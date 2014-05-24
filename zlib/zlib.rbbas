@@ -18,6 +18,10 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h1
+		Protected Soft Declare Function deflateEnd Lib "zlib1" (ByRef Stream As zlib . z_stream) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h1
 		Protected Soft Declare Function deflateInit_ Lib "zlib1" (ByRef Stream As zlib . z_stream, CompressionLevel As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
@@ -106,6 +110,9 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = Z_OK, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = Z_PARTIAL_FLUSH, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = Z_STREAM_END, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
