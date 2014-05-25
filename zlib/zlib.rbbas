@@ -2,16 +2,20 @@
 Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function Compress(Data As MemoryBlock) As MemoryBlock
-		  Dim out As New MemoryBlock(Data.Size)
-		  Dim outsz As UInt32 = out.Size
-		  Dim err As Integer = zlib._compress(out, outsz, Data, Data.Size)
+		  Dim cb As UInt32 = zlib.compressBound(Data.Size)
+		  Dim out As New MemoryBlock(cb)
+		  Dim err As Integer = zlib._compress(out, cb, Data, Data.Size)
 		  If err = Z_OK Then
-		    Return out.StringValue(0, outsz)
+		    Return out.StringValue(0, cb)
 		  Else
 		    Break
 		  End If
 		End Function
 	#tag EndMethod
+
+	#tag ExternalMethod, Flags = &h1
+		Protected Soft Declare Function compressBound Lib "zlib1" (sourceLen As UInt64) As UInt32
+	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h1
 		Protected Soft Declare Function deflate Lib "zlib1" (ByRef Stream As zlib . z_stream, Flush As Integer) As Integer

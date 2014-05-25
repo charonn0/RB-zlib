@@ -44,8 +44,8 @@ Implements Writeable
 		  p1.Ptr(0) = DataOut
 		  Dim p2 As New MemoryBlock(4)
 		  p2.Ptr(0) = DataIn
-		  If DataIn <> Nil Then 
-		    mStream.avail_in = DataIn.Size 
+		  If DataIn <> Nil Then
+		    mStream.avail_in = DataIn.Size
 		    mStream.next_in = p2
 		  Else
 		    mStream.avail_in = 0
@@ -96,7 +96,7 @@ Implements Writeable
 		    err.Message = FormatError(Me.LastError)
 		    Raise err
 		  End If
-		  If mStream.avail_out > 0 Then 
+		  If mStream.avail_out > 0 Then
 		    Outstream.Write(out.StringValue(0, mStream.avail_out))
 		  End If
 		  
