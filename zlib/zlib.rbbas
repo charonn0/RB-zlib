@@ -1,10 +1,15 @@
 #tag Module
 Protected Module zlib
 	#tag Method, Flags = &h1
-		Protected Function Compress(Data As MemoryBlock) As MemoryBlock
+		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION) As MemoryBlock
 		  Dim cb As UInt32 = zlib.compressBound(Data.Size)
 		  Dim out As New MemoryBlock(cb)
-		  Dim err As Integer = zlib._compress(out, cb, Data, Data.Size)
+		  Dim err As Integer
+		  If CompressionLevel = Z_DEFAULT_COMPRESSION Then
+		    err = zlib._compress(out, cb, Data, Data.Size)
+		  Else
+		    err = zlib._compress2(out, cb, Data, Data.Size, CompressionLevel)
+		  End If
 		  If err = Z_OK Then
 		    Return out.StringValue(0, cb)
 		  Else
@@ -19,6 +24,10 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h1
 		Protected Soft Declare Function deflate Lib "zlib1" (ByRef Stream As zlib . z_stream, Flush As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h1
+		Protected Soft Declare Function deflateBound Lib "zlib1" (ByRef Stream As zlib . z_stream, sourceLen As UInt32) As UInt32
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h1
@@ -82,6 +91,10 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h1
 		Protected Soft Declare Function _compress Lib "zlib1" Alias "compress" (Output As Ptr, ByRef OutLen As UInt32, Source As Ptr, SourceLen As UInt32) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h1
+		Protected Soft Declare Function _compress2 Lib "zlib1" Alias "compress2" (Output As Ptr, ByRef OutLen As UInt32, Source As Ptr, SourceLen As UInt32, Level As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h1
