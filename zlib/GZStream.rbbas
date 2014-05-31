@@ -6,9 +6,9 @@ Implements Readable, Writeable
 		  ' Opens an existing gzip stream
 		  If GzipFile = Nil Or GzipFile.Directory Then Raise New IOException
 		  If AllowSeek Then
-		    Return gzOpen(GzipFile, "a+")
+		    Return gzOpen(GzipFile, "ab+")
 		  Else
-		    Return gzOpen(GzipFile, "a")
+		    Return gzOpen(GzipFile, "ab")
 		  End If
 		End Function
 	#tag EndMethod
@@ -16,6 +16,19 @@ Implements Readable, Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
 		  Call zlib.gzclose(gzFile)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(Buffer As MemoryBlock)
+		  Dim bs As New BinaryStream(Buffer)
+		  #If TargetWin32 Then
+		    gzFile = zlib.gzdopen(bs.Handle(BinaryStream.HandleTypeWin32Handle), "rb+")
+		  #else
+		    gzFile = zlib.gzdopen(bs.Handle(BinaryStream.HandleTypeFileNumber), "rb+")
+		  #endif
+		  
+		  If gzFile = Nil Then Raise New RuntimeException
 		End Sub
 	#tag EndMethod
 
@@ -32,7 +45,7 @@ Implements Readable, Writeable
 		  Dim mode As String
 		  Select Case True
 		  Case OutputFile.Exists And OverWrite, Not OutputFile.Exists
-		    mode = "w+"
+		    mode = "wb+"
 		  Else
 		    Raise New IOException
 		  End Select
@@ -86,9 +99,9 @@ Implements Readable, Writeable
 		  If GzipFile = Nil Or GzipFile.Directory Or Not GzipFile.Exists Then Raise New IOException
 		  Dim mode As String
 		  If ReadWrite Then
-		    mode = "r+"
+		    mode = "rb+"
 		  Else
-		    mode = "r"
+		    mode = "rb"
 		  End If
 		  Return gzOpen(GzipFile, mode)
 		End Function
@@ -135,6 +148,29 @@ Implements Readable, Writeable
 	#tag Property, Flags = &h1
 		Protected gzFile As Ptr
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return zlib.gzseek(gzFile, 0, SEEK_CUR)
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If zlib.gzseek(gzFile, value, SEEK_SET) <> value Then
+			    Raise New IOException
+			  End If
+			End Set
+		#tag EndSetter
+		Position As Integer
+	#tag EndComputedProperty
+
+
+	#tag Constant, Name = SEEK_CUR, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = SEEK_SET, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
+	#tag EndConstant
 
 
 	#tag ViewBehavior
