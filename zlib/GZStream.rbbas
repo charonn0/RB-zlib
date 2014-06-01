@@ -1,6 +1,6 @@
 #tag Class
 Protected Class GZStream
-Implements Readable, Writeable
+Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		 Shared Function Append(GzipFile As FolderItem, AllowSeek As Boolean = False) As zlib.GZStream
 		  ' Opens an existing gzip stream
@@ -16,6 +16,7 @@ Implements Readable, Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
 		  Call zlib.gzclose(gzFile)
+		  Call gzError()
 		End Sub
 	#tag EndMethod
 
@@ -27,8 +28,7 @@ Implements Readable, Writeable
 		  #else
 		    gzFile = zlib.gzdopen(bs.Handle(BinaryStream.HandleTypeFileNumber), "rb+")
 		  #endif
-		  
-		  If gzFile = Nil Then Raise New RuntimeException
+		  If gzError <> Z_OK Or gzFile = Nil Then Raise New RuntimeException
 		End Sub
 	#tag EndMethod
 
@@ -64,21 +64,16 @@ Implements Readable, Writeable
 		Sub Flush()
 		  // Part of the Writeable interface.
 		  If zlib.gzflush(gzFile, Z_FINISH) <> Z_OK Then
+		    Call gzError()
 		    Raise New RuntimeException
 		  End If
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function gzError(ByRef Msg As String) As Integer
-		  Dim num As Integer
-		  Dim p As Ptr = zlib.gzerror(gzFile, num)
-		  If p <> Nil Then
-		    Dim mb As MemoryBlock = p
-		    Msg = mb.CString(0)
-		    Return num
-		  End If
-		  
+		Protected Function gzError() As Integer
+		  mLastMsg = zlib.gzerror(gzFile, mLastError)
+		  Return mLastError
 		End Function
 	#tag EndMethod
 
@@ -90,6 +85,22 @@ Implements Readable, Writeable
 		  Else
 		    Raise New RuntimeException
 		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LastError() As Integer
+		  Return mLastError
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LastErrorMessage() As String
+		  If mLastMsg <> Nil Then
+		    Dim mb As MemoryBlock = mLastMsg
+		    Return mb.CString(0)
+		  End If
+		  
 		End Function
 	#tag EndMethod
 
@@ -112,6 +123,7 @@ Implements Readable, Writeable
 		  // Part of the Readable interface.
 		  Dim mb As New MemoryBlock(Count)
 		  Dim red As Integer = zlib.gzread(gzFile, mb, mb.Size)
+		  Call gzError()
 		  If red > 0 Then
 		    Return DefineEncoding(mb.StringValue(0, mb.Size), encoding)
 		  End If
@@ -121,8 +133,7 @@ Implements Readable, Writeable
 	#tag Method, Flags = &h0
 		Function ReadError() As Boolean
 		  // Part of the Readable interface.
-		  Dim msg As String
-		  Return gzError(msg) <> 0
+		  Return gzError <> 0
 		End Function
 	#tag EndMethod
 
@@ -131,6 +142,7 @@ Implements Readable, Writeable
 		  // Part of the Writeable interface.
 		  Dim mb As MemoryBlock = text
 		  If zlib.gzwrite(gzFile, mb, text.LenB) <> text.LenB Then
+		    Call gzError()
 		    Raise New IOException
 		  End If
 		End Sub
@@ -139,14 +151,21 @@ Implements Readable, Writeable
 	#tag Method, Flags = &h0
 		Function WriteError() As Boolean
 		  // Part of the Writeable interface.
-		  Dim msg As String
-		  Return gzError(msg) <> 0
+		  Return gzError() <> 0
 		End Function
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h1
 		Protected gzFile As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mLastError As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mLastMsg As Ptr
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -193,6 +212,11 @@ Implements Readable, Writeable
 			Visible=true
 			Group="ID"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Position"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
