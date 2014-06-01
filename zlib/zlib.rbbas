@@ -1,6 +1,22 @@
 #tag Module
 Protected Module zlib
 	#tag Method, Flags = &h1
+		Protected Function Adler32(NewData As MemoryBlock, LastAdler As UInt32) As UInt32
+		  ' You must call this method once with NIL to initialize, and then pass back the returned value to each pass.
+		  '    Dim adler As UInt32 = zlib.Adler32(Nil, 0) //initialize
+		  '    While True
+		  '      adler = Adler32(NextInputData, adler)
+		  '    Wend
+		  
+		  If NewData <> Nil Then 
+		    Return _adler32(LastAdler, NewData, NewData.Size)
+		  Else
+		    Return _adler32(0, Nil, 0)
+		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION) As MemoryBlock
 		  Dim cb As UInt32 = zlib.compressBound(Data.Size)
 		  Dim out As New MemoryBlock(cb)
@@ -21,6 +37,22 @@ Protected Module zlib
 	#tag ExternalMethod, Flags = &h1
 		Protected Soft Declare Function compressBound Lib "zlib1" (sourceLen As UInt64) As UInt32
 	#tag EndExternalMethod
+
+	#tag Method, Flags = &h1
+		Protected Function CRC32(NewData As MemoryBlock, LastCRC As UInt32) As UInt32
+		  ' You must call this method once with NIL to initialize, and then pass back the returned value to each pass.
+		  '    Dim adler As UInt32 = zlib.CRC32(Nil, 0) //initialize
+		  '    While True
+		  '      adler = CRC32(NextInputData, adler)
+		  '    Wend
+		  
+		  If NewData <> Nil Then 
+		    Return _crc32(LastCRC, NewData, NewData.Size)
+		  Else
+		    Return _crc32(0, Nil, 0)
+		  End If
+		End Function
+	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h1
 		Protected Soft Declare Function deflate Lib "zlib1" (ByRef Stream As zlib . z_stream, Flush As Integer) As Integer
@@ -134,11 +166,19 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h1
+		Protected Soft Declare Function _adler32 Lib "zlib1" Alias "adler32" (adler As UInt32, Buffer As Ptr, BufferLen As UInt32) As UInt32
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h1
 		Protected Soft Declare Function _compress Lib "zlib1" Alias "compress" (Output As Ptr, ByRef OutLen As UInt32, Source As Ptr, SourceLen As UInt32) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h1
 		Protected Soft Declare Function _compress2 Lib "zlib1" Alias "compress2" (Output As Ptr, ByRef OutLen As UInt32, Source As Ptr, SourceLen As UInt32, Level As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h1
+		Protected Soft Declare Function _crc32 Lib "zlib1" Alias "crc32" (crc As UInt32, Buffer As Ptr, BufferLen As UInt32) As UInt32
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h1
