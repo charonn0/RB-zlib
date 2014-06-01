@@ -3,9 +3,9 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  'TestCompressMem()
+		  TestCompressMem()
 		  'TestCompress()
-		  TestDecompress()
+		  'TestDecompress()
 		  Break
 		  
 		  
@@ -99,8 +99,7 @@ Inherits Application
 		  Dim bs As zlib.GZStream = zlib.GZStream.Open(readfrom, False)
 		  Dim stream As BinaryStream = BinaryStream.Create(saveto, True)
 		  While Not bs.EOF
-		    If bs.Position + 256 <= bs.L
-		      stream.Write(bs.Read(256))
+		    stream.Write(bs.Read(1))
 		  Wend
 		  MsgBox(bs.LastErrorMessage)
 		  stream.Close

@@ -28,7 +28,7 @@ Implements Readable,Writeable
 		  #else
 		    gzFile = zlib.gzdopen(bs.Handle(BinaryStream.HandleTypeFileNumber), "rb+")
 		  #endif
-		  If gzError <> Z_OK Or gzFile = Nil Then Raise New RuntimeException
+		  If gzFile = Nil Then Raise New RuntimeException
 		End Sub
 	#tag EndMethod
 
@@ -63,7 +63,10 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Flush()
 		  // Part of the Writeable interface.
-		  If zlib.gzflush(gzFile, Z_FINISH) <> Z_OK Then
+		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary. 
+		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long. 
+		  
+		  If zlib.gzflush(gzFile, Z_PARTIAL_FLUSH) <> Z_OK Then
 		    Call gzError()
 		    Raise New RuntimeException
 		  End If
@@ -121,6 +124,8 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
+		  ' Reads the requested number of DEcompresseded bytes from the compressed stream.
+		  ' zlib will pad the data with NULLs if there is not enough bytes to read.
 		  Dim mb As New MemoryBlock(Count)
 		  Dim red As Integer = zlib.gzread(gzFile, mb, mb.Size)
 		  Call gzError()
@@ -140,6 +145,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Write(text As String)
 		  // Part of the Writeable interface.
+		  ' Compresses the data and writes it to the stream
 		  Dim mb As MemoryBlock = text
 		  If zlib.gzwrite(gzFile, mb, text.LenB) <> text.LenB Then
 		    Call gzError()
