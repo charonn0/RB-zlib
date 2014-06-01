@@ -21,7 +21,14 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(Buffer As MemoryBlock)
+		Sub Constructor(gzOpaque As Ptr)
+		  gzFile = gzOpaque
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Attributes( deprecated )  Sub Constructor_(Buffer As MemoryBlock)
+		  ' Doesn't work.
 		  Dim bs As New BinaryStream(Buffer)
 		  #If TargetWin32 Then
 		    gzFile = zlib.gzdopen(bs.Handle(BinaryStream.HandleTypeWin32Handle), "rb+")
@@ -29,12 +36,6 @@ Implements Readable,Writeable
 		    gzFile = zlib.gzdopen(bs.Handle(BinaryStream.HandleTypeFileNumber), "rb+")
 		  #endif
 		  If gzFile = Nil Then Raise New RuntimeException
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Constructor(gzOpaque As Ptr)
-		  gzFile = gzOpaque
 		End Sub
 	#tag EndMethod
 
@@ -63,8 +64,8 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Flush()
 		  // Part of the Writeable interface.
-		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary. 
-		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long. 
+		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary.
+		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long.
 		  
 		  If zlib.gzflush(gzFile, Z_PARTIAL_FLUSH) <> Z_OK Then
 		    Call gzError()
@@ -108,6 +109,27 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Level() As Integer
+		  Return mLevel
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Level(Assigns NewLevel As Integer)
+		  mLastError = zlib.gzsetparams(gzFile, NewLevel, Me.Strategy)
+		  If mLastError = Z_OK Then
+		    mLevel = NewLevel
+		  Else
+		    Dim err As New IOException
+		    err.Message = zlib.FormatError(mLastError)
+		    err.ErrorNumber = mLastError
+		    Raise err
+		  End If
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		 Shared Function Open(GzipFile As FolderItem, ReadWrite As Boolean) As zlib.GZStream
 		  ' Opens an existing gzip stream
 		  If GzipFile = Nil Or GzipFile.Directory Or Not GzipFile.Exists Then Raise New IOException
@@ -143,6 +165,27 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Strategy() As Integer
+		  Return mStrategy
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Strategy(Assigns NewStrategy As Integer)
+		  mLastError = zlib.gzsetparams(gzFile, Me.Level, NewStrategy)
+		  If mLastError = Z_OK Then
+		    mStrategy = NewStrategy
+		  Else
+		    Dim err As New IOException
+		    err.Message = zlib.FormatError(mLastError)
+		    err.ErrorNumber = mLastError
+		    Raise err
+		  End If
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Write(text As String)
 		  // Part of the Writeable interface.
 		  ' Compresses the data and writes it to the stream
@@ -172,6 +215,14 @@ Implements Readable,Writeable
 
 	#tag Property, Flags = &h21
 		Private mLastMsg As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h1
+		Protected mLevel As Integer = Z_DEFAULT_COMPRESSION
+	#tag EndProperty
+
+	#tag Property, Flags = &h1
+		Protected mStrategy As Integer = Z_DEFAULT_STRATEGY
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
