@@ -146,7 +146,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
-		  ' Reads the requested number of DEcompresseded bytes from the compressed stream.
+		  ' Reads the requested number of DEcompressed bytes from the compressed stream.
 		  ' zlib will pad the data with NULLs if there is not enough bytes to read.
 		  Dim mb As New MemoryBlock(Count)
 		  Dim red As Integer = zlib.gzread(gzFile, mb, mb.Size)
