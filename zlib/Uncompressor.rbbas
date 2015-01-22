@@ -1,5 +1,5 @@
 #tag Class
-Protected Class Uncommpressor
+Protected Class Uncompressor
 Implements Readable
 	#tag Method, Flags = &h0
 		Sub Close()
