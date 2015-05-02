@@ -8,7 +8,7 @@ Protected Module zlib
 		  '      adler = Adler32(NextInputData, adler)
 		  '    Wend
 		  
-		  If NewData <> Nil Then 
+		  If NewData <> Nil Then
 		    Return _adler32(LastAdler, NewData, NewData.Size)
 		  Else
 		    Return _adler32(0, Nil, 0)
@@ -41,12 +41,12 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function CRC32(NewData As MemoryBlock, LastCRC As UInt32) As UInt32
 		  ' You must call this method once with NIL to initialize, and then pass back the returned value to each pass.
-		  '    Dim adler As UInt32 = zlib.CRC32(Nil, 0) //initialize
+		  '    Dim crc As UInt32 = zlib.CRC32(Nil, 0) //initialize
 		  '    While True
-		  '      adler = CRC32(NextInputData, adler)
+		  '      crc = CRC32(NextInputData, crc)
 		  '    Wend
 		  
-		  If NewData <> Nil Then 
+		  If NewData <> Nil Then
 		    Return _crc32(LastCRC, NewData, NewData.Size)
 		  Else
 		    Return _crc32(0, Nil, 0)

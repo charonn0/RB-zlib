@@ -21,21 +21,22 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(gzOpaque As Ptr)
-		  gzFile = gzOpaque
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Attributes( deprecated )  Sub Constructor_(Buffer As MemoryBlock)
+		Attributes( deprecated )  Sub Constructor(Buffer As MemoryBlock)
 		  ' Doesn't work.
 		  Dim bs As New BinaryStream(Buffer)
 		  #If TargetWin32 Then
-		    gzFile = zlib.gzdopen(bs.Handle(BinaryStream.HandleTypeWin32Handle), "rb+")
+		    Dim i As Integer = bs.Handle(BinaryStream.HandleTypeWin32Handle)
+		    gzFile = zlib.gzdopen(i, "rb")
 		  #else
 		    gzFile = zlib.gzdopen(bs.Handle(BinaryStream.HandleTypeFileNumber), "rb+")
 		  #endif
 		  If gzFile = Nil Then Raise New RuntimeException
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(gzOpaque As Ptr)
+		  gzFile = gzOpaque
 		End Sub
 	#tag EndMethod
 
