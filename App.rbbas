@@ -3,19 +3,61 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  Dim data1 As String
-		  Dim d As New MemoryBlock(0)
-		  Dim bs As New BinaryStream(d)
-		  For i As Integer = 0 To 99
-		    bs.Write(zlib.Compress("Hello! "))
-		  Next
-		  bs.Close
-		  'Dim comp1 As String = zlib.Compress(data1, 90)
-		  'Dim decom1 As String = zlib.Uncompress(comp1, data1.LenB)
-		  Dim decom2 As String = zlib.Uncompress(d)
-		  Break
+		  If Not TestCompress() Then MsgBox("Compression failed")
+		  If Not TestGZWrite() Then MsgBox("gzip failed")
+		  If Not TestGZRead() Then MsgBox("gunzip failed")
+		  
 		End Sub
 	#tag EndEvent
+
+
+	#tag Method, Flags = &h0
+		Function TestCompress() As Boolean
+		  Dim data As String
+		  For i As Integer = 0 To 999
+		    data = data + "Hello! "
+		  Next
+		  Dim comp As String = zlib.Compress(data)
+		  Return zlib.Uncompress(comp) = data
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestGZRead() As Boolean
+		  Dim dlg As New OpenDialog
+		  dlg.Title = "Select a GZip file to read"
+		  Dim f As FolderItem = dlg.ShowModal
+		  If f = Nil Then Return False
+		  Dim gz As zlib.GZStream = zlib.GZStream.Open(f)
+		  Dim g As FolderItem = f.Parent.Child(f.Name + "_uncompressed")
+		  Dim bs As BinaryStream = BinaryStream.Create(g, True)
+		  While Not gz.EOF
+		    bs.Write(gz.Read(1024))
+		  Wend
+		  bs.Close
+		  gz.Close
+		  Return True
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestGZWrite() As Boolean
+		  Dim dlg As New OpenDialog
+		  dlg.Title = "Select a file to GZip"
+		  Dim f As FolderItem = dlg.ShowModal
+		  If f = Nil Then Return False
+		  Dim bs As BinaryStream = BinaryStream.Open(f)
+		  Dim gz As zlib.GZStream = zlib.GZStream.Create(f.Parent.Child(f.Name + ".gz"))
+		  While Not bs.EOF
+		    gz.Write(bs.Read(1024))
+		  Wend
+		  bs.Close
+		  gz.Close
+		  Return True
+		  
+		End Function
+	#tag EndMethod
 
 
 	#tag Constant, Name = BlankErrorPage, Type = String, Dynamic = False, Default = \"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r<html xmlns\x3D\"http://www.w3.org/1999/xhtml\">\r<head>\r<meta http-equiv\x3D\"Content-Type\" content\x3D\"text/html; charset\x3Diso-8859-1\" />\r<title>%HTTPERROR%</title>\r<style type\x3D\"text/css\">\r<!--\rbody\x2Ctd\x2Cth {\r\tfont-family: Arial\x2C Helvetica\x2C sans-serif;\r\tfont-size: medium;\r}\ra:link {\r\tcolor: #0000FF;\r\ttext-decoration: none;\r}\ra:visited {\r\ttext-decoration: none;\r\tcolor: #990000;\r}\ra:hover {\r\ttext-decoration: underline;\r\tcolor: #009966;\r}\ra:active {\r\ttext-decoration: none;\r\tcolor: #FF0000;\r}\r-->\r</style></head>\r\r<body>\r<h1>%HTTPERROR%</h1>\r<p>%DOCUMENT%</p>\r<hr />\r<p>%SIGNATURE%</p>\r</body>\r</html>", Scope = Protected
