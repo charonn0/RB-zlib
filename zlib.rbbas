@@ -21,27 +21,16 @@ Protected Module zlib
 		  Dim cb As UInt32 = zlib.compressBound(Data.Size)
 		  Dim out As New MemoryBlock(cb)
 		  Dim err As Integer
-		  Do
-		    If CompressionLevel = Z_DEFAULT_COMPRESSION Then
-		      err = zlib._compress(out, cb, Data, Data.Size)
-		    Else
-		      err = zlib._compress2(out, cb, Data, Data.Size, CompressionLevel)
-		    End If
-		    Select Case err
-		    Case Z_MEM_ERROR
-		      Raise New OutOfMemoryException
-		      
-		    Case Z_STREAM_ERROR
-		      Break ' CompressionLevel is invalid; using default
-		      Return Compress(Data)
-		      
-		    Case Z_BUF_ERROR
-		      out = New MemoryBlock(out.Size * 2)
-		      cb = out.Size
-		    End Select
-		  Loop Until err <> Z_BUF_ERROR
-		  If err <> Z_OK Then Raise New zlib.zlibException(err) 
-		  Return out.StringValue(0, cb)
+		  If CompressionLevel = Z_DEFAULT_COMPRESSION Then
+		    err = zlib._compress(out, cb, Data, Data.Size)
+		  Else
+		    err = zlib._compress2(out, cb, Data, Data.Size, CompressionLevel)
+		  End If
+		  If err = Z_OK Then
+		    Return out.StringValue(0, cb)
+		  Else
+		    Break
+		  End If
 		End Function
 	#tag EndMethod
 
@@ -61,6 +50,15 @@ Protected Module zlib
 		    Return _crc32(LastCRC, NewData, NewData.Size)
 		  Else
 		    Return _crc32(0, Nil, 0)
+		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function FormatError(ErrorCode As Integer) As String
+		  If zlib.IsAvailable Then
+		    Dim err As MemoryBlock = zlib.zError(ErrorCode)
+		    Return err.CString(0)
 		  End If
 		End Function
 	#tag EndMethod
