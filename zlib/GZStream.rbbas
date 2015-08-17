@@ -2,10 +2,18 @@
 Protected Class GZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
-		 Shared Function Append(GzipFile As FolderItem) As zlib.GZStream
-		  ' Opens an existing gzip stream
+		 Shared Function Append(GzipFile As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.GZStream
+		  ' Opens an existing gzip stream for appending
 		  If GzipFile = Nil Or GzipFile.Directory Then Raise New IOException
-		  Return gzOpen(GzipFile, "ab")
+		  Dim mode As String = "ab"
+		  If CompressionLevel <> Z_DEFAULT_COMPRESSION Then
+		    If CompressionLevel < 0 Or CompressionLevel > 9 Then
+		      Break ' Invalid CompressionLevel
+		    Else
+		      mode = mode + Str(CompressionLevel)
+		    End If
+		  End If
+		  Return gzOpen(GzipFile, mode)
 		End Function
 	#tag EndMethod
 
@@ -24,10 +32,18 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(OutputFile As FolderItem) As zlib.GZStream
+		 Shared Function Create(OutputFile As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.GZStream
 		  ' Creates an empty gzip stream
 		  If OutputFile = Nil Or OutputFile.Directory Then Raise New IOException
-		  Return gzOpen(OutputFile, "wb")
+		  Dim mode As String = "wb"
+		  If CompressionLevel <> Z_DEFAULT_COMPRESSION Then 
+		    If CompressionLevel < 0 Or CompressionLevel > 9 Then
+		      Break ' Invalid CompressionLevel
+		    Else
+		      mode = mode + Str(CompressionLevel)
+		    End If
+		  End If
+		  Return gzOpen(OutputFile, mode)
 		End Function
 	#tag EndMethod
 
