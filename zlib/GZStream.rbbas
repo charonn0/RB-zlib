@@ -61,6 +61,19 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub FinishBlock()
+		  ' A stronger version of Flush(). All remaining data is written and the gzip stream is completed in the output. If GZStream.Write is 
+		  ' called again, a new gzip stream will be started in the output. GZStream.Read is able to read such concatented gzip streams. This 
+		  ' will severely impact compression ratios, even into the negative.
+		  
+		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
+		  If gzFile = Nil Then Raise New NilObjectException
+		  mLastError = zlib.gzflush(gzFile, Z_FINISH)
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Flush()
 		  // Part of the Writeable interface.
 		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary.
