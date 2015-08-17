@@ -3,11 +3,11 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  Call TestZStreamWrite
+		  'Call TestZStreamWrite
 		  If Not TestCompress() Then MsgBox("Compression failed")
+		  If Not TestGZAppend() Then MsgBox("gzip append failed")
 		  If Not TestGZWrite() Then MsgBox("gzip failed")
 		  If Not TestGZRead() Then MsgBox("gunzip failed")
-		  
 		End Sub
 	#tag EndEvent
 
@@ -15,11 +15,33 @@ Inherits Application
 	#tag Method, Flags = &h0
 		Function TestCompress() As Boolean
 		  Dim data As String
+		  Dim rand As New Random
 		  For i As Integer = 0 To 999
 		    data = data + "Hello! "
+		    If Rand.InRange(0, 5) = 5 Then data = data + Str(rand.InRange(0, 1000))
 		  Next
-		  Dim comp As String = zlib.Compress(data)
-		  Return zlib.Uncompress(comp) = data
+		  Return _
+		  (zlib.Uncompress(zlib.Compress(data, 9)) = data) And _
+		  (zlib.Uncompress(zlib.Compress(data), data.LenB) = data) And _
+		  (zlib.Uncompress(zlib.Compress(data, 9), data.LenB) = data)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestGZAppend() As Boolean
+		  Dim dlg As New OpenDialog
+		  dlg.Title = "Select a file to GZip"
+		  Dim f As FolderItem = dlg.ShowModal
+		  If f = Nil Then Return False
+		  Dim bs As BinaryStream = BinaryStream.Open(f)
+		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
+		  Dim gz As zlib.GZStream = zlib.GZStream.Append(g)
+		  While Not bs.EOF
+		    gz.Write(bs.Read(1024))
+		  Wend
+		  gz.Close
+		  Return True
+		  
 		End Function
 	#tag EndMethod
 
@@ -49,7 +71,9 @@ Inherits Application
 		  Dim f As FolderItem = dlg.ShowModal
 		  If f = Nil Then Return False
 		  Dim bs As BinaryStream = BinaryStream.Open(f)
-		  Dim gz As zlib.GZStream = zlib.GZStream.Create(f.Parent.Child(f.Name + ".gz"))
+		  Dim gz As zlib.GZStream = zlib.GZStream.Create(f.Parent.Child(f.Name + ".gz"), 99)
+		  gz.Level = 9
+		  gz.Strategy = 3
 		  While Not bs.EOF
 		    gz.Write(bs.Read(1024))
 		  Wend
