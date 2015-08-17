@@ -11,13 +11,14 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		Sub Close()
-		  Call zlib.gzclose(gzFile)
-		  Call gzError()
+		  If gzFile <> Nil Then mLastError = zlib.gzclose(gzFile)
+		  gzFile = Nil
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Sub Constructor(gzOpaque As Ptr)
+		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  gzFile = gzOpaque
 		End Sub
 	#tag EndMethod
@@ -30,10 +31,16 @@ Implements Readable,Writeable
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub Destructor()
+		  Me.Close
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
-		  Return zlib.gzeof(gzFile)
+		  If gzFile <> Nil Then Return zlib.gzeof(gzFile)
 		End Function
 	#tag EndMethod
 
@@ -43,30 +50,41 @@ Implements Readable,Writeable
 		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary.
 		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long.
 		  
-		  If Not mIsWriteable Then Return
-		  If zlib.gzflush(gzFile, Z_PARTIAL_FLUSH) <> Z_OK Then
-		    Call gzError()
-		    Raise New RuntimeException
-		  End If
+		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
+		  If gzFile = Nil Then Raise New NilObjectException
+		  mLastError = zlib.gzflush(gzFile, Z_PARTIAL_FLUSH)
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Function gzError() As Integer
-		  mLastMsg = zlib.gzerror(gzFile, mLastError)
-		  Return mLastError
+		  If gzFile <> Nil Then
+		    mLastMsg = zlib.gzerror(gzFile, mLastError)
+		    Return mLastError
+		  End If
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Shared Function gzOpen(GzipFile As FolderItem, Mode As String) As zlib.GZStream
+		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  Dim strm As Ptr = zlib.gzOpen(GzipFile.AbsolutePath, mode)
 		  If strm <> Nil Then
 		    Dim s As New zlib.GZStream(strm)
 		    s.mIsWriteable = (mode <> "rb")
 		    Return s
 		  Else
-		    Raise New RuntimeException
+		    #If TargetWin32 Then
+		      Dim err As Integer
+		      If Not _get_errno(err) Then
+		        Raise New IOException
+		      Else
+		        Raise New zlibException(err)
+		      End If
+		    #Else
+		      Raise New IOException
+		    #EndIf
 		  End If
 		End Function
 	#tag EndMethod
@@ -79,11 +97,13 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		Sub Level(Assigns NewLevel As Integer)
+		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
+		  If gzFile = Nil Then Raise New NilObjectException
 		  mLastError = zlib.gzsetparams(gzFile, NewLevel, Me.Strategy)
 		  If mLastError = Z_OK Then
 		    mLevel = NewLevel
 		  Else
-		    Raise New zlib.zlibException(mLastError)
+		    Raise New zlibException(mLastError)
 		  End If
 		  
 		End Sub
@@ -104,6 +124,7 @@ Implements Readable,Writeable
 		  ' zlib will pad the data with NULLs if there is not enough bytes to read.
 		  
 		  If mIsWriteable Then Raise New IOException ' opened for writing!
+		  If gzFile = Nil Then Raise New NilObjectException
 		  Dim mb As New MemoryBlock(Count)
 		  Dim red As Integer = zlib.gzread(gzFile, mb, mb.Size)
 		  Call gzError()
@@ -128,11 +149,12 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		Sub Strategy(Assigns NewStrategy As Integer)
+		  If Not mIsWriteable Or gzFile = Nil Then Raise New IOException
 		  mLastError = zlib.gzsetparams(gzFile, Me.Level, NewStrategy)
 		  If mLastError = Z_OK Then
 		    mStrategy = NewStrategy
 		  Else
-		    Raise New zlib.zlibException(mLastError)
+		    Raise New zlibException(mLastError)
 		  End If
 		  
 		End Sub
@@ -144,6 +166,7 @@ Implements Readable,Writeable
 		  ' Compresses the data and writes it to the stream
 		  
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
+		  If gzFile = Nil Then Raise New NilObjectException
 		  Dim mb As MemoryBlock = text
 		  If zlib.gzwrite(gzFile, mb, text.LenB) <> text.LenB Then
 		    Call gzError()

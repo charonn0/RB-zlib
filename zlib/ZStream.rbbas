@@ -1,6 +1,6 @@
 #tag Class
 Protected Class ZStream
-Implements Readable, Writeable
+Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
 		  If mOutStream <> Nil Then ' Compressing
@@ -37,7 +37,7 @@ Implements Readable, Writeable
 		    stream.mOutStream = Output
 		    Return stream
 		  Else
-		    Raise New zlib.zlibException(err)
+		    Raise New zlibException(err)
 		  End If
 		End Function
 	#tag EndMethod
@@ -76,7 +76,7 @@ Implements Readable, Writeable
 		    stream.mInStream = InputStream
 		    Return stream
 		  Else
-		    Raise New zlib.zlibException(err)
+		    Raise New zlibException(err)
 		  End If
 		End Function
 	#tag EndMethod
@@ -96,7 +96,7 @@ Implements Readable, Writeable
 		  If mLastError = Z_OK Or mLastError = Z_STREAM_END Then
 		    Return DefineEncoding(odata, encoding)
 		  Else
-		    Raise New zlib.zlibException(mLastError)
+		    Raise New zlibException(mLastError)
 		  End If
 		End Function
 	#tag EndMethod
@@ -160,9 +160,6 @@ Implements Readable, Writeable
 		Private zstream As z_stream
 	#tag EndProperty
 
-
-	#tag Constant, Name = Z_FINISH, Type = Double, Dynamic = False, Default = \"4", Scope = Protected
-	#tag EndConstant
 
 	#tag Constant, Name = Z_NO_FLUSH, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
 	#tag EndConstant

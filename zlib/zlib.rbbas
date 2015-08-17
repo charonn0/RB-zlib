@@ -37,7 +37,7 @@ Protected Module zlib
 		      cb = out.Size
 		    End Select
 		  Loop Until err <> Z_BUF_ERROR
-		  If err <> Z_OK Then Raise New zlib.zlibException(err)
+		  If err <> Z_OK Then Raise New zlibException(err)
 		  Return out.StringValue(0, cb)
 		End Function
 	#tag EndMethod
@@ -124,24 +124,27 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function IsAvailable() As Boolean
-		  Return System.IsFunctionAvailable("zlibVersion", "zlib1")
+		  Static mIsAvailable As Boolean
+		  
+		  If Not mIsAvailable Then mIsAvailable = System.IsFunctionAvailable("zlibVersion", "zlib1")
+		  Return mIsAvailable
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1) As MemoryBlock
 		  If ExpandedSize <= 0 Then ExpandedSize = Data.Size * 1.1 + 12
-		  Dim out As New MemoryBlock(ExpandedSize)
-		  Dim outsz As UInt32 = out.Size
+		  Dim out As MemoryBlock
+		  Dim outsz As UInt32
 		  Dim err As Integer
 		  Do
+		    out = New MemoryBlock(ExpandedSize)
+		    outsz = out.Size
 		    err = zlib._uncompress(out, outsz, Data, Data.Size)
-		    If err = Z_BUF_ERROR Then
-		      ExpandedSize = ExpandedSize * 2
-		      out = New MemoryBlock(ExpandedSize)
-		      outsz = out.Size
-		    End If
+		    ExpandedSize = ExpandedSize * 2
 		  Loop Until err <> Z_BUF_ERROR
+		  
+		  If err <> Z_OK Then Raise New zlibException(err)
 		  Return out.StringValue(0, outsz)
 		End Function
 	#tag EndMethod
@@ -178,6 +181,10 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function _get_errno Lib "msvcrt" (ByRef errno As Integer) As Boolean
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function _uncompress Lib "zlib1" Alias "uncompress" (Output As Ptr, ByRef OutLen As UInt32, Source As Ptr, SourceLen As UInt32) As Integer
 	#tag EndExternalMethod
 
@@ -188,13 +195,16 @@ Protected Module zlib
 	#tag Constant, Name = Z_DATA_ERROR, Type = Double, Dynamic = False, Default = \"-3", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = Z_DEFAULT_COMPRESSION, Type = Double, Dynamic = False, Default = \"-1", Scope = Private
+	#tag Constant, Name = Z_DEFAULT_COMPRESSION, Type = Double, Dynamic = False, Default = \"-1", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = Z_DEFAULT_STRATEGY, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = Z_ERRNO, Type = Double, Dynamic = False, Default = \"-1", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = Z_FINISH, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = Z_MEM_ERROR, Type = Double, Dynamic = False, Default = \"-4", Scope = Private
