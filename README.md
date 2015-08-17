@@ -23,5 +23,18 @@ This example creates a gzip file and writes to it. Data is compressed transparen
     gz.Close
   End If
 ```
-  
-  
+
+This example opens an existing gzip file and decompresses it into a `MemoryBlock`:
+```vbnet
+  Dim f As FolderItem = GetOpenFolderItem("") ' the gzip file to open
+  If f <> Nil Then
+    Dim gz As zlib.GZStream = zlib.GZStream.Open(f)
+    Dim uncompressed As New MemoryBlock(0)
+    Dim bs As BinaryStream = New BinaryStream(uncompressed)
+    While Not gz.EOF
+      bs.Write(gz.Read(1024))
+    Wend
+    bs.Close
+    gz.Close
+  End If
+```
