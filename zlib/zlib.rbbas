@@ -63,6 +63,18 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflate Lib "zlib1" (ByRef Stream As z_stream, Flush As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateEnd Lib "zlib1" (ByRef Stream As z_stream) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateInit_ Lib "zlib1" (ByRef Stream As z_stream, CompressionLevel As Integer, Version As CString, StreamSz As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function gzclose Lib "zlib1" (gzFile As Ptr) As Integer
 	#tag EndExternalMethod
 
@@ -100,6 +112,14 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function gzwrite Lib "zlib1" (gzFile As Ptr, Buffer As Ptr, Length As UInt32) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflate Lib "zlib1" (ByRef Stream As z_stream, Flush As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflateInit_ Lib "zlib1" (ByRef Stream As z_stream, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -191,6 +211,24 @@ Protected Module zlib
 
 	#tag Constant, Name = Z_VERSION_ERROR, Type = Double, Dynamic = False, Default = \"-6", Scope = Private
 	#tag EndConstant
+
+
+	#tag Structure, Name = z_stream, Flags = &h21
+		next_in as Ptr
+		  avail_in as UInt32
+		  total_in as UInt32
+		  next_out as Ptr
+		  avail_out as UInt32
+		  total_out as UInt32
+		  msg as Ptr
+		  internal_state as Ptr
+		  zalloc as Ptr
+		  zfree as Ptr
+		  opaque as Ptr
+		  data_type as Int32
+		  adler as UInt32
+		reserved as UInt32
+	#tag EndStructure
 
 
 	#tag ViewBehavior

@@ -1,6 +1,6 @@
 #tag Class
 Protected Class GZStream
-Implements Readable, Writeable
+Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		 Shared Function Append(GzipFile As FolderItem) As zlib.GZStream
 		  ' Opens an existing gzip stream

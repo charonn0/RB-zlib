@@ -4,6 +4,7 @@ MinIDEVersion=20070100
 Class=App;App.rbbas;&h66D007FF;&h0;false
 BuildSteps=Build Automation;Build Automation.rbbas;&h28184FFF;&h0;false
 Module=zlib;zlib/zlib.rbbas;&h5A1247FF;&h0;false
+Class=ZStream;zlib/ZStream.rbbas;&h412B2FFF;&h5A1247FF;false
 Class=GZStream;zlib/GZStream.rbbas;&h6F1F97FF;&h5A1247FF;false
 Class=zlibException;zlib/zlibException.rbbas;&h1116D7FF;&h5A1247FF;false
 MajorVersion=1
