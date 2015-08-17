@@ -8,10 +8,10 @@ This example compresses and decompresses a string in memory:
  Dim decompressed As String = zlib.Uncompress(compressed)
 ```
 
-This example creates a gzip file and writes to it. Data is compressed transparently.
+This example creates gzips a file:
 
 ```vbnet
-  Dim f As FolderItem = GetSaveFolderItem("") ' the gzip file to create
+  Dim f As FolderItem = GetSaveFolderItem("") ' a file to be gzipped
   If f <> Nil Then
     Dim bs As BinaryStream = BinaryStream.Open(f)
     Dim gz As zlib.GZStream = zlib.GZStream.Create(f.Parent.Child(f.Name + ".gz"))
