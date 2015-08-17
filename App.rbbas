@@ -4,6 +4,16 @@ Inherits Application
 	#tag Event
 		Sub Open()
 		  'Call TestZStreamWrite
+		  If True Then
+		    Dim compressed As String = zlib.Compress("InputData")
+		    Dim expanded As String = zlib.Uncompress(compressed)
+		    Break
+		  End If
+		  If True Then
+		    Dim data As String = "InputData"
+		    Dim compressed As String = zlib.Compress(data)
+		    Break
+		  End If
 		  If Not TestCompress() Then MsgBox("Compression failed")
 		  If Not TestGZAppend() Then MsgBox("gzip append failed")
 		  If Not TestGZWrite() Then MsgBox("gzip failed")
@@ -35,7 +45,7 @@ Inherits Application
 		  If f = Nil Then Return False
 		  Dim bs As BinaryStream = BinaryStream.Open(f)
 		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
-		  Dim gz As zlib.GZStream = zlib.GZStream.Append(g)
+		  Dim gz As zlib.GZStream = zlib.GZStream.Create(g, True)
 		  While Not bs.EOF
 		    gz.Write(bs.Read(1024))
 		  Wend
@@ -71,7 +81,10 @@ Inherits Application
 		  Dim f As FolderItem = dlg.ShowModal
 		  If f = Nil Then Return False
 		  Dim bs As BinaryStream = BinaryStream.Open(f)
-		  Dim gz As zlib.GZStream = zlib.GZStream.Create(f.Parent.Child(f.Name + ".gz"), 99)
+		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
+		  Dim tmp As BinaryStream = BinaryStream.Create(g, True)
+		  tmp.Close
+		  Dim gz As zlib.GZStream = zlib.GZStream.Create(g)
 		  gz.Level = 9
 		  gz.Strategy = 3
 		  While Not bs.EOF

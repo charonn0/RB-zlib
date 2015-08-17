@@ -2,22 +2,6 @@
 Protected Class GZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
-		 Shared Function Append(GzipFile As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.GZStream
-		  ' Opens an existing gzip stream for appending
-		  If GzipFile = Nil Or GzipFile.Directory Then Raise New IOException
-		  Dim mode As String = "ab"
-		  If CompressionLevel <> Z_DEFAULT_COMPRESSION Then
-		    If CompressionLevel < 0 Or CompressionLevel > 9 Then
-		      Break ' Invalid CompressionLevel
-		    Else
-		      mode = mode + Str(CompressionLevel)
-		    End If
-		  End If
-		  Return gzOpen(GzipFile, mode)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub Close()
 		  If gzFile <> Nil Then mLastError = zlib.gzclose(gzFile)
 		  gzFile = Nil
@@ -32,10 +16,11 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(OutputFile As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.GZStream
+		 Shared Function Create(OutputFile As FolderItem, Append As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.GZStream
 		  ' Creates an empty gzip stream
 		  If OutputFile = Nil Or OutputFile.Directory Then Raise New IOException
 		  Dim mode As String = "wb"
+		  If Append Then mode = "ab"
 		  If CompressionLevel <> Z_DEFAULT_COMPRESSION Then 
 		    If CompressionLevel < 0 Or CompressionLevel > 9 Then
 		      Break ' Invalid CompressionLevel
@@ -66,10 +51,7 @@ Implements Readable,Writeable
 		  ' called again, a new gzip stream will be started in the output. GZStream.Read is able to read such concatented gzip streams. This 
 		  ' will severely impact compression ratios, even into the negative.
 		  
-		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
-		  If gzFile = Nil Then Raise New NilObjectException
-		  mLastError = zlib.gzflush(gzFile, Z_FINISH)
-		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  If Not Me.Flush(Z_FINISH) Then Raise New zlibException(mLastError)
 		End Sub
 	#tag EndMethod
 
@@ -79,11 +61,17 @@ Implements Readable,Writeable
 		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary.
 		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long.
 		  
+		  If Not Me.Flush(Z_PARTIAL_FLUSH) Then Raise New zlibException(mLastError)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Flush(Flushing As Integer) As Boolean
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
-		  mLastError = zlib.gzflush(gzFile, Z_PARTIAL_FLUSH)
-		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
-		End Sub
+		  mLastError = zlib.gzflush(gzFile, Flushing)
+		  Return mLastError <> Z_OK
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
@@ -128,7 +116,7 @@ Implements Readable,Writeable
 		Sub Level(Assigns NewLevel As Integer)
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
-		  mLastError = zlib.gzsetparams(gzFile, NewLevel, Me.Strategy)
+		  mLastError = zlib.gzsetparams(gzFile, NewLevel, mStrategy)
 		  If mLastError = Z_OK Then
 		    mLevel = NewLevel
 		  Else
@@ -179,7 +167,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Strategy(Assigns NewStrategy As Integer)
 		  If Not mIsWriteable Or gzFile = Nil Then Raise New IOException
-		  mLastError = zlib.gzsetparams(gzFile, Me.Level, NewStrategy)
+		  mLastError = zlib.gzsetparams(gzFile, mLevel, NewStrategy)
 		  If mLastError = Z_OK Then
 		    mStrategy = NewStrategy
 		  Else
