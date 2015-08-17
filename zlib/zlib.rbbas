@@ -74,6 +74,19 @@ Protected Module zlib
 		Private Soft Declare Function deflateInit_ Lib "zlib1" (ByRef Stream As z_stream, CompressionLevel As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
+	#tag Method, Flags = &h1
+		Protected Function GUnZip(InputFile As FolderItem, OutputStream As Writeable) As Boolean
+		  ' Decompress the InputFile and write it into OutputStream
+		  Dim gz As zlib.GZStream = zlib.GZStream.Open(InputFile)
+		  While Not gz.EOF
+		    OutputStream.Write(gz.Read(1024))
+		  Wend
+		  gz.Close
+		  Return True
+		  
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function gzclose Lib "zlib1" (gzFile As Ptr) As Integer
 	#tag EndExternalMethod
@@ -89,6 +102,21 @@ Protected Module zlib
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function gzflush Lib "zlib1" (gzFile As Ptr, Flush As Integer) As Integer
 	#tag EndExternalMethod
+
+	#tag Method, Flags = &h1
+		Protected Function GZip(InputStream As Readable, OutputFile As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Strategy As Integer = zlib.Z_DEFAULT_STRATEGY) As Boolean
+		  ' Compress the InputStream and write it to OutputFile
+		  Dim gz As zlib.GZStream = zlib.GZStream.Create(OutputFile)
+		  If CompressionLevel <> Z_DEFAULT_COMPRESSION Then gz.Level = CompressionLevel
+		  If Strategy <> Z_DEFAULT_STRATEGY Then gz.Strategy = Strategy
+		  While Not InputStream.EOF
+		    gz.Write(InputStream.Read(1024))
+		  Wend
+		  gz.Close
+		  Return True
+		  
+		End Function
+	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function gzoffset Lib "zlib1" (gzFile As Ptr) As Integer
