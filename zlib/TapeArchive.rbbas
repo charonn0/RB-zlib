@@ -5,6 +5,7 @@ Protected Class TapeArchive
 		  Dim header As FileHeader
 		  header.Name = File.Name
 		  header.Length = Oct(File.Length)
+		  header.Checksum = Encodings.ASCII.Chr(32) + Encodings.ASCII.Chr(32) + Oct(GetCheckSum(header))
 		  Me.Reset
 		  While Me.MoveNext()
 		    App.YieldToNextThread
@@ -28,6 +29,9 @@ Protected Class TapeArchive
 		Sub Close()
 		  If mArchive <> Nil Then
 		    If mDirty Then
+		      Me.Pad()
+		      mArchive.Write(Encodings.ASCII.Chr(0))
+		      Me.Pad()
 		      mArchive.Write(Encodings.ASCII.Chr(0))
 		      Me.Pad()
 		    End If
@@ -82,8 +86,29 @@ Protected Class TapeArchive
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Shared Function GetCheckSum(TarHeader As FileHeader) As UInt32
+		  Dim tmpmb As MemoryBlock = TarHeader.StringValue(TargetLittleEndian)
+		  Dim chksum As UInt32
+		  For i as Integer = 0 To 499
+		    Try
+		      If i = 148 Then
+		        i = 156
+		        chksum = chksum + UInt32(32 * 8) ' spaces
+		      End If
+		      Dim b As UInt8 = tmpmb.UInt8Value(i)
+		      chksum = chksum + b
+		    Catch Err As OutOfBoundsException
+		      Exit For
+		    End Try
+		  Next
+		  Return chksum
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable = Nil) As Boolean
+		  Dim chksum As UInt32
 		  If ExtractTo <> Nil And mIndex > -1 Then
 		    Dim sz As Integer = Val("&o" + mHeader.Length.Trim)
 		    Dim blk As Integer = ((sz \ 512) * 512) + 512
@@ -99,7 +124,8 @@ Protected Class TapeArchive
 		  Try
 		    #pragma BreakOnExceptions Off
 		    header.StringValue(TargetLittleEndian) = mb.StringValue(0, header.Size)
-		    If header.Name.Trim = "" Then 
+		    #pragma BreakOnExceptions On
+		    If header.Name.Trim = "" Then
 		      mArchive.Position = lastpos
 		      Return False
 		    End If
@@ -107,6 +133,9 @@ Protected Class TapeArchive
 		    mArchive.Position = lastpos
 		    Return False
 		  End Try
+		  If Val("&o" + header.Checksum.Trim) <> GetCheckSum(header) Then 
+		    Raise New IOException
+		  End If
 		  mHeader = header
 		  mIndex = mIndex + 1
 		  Return True
@@ -115,7 +144,7 @@ Protected Class TapeArchive
 
 	#tag Method, Flags = &h21
 		Private Sub Pad()
-		  Dim sizetoadd As UInt64 = (mArchive.Length Mod 512)
+		  Dim sizetoadd As UInt64 = 512 - (mArchive.Length Mod 512)
 		  If sizetoadd <= 0 Then Return
 		  Dim pos As UInt64 = mArchive.Position
 		  Dim len As UInt64 = mArchive.Length
