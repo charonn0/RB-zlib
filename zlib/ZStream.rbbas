@@ -3,27 +3,22 @@ Protected Class ZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
-		  If mOutStream <> Nil Then ' Compressing
-		    Do Until zstream.avail_in <= 0
-		      mLastError = zlib.deflate(zstream, Z_PARTIAL_FLUSH)
-		    Loop Until mLastError <> Z_OK
-		    If zstream.avail_out > 0 Then
-		      Dim outdata As MemoryBlock = zstream.next_out
-		      mOutstream.Write(outdata.StringValue(0, zstream.avail_out))
-		    End If
-		  Else
-		    mLastError = zlib.inflate(zstream, Z_FINISH)
+		  If zstream <> Nil Then 
+		    zstream.Close()
+		    mLastError = zstream.LastError
 		  End If
-		  
+		  zstream = Nil
+		  mReadBuffer = Nil
+		  mOutStream = Nil
+		  mInStream = Nil
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub Constructor(zStruct As z_stream)
-		  zstream = zStruct
-		  mOutData = New MemoryBlock(262144)
-		  zstream.next_out = mOutData
-		  zstream.avail_out = mOutData.Size
+		Protected Sub Constructor(ByRef zStruct As z_stream, Deflate As Boolean)
+		  zstream = New ZStreamPtr(zStruct, Deflate)
+		  AddHandler zstream.DataAvailable, WeakAddressOf _DataAvailableHandler
+		  AddHandler zstream.DataNeeded, WeakAddressOf _DataNeededHandler
 		End Sub
 	#tag EndMethod
 
@@ -33,13 +28,19 @@ Implements Readable,Writeable
 		  zstruct.opaque = GenOpaque()
 		  Dim err As Integer = deflateInit_(zstruct, CompressionLevel, zlib.Version, zstruct.Size)
 		  If err = Z_OK Then
-		    Dim stream As New zlib.ZStream(zstruct)
+		    Dim stream As New zlib.ZStream(zstruct, True)
 		    stream.mOutStream = Output
 		    Return stream
 		  Else
 		    Raise New zlibException(err)
 		  End If
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Destructor()
+		  Me.Close()
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -52,9 +53,10 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Flush()
 		  // Part of the Writeable interface.
-		  Do Until zstream.avail_in <= 0
-		    mLastError = zlib.deflate(zstream, Z_PARTIAL_FLUSH)
+		  Do Until mInStream.EOF
+		    mLastError = zstream.Poll(Z_PARTIAL_FLUSH)
 		  Loop Until mLastError <> Z_OK
+		  mOutStream.Flush
 		End Sub
 	#tag EndMethod
 
@@ -72,7 +74,7 @@ Implements Readable,Writeable
 		  zstruct.opaque = GenOpaque()
 		  Dim err As Integer = inflateInit_(zstruct, zlib.Version, zstruct.Size)
 		  If err = Z_OK Then
-		    Dim stream As New zlib.ZStream(zstruct)
+		    Dim stream As New zlib.ZStream(zstruct, False)
 		    stream.mInStream = InputStream
 		    Return stream
 		  Else
@@ -84,17 +86,25 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
-		  Dim zdata As MemoryBlock = mInStream.Read(Count)
-		  zstream.next_in = zdata
-		  zstream.avail_in = zdata.Size
 		  
-		  Dim odata As New MemoryBlock(Count * 4)
-		  zstream.next_out = odata
-		  zstream.avail_out = odata.Size
-		  mLastError = inflate(zstream, 0)
+		  Dim bs As BinaryStream
+		  If mOutStream = Nil Then 
+		    mReadBuffer = New MemoryBlock(0)
+		    bs = New BinaryStream(mReadBuffer)
+		    bs.Position = bs.Length
+		    mOutStream = bs
+		  End If
+		  
+		  Do Until mInStream.EOF
+		    mLastError = zstream.Poll()
+		  Loop Until mLastError <> Z_OK
 		  
 		  If mLastError = Z_OK Or mLastError = Z_STREAM_END Then
-		    Return DefineEncoding(odata, encoding)
+		    If bs = Nil Then bs = BinaryStream(mOutStream)
+		    bs.Position = 0
+		    Dim data As String = bs.Read(Count, encoding)
+		    bs.Position = Min(bs.Length - Count, Count)
+		    Return data
 		  Else
 		    Raise New zlibException(mLastError)
 		  End If
@@ -112,22 +122,20 @@ Implements Readable,Writeable
 		Sub Write(text As String)
 		  // Part of the Writeable interface.
 		  'writes to a compressed stream
-		  Dim indata As New MemoryBlock(text.LenB)
-		  zstream.next_in = indata
-		  zstream.avail_in = indata.Size
-		  'Dim outdata As New MemoryBlock(indata.Size * 1.1 + 13)
-		  'zstream.next_out = outdata
-		  'zstream.avail_out = outdata.Size
 		  
-		  Do Until zstream.avail_in <= 0
-		    mLastError = zlib.deflate(zstream, Z_NO_FLUSH)
-		  Loop Until mLastError <> Z_OK
-		  
-		  If zstream.total_out > 0 Then
-		    Dim data As MemoryBlock = zstream.next_out
-		    data = data.StringValue(0, zstream.total_out)
-		    mOutstream.Write(data)
+		  Dim bs As BinaryStream
+		  If mInStream = Nil Then
+		    bs = New BinaryStream(text)
+		    mInStream = bs
+		  Else
+		    bs = BinaryStream(mInStream)
+		    bs.Position = bs.Length
+		    bs.Write(text)
 		  End If
+		  bs.Position = 0
+		  Do Until mInStream.EOF
+		    mLastError = zstream.Poll
+		  Loop Until mLastError <> Z_OK
 		  
 		End Sub
 	#tag EndMethod
@@ -136,6 +144,25 @@ Implements Readable,Writeable
 		Function WriteError() As Boolean
 		  // Part of the Writeable interface.
 		  Return mOutStream.WriteError
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub _DataAvailableHandler(Sender As ZStreamPtr, NewData As MemoryBlock)
+		  #pragma Unused Sender
+		  If NewData <> Nil Then 
+		    mOutStream.Write(NewData)
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function _DataNeededHandler(Sender As ZStreamPtr, ByRef Data As MemoryBlock, MaxLength As Integer) As Boolean
+		  #pragma Unused Sender
+		  If mInStream <> Nil Then 
+		    Data = mInStream.Read(MaxLength)
+		  End If
+		  Return Data <> Nil And Data.Size > 0
 		End Function
 	#tag EndMethod
 
@@ -149,19 +176,19 @@ Implements Readable,Writeable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mOutData As MemoryBlock
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private mOutStream As Writeable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private zstream As z_stream
+		Private mReadBuffer As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private zstream As ZStreamPtr
 	#tag EndProperty
 
 
-	#tag Constant, Name = Z_NO_FLUSH, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
+	#tag Constant, Name = BufferSize, Type = Double, Dynamic = False, Default = \"262144", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = Z_STREAM_END, Type = Double, Dynamic = False, Default = \"1", Scope = Protected

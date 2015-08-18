@@ -63,11 +63,11 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflate Lib "zlib1" (ByRef Stream As z_stream, Flush As Integer) As Integer
+		Private Soft Declare Function deflate Lib "zlib1" (Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateEnd Lib "zlib1" (ByRef Stream As z_stream) As Integer
+		Private Soft Declare Function deflateEnd Lib "zlib1" (Stream As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -143,7 +143,11 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflate Lib "zlib1" (ByRef Stream As z_stream, Flush As Integer) As Integer
+		Private Soft Declare Function inflate Lib "zlib1" (Stream As z_stream, Flush As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflateEnd Lib "zlib1" (Stream As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -238,6 +242,9 @@ Protected Module zlib
 	#tag Constant, Name = Z_MEM_ERROR, Type = Double, Dynamic = False, Default = \"-4", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = Z_NO_FLUSH, Type = Double, Dynamic = False, Default = \"0", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = Z_OK, Type = Double, Dynamic = False, Default = \"0", Scope = Private
 	#tag EndConstant
 
@@ -245,6 +252,9 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = Z_STREAM_ERROR, Type = Double, Dynamic = False, Default = \"-2", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = Z_SYNC_FLUSH, Type = Double, Dynamic = False, Default = \"2", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = Z_VERSION_ERROR, Type = Double, Dynamic = False, Default = \"-6", Scope = Private
