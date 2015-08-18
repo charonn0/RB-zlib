@@ -7,7 +7,7 @@ Protected Module zlib
 		  '    While True
 		  '      adler = Adler32(NextInputData, adler)
 		  '    Wend
-		  
+		  If Not zlib.IsAvailable Then Return 0
 		  If NewData <> Nil Then
 		    Return _adler32(LastAdler, NewData, NewData.Size)
 		  Else
@@ -18,6 +18,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION) As MemoryBlock
+		  If Not zlib.IsAvailable Then Return Nil
 		  Dim cb As UInt32 = zlib.compressBound(Data.Size)
 		  Dim out As New MemoryBlock(cb)
 		  Dim err As Integer
@@ -54,6 +55,7 @@ Protected Module zlib
 		  '      crc = CRC32(NextInputData, crc)
 		  '    Wend
 		  
+		  If Not zlib.IsAvailable Then Return 0
 		  If NewData <> Nil Then
 		    Return _crc32(LastCRC, NewData, NewData.Size)
 		  Else
@@ -77,6 +79,8 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(InputFile As FolderItem, OutputStream As Writeable) As Boolean
 		  ' Decompress the InputFile and write it into OutputStream
+		  
+		  If Not zlib.IsAvailable Then Return False
 		  Dim gz As zlib.GZStream = zlib.GZStream.Open(InputFile)
 		  While Not gz.EOF
 		    OutputStream.Write(gz.Read(1024))
@@ -106,6 +110,8 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function GZip(InputStream As Readable, OutputFile As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Strategy As Integer = zlib.Z_DEFAULT_STRATEGY) As Boolean
 		  ' Compress the InputStream and write it to OutputFile
+		  
+		  If Not zlib.IsAvailable Then Return False
 		  Dim gz As zlib.GZStream = zlib.GZStream.Create(OutputFile)
 		  If CompressionLevel <> Z_DEFAULT_COMPRESSION Then gz.Level = CompressionLevel
 		  If Strategy <> Z_DEFAULT_STRATEGY Then gz.Strategy = Strategy
@@ -165,6 +171,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1) As MemoryBlock
+		  If Not zlib.IsAvailable Then Return Nil
 		  If ExpandedSize <= 0 Then ExpandedSize = Data.Size * 1.1 + 12
 		  Dim out As MemoryBlock
 		  Dim outsz As UInt32
@@ -183,6 +190,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Version() As String
+		  If Not zlib.IsAvailable Then Return ""
 		  Dim mb As MemoryBlock = zlib.zlibVersion
 		  Return mb.CString(0)
 		End Function
