@@ -7,6 +7,7 @@ Module=zlib;zlib/zlib.rbbas;&h5A1247FF;&h0;false
 Class=ZStream;zlib/ZStream.rbbas;&h412B2FFF;&h5A1247FF;false
 Class=GZStream;zlib/GZStream.rbbas;&h6F1F97FF;&h5A1247FF;false
 Class=zlibException;zlib/zlibException.rbbas;&h1116D7FF;&h5A1247FF;false
+FileTypeSet=FileTypes1;FileTypes1.rbbas;&h649F97FF;&h0;false
 MajorVersion=1
 MinorVersion=0
 SubVersion=0
