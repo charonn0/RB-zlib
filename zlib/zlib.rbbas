@@ -100,10 +100,6 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzerror Lib "zlib1" (gzFile As Ptr, ByRef ErrorNum As Integer) As Ptr
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function gzflush Lib "zlib1" (gzFile As Ptr, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
@@ -169,6 +165,25 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function IsGZipped(Extends TargetFile As FolderItem) As Boolean
+		  //Checks the GZip magic number. Returns True if the source file is likely a GZip archive
+		  
+		  If TargetFile.Directory Or Not TargetFile.Exists Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsGZ As Boolean
+		  Try
+		    bs = bs.Open(TargetFile)
+		    If bs.ReadByte = &h1F And bs.ReadByte = &h8B Then IsGZ = True
+		  Catch
+		    IsGZ = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsGZ
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1) As MemoryBlock
 		  If Not zlib.IsAvailable Then Return Nil
@@ -222,6 +237,10 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function _get_errno Lib "msvcrt" (ByRef errno As Integer) As Boolean
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function _gzerror Lib "zlib1" Alias "gzerror" (gzFile As Ptr, ByRef ErrorNum As Integer) As Ptr
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21

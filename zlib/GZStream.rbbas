@@ -12,23 +12,27 @@ Implements Readable,Writeable
 		Protected Sub Constructor(gzOpaque As Ptr)
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  gzFile = gzOpaque
+		  gzError() ' set LastError
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(OutputFile As FolderItem, Append As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.GZStream
+		 Shared Function Create(OutputFile As FolderItem, Append As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY) As zlib.GZStream
 		  ' Creates an empty gzip stream
 		  If OutputFile = Nil Or OutputFile.Directory Then Raise New IOException
 		  Dim mode As String = "wb"
 		  If Append Then mode = "ab"
-		  If CompressionLevel <> Z_DEFAULT_COMPRESSION Then 
+		  If CompressionLevel <> Z_DEFAULT_COMPRESSION Then
 		    If CompressionLevel < 0 Or CompressionLevel > 9 Then
 		      Break ' Invalid CompressionLevel
 		    Else
 		      mode = mode + Str(CompressionLevel)
 		    End If
 		  End If
-		  Return gzOpen(OutputFile, mode)
+		  Dim z As GZStream = gzOpen(OutputFile, mode)
+		  z.mLevel = CompressionLevel
+		  z.Strategy = CompressionStrategy
+		  Return z
 		End Function
 	#tag EndMethod
 
@@ -47,8 +51,8 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		Sub FinishBlock()
-		  ' A stronger version of Flush(). All remaining data is written and the gzip stream is completed in the output. If GZStream.Write is 
-		  ' called again, a new gzip stream will be started in the output. GZStream.Read is able to read such concatented gzip streams. This 
+		  ' A stronger version of Flush(). All remaining data is written and the gzip stream is completed in the output. If GZStream.Write is
+		  ' called again, a new gzip stream will be started in the output. GZStream.Read is able to read such concatented gzip streams. This
 		  ' will severely impact compression ratios, even into the negative.
 		  
 		  If Not Me.Flush(Z_FINISH) Then Raise New zlibException(mLastError)
@@ -75,12 +79,9 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function gzError() As Integer
-		  If gzFile <> Nil Then
-		    mLastMsg = zlib.gzerror(gzFile, mLastError)
-		    Return mLastError
-		  End If
-		End Function
+		Protected Sub gzError()
+		  If gzFile <> Nil Then mLastMsg = zlib._gzerror(gzFile, mLastError)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
@@ -102,6 +103,21 @@ Implements Readable,Writeable
 		    #Else
 		      Raise New IOException
 		    #EndIf
+		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LastError() As Integer
+		  Return mLastError
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LastErrorMsg() As CString
+		  If mLastMsg <> Nil Then
+		    Dim mb As MemoryBlock = mLastMsg
+		    Return mb.CString(0)
 		  End If
 		End Function
 	#tag EndMethod
@@ -144,7 +160,7 @@ Implements Readable,Writeable
 		  If gzFile = Nil Then Raise New NilObjectException
 		  Dim mb As New MemoryBlock(Count)
 		  Dim red As Integer = zlib.gzread(gzFile, mb, mb.Size)
-		  Call gzError()
+		  gzError() ' set LastError
 		  If red > 0 Then
 		    Return DefineEncoding(mb.StringValue(0, red), encoding)
 		  End If
@@ -154,7 +170,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function ReadError() As Boolean
 		  // Part of the Readable interface.
-		  Return gzError <> 0
+		  Return mLastError <> Z_OK
 		End Function
 	#tag EndMethod
 
@@ -185,9 +201,11 @@ Implements Readable,Writeable
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
 		  Dim mb As MemoryBlock = text
-		  If zlib.gzwrite(gzFile, mb, text.LenB) <> text.LenB Then
-		    Call gzError()
-		    Raise New IOException
+		  If zlib.gzwrite(gzFile, mb, mb.Size) <> text.LenB Then 
+		    gzError() ' set LastError
+		    Raise New zlibException(mLastError)
+		  Else
+		    gzError() ' set LastError
 		  End If
 		End Sub
 	#tag EndMethod
@@ -195,7 +213,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function WriteError() As Boolean
 		  // Part of the Writeable interface.
-		  Return gzError() <> 0
+		  Return mLastError <> Z_OK
 		End Function
 	#tag EndMethod
 
