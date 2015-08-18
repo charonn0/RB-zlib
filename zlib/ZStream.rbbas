@@ -15,7 +15,7 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub Constructor(ByRef zStruct As z_stream, Deflate As Boolean)
+		Protected Sub Constructor(zStruct As Ptr, Deflate As Boolean)
 		  zstream = New ZStreamPtr(zStruct, Deflate)
 		  AddHandler zstream.DataAvailable, WeakAddressOf _DataAvailableHandler
 		  AddHandler zstream.DataNeeded, WeakAddressOf _DataNeededHandler
@@ -24,8 +24,8 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZStream
-		  Dim zstruct As z_stream
-		  zstruct.opaque = GenOpaque()
+		  Dim zstruct As New MemoryBlock(z_stream.Size)
+		  zstruct.Ptr(40) = GenOpaque()
 		  Dim err As Integer = deflateInit_(zstruct, CompressionLevel, zlib.Version, zstruct.Size)
 		  If err = Z_OK Then
 		    Dim stream As New zlib.ZStream(zstruct, True)
@@ -70,8 +70,8 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function Open(InputStream As Readable) As zlib.ZStream
-		  Dim zstruct As z_stream
-		  zstruct.opaque = GenOpaque()
+		  Dim zstruct As New MemoryBlock(z_stream.Size)
+		  zstruct.Ptr(40) = GenOpaque()
 		  Dim err As Integer = inflateInit_(zstruct, zlib.Version, zstruct.Size)
 		  If err = Z_OK Then
 		    Dim stream As New zlib.ZStream(zstruct, False)

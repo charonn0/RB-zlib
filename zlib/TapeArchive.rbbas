@@ -94,7 +94,7 @@ Protected Class TapeArchive
 		    Try
 		      If i = 148 Then
 		        i = 156
-		        chksum = chksum + UInt32(32 * 8) ' spaces
+		        chksum = chksum + UInt32(32 * 8) ' 8 spaces
 		      End If
 		      Dim b As UInt8 = tmpmb.UInt8Value(i)
 		      chksum = chksum + b
@@ -132,7 +132,7 @@ Protected Class TapeArchive
 		    mArchive.Position = lastpos
 		    Return False
 		  End Try
-		  If Val("&o" + header.Checksum.Trim) <> GetCheckSum(header) Then 
+		  If Val("&o" + header.Checksum.Trim) <> GetCheckSum(header) Then
 		    Raise New IOException
 		  End If
 		  mHeader = header
