@@ -3,11 +3,14 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  'If Not TestZStreamRead(TestZStreamWrite) Then MsgBox("ZStream failed")
-		  If Not TestCompress() Then MsgBox("Compression failed")
-		  If Not TestGZAppend() Then MsgBox("gzip append failed")
-		  If Not TestGZWrite() Then MsgBox("gzip failed")
-		  If Not TestGZRead() Then MsgBox("gunzip failed")
+		  ''If Not TestZStreamRead(TestZStreamWrite) Then MsgBox("ZStream failed")
+		  'If Not TestCompress() Then MsgBox("Compression failed")
+		  'If Not TestGZAppend() Then MsgBox("gzip append failed")
+		  'If Not TestGZWrite() Then MsgBox("gzip failed")
+		  'If Not TestGZRead() Then MsgBox("gunzip failed")
+		  If Not TestTar() Then MsgBox("Tar failed")
+		  If Not TestUntar() Then MsgBox("Untar failed")
+		  If Not TestTarAppend() Then MsgBox("Tar append failed")
 		End Sub
 	#tag EndEvent
 
@@ -38,11 +41,6 @@ Inherits Application
 		  Dim gz As zlib.GZStream = zlib.GZStream.Create(g, True)
 		  While Not bs.EOF
 		    gz.Write(bs.Read(1024))
-		    If gz.LastError <> 0 Or gz.LastErrorMsg <> "" Then
-		      Dim err As Integer = gz.LastError
-		      Dim msg As String = gz.LastErrorMsg
-		      Break
-		    End If
 		  Wend
 		  gz.Close
 		  Return True
@@ -62,11 +60,6 @@ Inherits Application
 		  Dim bs As BinaryStream = BinaryStream.Create(g, True)
 		  While Not gz.EOF
 		    bs.Write(gz.Read(1024))
-		    If gz.LastError <> 0 Or gz.LastErrorMsg <> "" Then
-		      Dim err As Integer = gz.LastError
-		      Dim msg As String = gz.LastErrorMsg
-		      Break
-		    End If
 		  Wend
 		  bs.Close
 		  gz.Close
@@ -90,16 +83,50 @@ Inherits Application
 		  gz.Strategy = 3
 		  While Not bs.EOF
 		    gz.Write(bs.Read(1024))
-		    If gz.LastError <> 0 Or gz.LastErrorMsg <> "" Then
-		      Dim err As Integer = gz.LastError
-		      Dim msg As String = gz.LastErrorMsg
-		      Break
-		    End If
 		  Wend
 		  bs.Close
 		  gz.Close
 		  Return True
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestTar() As Boolean
+		  Dim tar As New zlib.TapeArchive(GetSaveFolderItem(FileTypes1.ApplicationXTar, "test"))
+		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  tar.Close
+		  Return True
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestTarAppend() As Boolean
+		  Dim tar As New zlib.TapeArchive(GetOpenFolderItem(FileTypes1.ApplicationXTar))
+		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  tar.Close
+		  Return True
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestUntar() As Boolean
+		  Dim tar As New zlib.TapeArchive(GetOpenFolderItem(FileTypes1.ApplicationXTar))
+		  Dim bs As BinaryStream
+		  Dim target As FolderItem = SelectFolder()
+		  Do
+		    If bs <> Nil Then bs.Close
+		    Dim f As FolderItem = target.Child(tar.CurrentName)
+		    bs = BinaryStream.Create(f, True)
+		  Loop Until Not tar.MoveNext(bs)
+		  tar.Close
+		  Return True
 		End Function
 	#tag EndMethod
 

@@ -29,8 +29,8 @@ Protected Class TapeArchive
 		Sub Close()
 		  If mArchive <> Nil Then
 		    If mDirty Then
-		      Me.Pad()
-		      mArchive.Write(Encodings.ASCII.Chr(0))
+		      'Me.Pad()
+		      'mArchive.Write(Encodings.ASCII.Chr(0))
 		      Me.Pad()
 		      mArchive.Write(Encodings.ASCII.Chr(0))
 		      Me.Pad()
@@ -108,7 +108,6 @@ Protected Class TapeArchive
 
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable = Nil) As Boolean
-		  Dim chksum As UInt32
 		  If ExtractTo <> Nil And mIndex > -1 Then
 		    Dim sz As Integer = Val("&o" + mHeader.Length.Trim)
 		    Dim blk As Integer = ((sz \ 512) * 512) + 512
