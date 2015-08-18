@@ -185,6 +185,24 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem) As FolderItem()
+		  ' Extracts a TAR file to the ExtractTo directory
+		  Dim tar As New TapeArchive(TarFile)
+		  Dim bs As BinaryStream
+		  Dim fs() As FolderItem
+		  Do
+		    If bs <> Nil Then bs.Close
+		    Dim g As FolderItem = ExtractTo.Child(tar.CurrentName)
+		    bs = BinaryStream.Create(g)
+		    fs.Append(g)
+		  Loop Until Not tar.MoveNext(bs)
+		  bs.Close
+		  tar.Close
+		  Return fs
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1) As MemoryBlock
 		  If Not zlib.IsAvailable Then Return Nil
 		  If ExpandedSize <= 0 Then ExpandedSize = Data.Size * 1.1 + 12
@@ -208,6 +226,20 @@ Protected Module zlib
 		  If Not zlib.IsAvailable Then Return ""
 		  Dim mb As MemoryBlock = zlib.zlibVersion
 		  Return mb.CString(0)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
+		  ' Creates a TAR file of the ToArchive FolderItems
+		  Dim tar As New TapeArchive(OutputFile)
+		  For i As Integer = 0 To UBound(ToArchive)
+		    If Not tar.AppendFile(ToArchive(i)) Then Return False
+		  Next
+		  tar.Close
+		  Return True
+		  
+		  
 		End Function
 	#tag EndMethod
 
