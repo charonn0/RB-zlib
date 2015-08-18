@@ -4,17 +4,18 @@
 ##Examples
 This example compresses and decompresses a string in memory:
 ```vbnet
- Dim compressed As String = zlib.Compress("InputData")
+ Dim compressed As String = zlib.Compress("Hello, world!")
  Dim decompressed As String = zlib.Uncompress(compressed)
 ```
 
-This example creates gzips a file:
+This example gzips a file:
 
 ```vbnet
   Dim f As FolderItem = GetSaveFolderItem("") ' a file to be gzipped
   If f <> Nil Then
     Dim bs As BinaryStream = BinaryStream.Open(f)
-    Dim gz As zlib.GZStream = zlib.GZStream.Create(f.Parent.Child(f.Name + ".gz"))
+    Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
+    Dim gz As zlib.GZStream = zlib.GZStream.Create(g)
     gz.Level = 9 ' set the compression level as desired
     While Not bs.EOF
       gz.Write(bs.Read(1024))
