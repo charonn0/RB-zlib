@@ -29,11 +29,13 @@ Protected Class TapeArchive
 		Sub Close()
 		  If mArchive <> Nil Then
 		    If mDirty Then
+		      Me.Flush
+		      'Me.Flush
+		      ''Me.Pad()
+		      ''mArchive.Write(Encodings.ASCII.Chr(0))
 		      'Me.Pad()
 		      'mArchive.Write(Encodings.ASCII.Chr(0))
-		      Me.Pad()
-		      mArchive.Write(Encodings.ASCII.Chr(0))
-		      Me.Pad()
+		      'Me.Pad()
 		    End If
 		    mArchive.Close
 		    mArchive = Nil
@@ -82,6 +84,16 @@ Protected Class TapeArchive
 
 	#tag Method, Flags = &h0
 		Sub Flush()
+		  'Dim header As FileHeader
+		  'header.Name = ""
+		  'header.Length = Oct(0)
+		  'header.Checksum = Encodings.ASCII.Chr(32) + Encodings.ASCII.Chr(32) + Oct(GetCheckSum(header))
+		  Me.Pad()
+		  Dim mb As New MemoryBlock(1024)
+		  'mb.StringValue(0, header.Size) = header.StringValue(TargetLittleEndian)
+		  mArchive.Write(mb)
+		  'Me.Pad()
+		  
 		  mArchive.Flush
 		End Sub
 	#tag EndMethod
@@ -108,6 +120,9 @@ Protected Class TapeArchive
 
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable = Nil) As Boolean
+		  ' Advances to the next file in the archive. If there are no more files then this method returns False.
+		  ' If ExtractTo is not Nil then the current file is written to that object *before* advancing.
+		  
 		  If ExtractTo <> Nil And mIndex > -1 Then
 		    Dim sz As Integer = Val("&o" + mHeader.Length.Trim)
 		    Dim blk As Integer = ((sz \ 512) * 512) + 512
@@ -143,15 +158,11 @@ Protected Class TapeArchive
 
 	#tag Method, Flags = &h21
 		Private Sub Pad()
-		  Dim sizetoadd As UInt64 = 512 - (mArchive.Length Mod 512)
-		  If sizetoadd <= 0 Then Return
-		  Dim pos As UInt64 = mArchive.Position
-		  Dim len As UInt64 = mArchive.Length
-		  mArchive.Position = len
-		  For i As Integer = 0 To sizetoadd
-		    mArchive.Write(Encodings.ASCII.Chr(0))
-		  Next
-		  mArchive.Position = pos
+		  Dim sizetoadd As UInt64 = mArchive.Length Mod 512
+		  If sizetoadd = 0 Then Return
+		  sizetoadd = 512 - sizetoadd
+		  Dim mb As New MemoryBlock(sizetoadd)
+		  mArchive.Write(mb)
 		End Sub
 	#tag EndMethod
 
