@@ -191,7 +191,7 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem) As FolderItem()
 		  ' Extracts a TAR file to the ExtractTo directory
-		  Dim tar As New TapeArchive(TarFile)
+		  Dim tar As TapeArchive = zlib.TapeArchive.Open(TarFile)
 		  Dim bs As BinaryStream
 		  Dim fs() As FolderItem
 		  Do
@@ -243,8 +243,13 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
-		  ' Creates a TAR file of the ToArchive FolderItems
-		  Dim tar As New TapeArchive(OutputFile)
+		  ' Creates/appends a TAR file with the ToArchive FolderItems
+		  Dim tar As zlib.TapeArchive
+		  If OutputFile.Exists Then
+		    tar = zlib.TapeArchive.Open(OutputFile)
+		  Else
+		    tar = zlib.TapeArchive.Create(OutputFile)
+		  End If
 		  For i As Integer = 0 To UBound(ToArchive)
 		    If Not tar.AppendFile(ToArchive(i)) Then Return False
 		  Next
