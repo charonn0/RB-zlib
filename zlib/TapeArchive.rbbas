@@ -46,16 +46,19 @@ Protected Class TapeArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(TARFile As FolderItem)
-		  mArchiveFile = TARFile
-		  If mArchiveFile.Exists Then
-		    mArchive = BinaryStream.Open(mArchiveFile, True)
-		    Me.Reset()
-		  Else
-		    mArchive = BinaryStream.Create(mArchiveFile, True)
-		  End If
-		  
+		Sub Constructor(TARStream As BinaryStream)
+		  mArchive = TARStream
+		  Me.Reset
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function Create(TARFile As FolderItem, OverWrite As Boolean = False) As zlib.TapeArchive
+		  Dim bs As BinaryStream
+		  bs = BinaryStream.Create(TARFile, OverWrite)
+		  Return New zlib.TapeArchive(bs)
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -156,6 +159,14 @@ Protected Class TapeArchive
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		 Shared Function Open(TARFile As FolderItem, ReadWrite As Boolean = True) As zlib.TapeArchive
+		  Dim bs As BinaryStream = BinaryStream.Open(TARFile, ReadWrite)
+		  If bs <> Nil Then Return New zlib.TapeArchive(bs)
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Pad()
 		  Dim sizetoadd As UInt64 = mArchive.Length Mod 512
@@ -177,10 +188,6 @@ Protected Class TapeArchive
 
 	#tag Property, Flags = &h21
 		Private mArchive As BinaryStream
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mArchiveFile As FolderItem
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
