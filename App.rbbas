@@ -9,7 +9,7 @@ Inherits Application
 		  'If Not TestGZWrite() Then MsgBox("gzip failed")
 		  'If Not TestGZRead() Then MsgBox("gunzip failed")
 		  If Not TestTar() Then MsgBox("Tar failed")
-		  If Not TestUntar() Then MsgBox("Untar failed")
+		  'If Not TestUntar() Then MsgBox("Untar failed")
 		  If Not TestTarAppend() Then MsgBox("Tar append failed")
 		End Sub
 	#tag EndEvent
@@ -33,7 +33,7 @@ Inherits Application
 	#tag Method, Flags = &h0
 		Function TestGZAppend() As Boolean
 		  Dim dlg As New OpenDialog
-		  dlg.Title = "Select a file to GZip"
+		  dlg.Title = CurrentMethodName + " - Select a file to GZip"
 		  Dim f As FolderItem = dlg.ShowModal
 		  If f = Nil Then Return False
 		  Dim bs As BinaryStream = BinaryStream.Open(f)
@@ -51,7 +51,7 @@ Inherits Application
 	#tag Method, Flags = &h0
 		Function TestGZRead() As Boolean
 		  Dim dlg As New OpenDialog
-		  dlg.Title = "Select a GZip file to read"
+		  dlg.Title = CurrentMethodName + " - Select a GZip file to read"
 		  Dim f As FolderItem = dlg.ShowModal
 		  dlg.Filter = FileTypes1.ApplicationXGzip
 		  If f = Nil Then Return False
@@ -71,7 +71,7 @@ Inherits Application
 	#tag Method, Flags = &h0
 		Function TestGZWrite() As Boolean
 		  Dim dlg As New OpenDialog
-		  dlg.Title = "Select a file to GZip"
+		  dlg.Title = CurrentMethodName + " - Select a file to GZip"
 		  Dim f As FolderItem = dlg.ShowModal
 		  If f = Nil Then Return False
 		  Dim bs As BinaryStream = BinaryStream.Open(f)
@@ -93,11 +93,20 @@ Inherits Application
 
 	#tag Method, Flags = &h0
 		Function TestTar() As Boolean
-		  Dim tar As New zlib.TapeArchive(GetSaveFolderItem(FileTypes1.ApplicationXTar, "test"))
-		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
-		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
-		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
-		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  Dim sdlg As New SaveAsDialog
+		  sdlg.Title = CurrentMethodName + " - Create TAR file"
+		  sdlg.Filter = FileTypes1.ApplicationXTar
+		  sdlg.SuggestedFileName = "TestArchive"
+		  Dim f As FolderItem = sdlg.ShowModal
+		  If f = Nil Then Return False
+		  Dim tar As zlib.TapeArchive = zlib.TapeArchive.Create(f)
+		  Dim odlg As New OpenDialog
+		  odlg.Title = CurrentMethodName + " - Add files to TAR"
+		  odlg.MultiSelect = True
+		  If odlg.ShowModal = Nil Then Return False
+		  For i As Integer = 0 To odlg.Count - 1
+		    If Not tar.AppendFile(odlg.Item(i)) Then Return False
+		  Next
 		  tar.Close
 		  Return True
 		End Function
@@ -105,11 +114,19 @@ Inherits Application
 
 	#tag Method, Flags = &h0
 		Function TestTarAppend() As Boolean
-		  Dim tar As New zlib.TapeArchive(GetOpenFolderItem(FileTypes1.ApplicationXTar))
-		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
-		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
-		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
-		  If Not tar.AppendFile(GetOpenFolderItem("")) Then Return False
+		  Dim odlg As New OpenDialog
+		  odlg.Title = CurrentMethodName + " - Open TAR file for appending"
+		  odlg.Filter = FileTypes1.ApplicationXTar
+		  Dim f As FolderItem = odlg.ShowModal
+		  If f = Nil Then Return False
+		  Dim tar As zlib.TapeArchive = zlib.TapeArchive.Open(f)
+		  odlg.Filter = ""
+		  odlg.Title = CurrentMethodName + " - Add files to TAR"
+		  odlg.MultiSelect = True
+		  If odlg.ShowModal = Nil Then Return False
+		  For i As Integer = 0 To odlg.Count - 1
+		    If Not tar.AppendFile(odlg.Item(i)) Then Return False
+		  Next
 		  tar.Close
 		  Return True
 		End Function
@@ -117,9 +134,20 @@ Inherits Application
 
 	#tag Method, Flags = &h0
 		Function TestUntar() As Boolean
-		  Dim tar As New zlib.TapeArchive(GetOpenFolderItem(FileTypes1.ApplicationXTar))
+		  Dim odlg As New OpenDialog
+		  odlg.Title = CurrentMethodName + " - Open TAR file for extraction"
+		  odlg.Filter = FileTypes1.ApplicationXTar
+		  
+		  Dim tarf As FolderItem = odlg.ShowModal
+		  If tarf = Nil Then Return False
+		  
+		  Dim sfdlg As New SelectFolderDialog
+		  sfdlg.Title = CurrentMethodName + " - Choose folder to extract into"
+		  Dim target As FolderItem = sfdlg.ShowModal
+		  If target = Nil Then Return False
+		  Dim tar As zlib.TapeArchive = zlib.TapeArchive(tarf)
 		  Dim bs As BinaryStream
-		  Dim target As FolderItem = SelectFolder()
+		  
 		  Do
 		    If bs <> Nil Then bs.Close
 		    Dim f As FolderItem = target.Child(tar.CurrentName)
