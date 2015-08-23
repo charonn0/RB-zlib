@@ -18,7 +18,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION) As MemoryBlock
-		  If Not zlib.IsAvailable Then Return Nil
+		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  Dim cb As UInt32 = zlib.compressBound(Data.Size)
 		  Dim out As New MemoryBlock(cb)
 		  Dim err As Integer
@@ -36,6 +36,10 @@ Protected Module zlib
 		    Case Z_BUF_ERROR
 		      out = New MemoryBlock(out.Size * 2)
 		      cb = out.Size
+		      
+		    Case Z_MEM_ERROR
+		      Raise New OutOfMemoryException
+		      
 		    End Select
 		  Loop Until err <> Z_BUF_ERROR
 		  If err <> Z_OK Then Raise New zlibException(err)
@@ -204,7 +208,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1) As MemoryBlock
-		  If Not zlib.IsAvailable Then Return Nil
+		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  If ExpandedSize <= 0 Then ExpandedSize = Data.Size * 1.1 + 12
 		  Dim out As MemoryBlock
 		  Dim outsz As UInt32
@@ -214,6 +218,14 @@ Protected Module zlib
 		    outsz = out.Size
 		    err = zlib._uncompress(out, outsz, Data, Data.Size)
 		    ExpandedSize = ExpandedSize * 2
+		    Select Case err
+		    Case Z_MEM_ERROR
+		      Raise New OutOfMemoryException
+		      
+		    Case Z_DATA_ERROR
+		      Raise New UnsupportedFormatException
+		      
+		    End Select
 		  Loop Until err <> Z_BUF_ERROR
 		  
 		  If err <> Z_OK Then Raise New zlibException(err)

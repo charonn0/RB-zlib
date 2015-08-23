@@ -3,7 +3,20 @@ Protected Class GZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
-		  If gzFile <> Nil Then mLastError = zlib.gzclose(gzFile)
+		  If gzFile <> Nil Then 
+		    mLastError = zlib.gzclose(gzFile)
+		    If mLastError = Z_ERRNO Then
+		      #If TargetWin32 Then
+		        If Not _get_errno(mLastError) Then
+		          Raise New IOException
+		        Else
+		          Raise New zlibException(mLastError)
+		        End If
+		      #Else
+		        Raise New IOException
+		      #EndIf
+		    End If
+		  End If
 		  gzFile = Nil
 		End Sub
 	#tag EndMethod
@@ -38,7 +51,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  Me.Close
+		  If gzFile <> Nil Then Me.Close
 		End Sub
 	#tag EndMethod
 
