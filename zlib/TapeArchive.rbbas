@@ -150,7 +150,7 @@ Protected Class TapeArchive
 		    mArchive.Position = lastpos
 		    Return False
 		  End Try
-		  If Val("&o" + header.Checksum.Trim) <> GetCheckSum(header) Then
+		  If ValidateChecksums And Val("&o" + header.Checksum.Trim) <> GetCheckSum(header) Then
 		    Raise New IOException
 		  End If
 		  mHeader = header
@@ -200,6 +200,10 @@ Protected Class TapeArchive
 
 	#tag Property, Flags = &h21
 		Private mIndex As Integer = -1
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		ValidateChecksums As Boolean = True
 	#tag EndProperty
 
 

@@ -145,7 +145,8 @@ Inherits Application
 		  sfdlg.Title = CurrentMethodName + " - Choose folder to extract into"
 		  Dim target As FolderItem = sfdlg.ShowModal
 		  If target = Nil Then Return False
-		  Dim tar As zlib.TapeArchive = zlib.TapeArchive(tarf)
+		  Dim tar As zlib.TapeArchive = zlib.TapeArchive.Open(tarf)
+		  'tar.ValidateChecksums = False
 		  Dim bs As BinaryStream
 		  
 		  Do
