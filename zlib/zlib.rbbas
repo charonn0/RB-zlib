@@ -1,18 +1,21 @@
 #tag Module
 Protected Module zlib
 	#tag Method, Flags = &h1
-		Protected Function Adler32(NewData As MemoryBlock, LastAdler As UInt32) As UInt32
-		  ' You must call this method once with NIL to initialize, and then pass back the returned value to each pass.
-		  '    Dim adler As UInt32 = zlib.Adler32(Nil, 0) //initialize
+		Protected Function Adler32(NewData As MemoryBlock, LastAdler As UInt32 = 0, NewDataSize As Integer = -1) As UInt32
+		  ' Calculate the Adler32 checksum for the NewData. Pass back the returned value 
+		  ' to continue processing. 
+		  '    Dim adler As UInt32
 		  '    While True
-		  '      adler = Adler32(NextInputData, adler)
+		  '      adler = zlib.Adler32(NextInputData, adler)
 		  '    Wend
 		  If Not zlib.IsAvailable Then Return 0
-		  If NewData <> Nil Then
-		    Return _adler32(LastAdler, NewData, NewData.Size)
-		  Else
-		    Return _adler32(0, Nil, 0)
-		  End If
+		  Static ADLER_POLYNOMIAL As UInt32
+		  If ADLER_POLYNOMIAL = 0 Then ADLER_POLYNOMIAL = _adler32(0, Nil, 0)
+		  
+		  If NewDataSize = -1 Then NewDataSize = NewData.Size
+		  If LastAdler = 0 Then LastAdler = ADLER_POLYNOMIAL
+		  If NewData <> Nil Then Return _adler32(LastAdler, NewData, NewData.Size)
+		  
 		End Function
 	#tag EndMethod
 
@@ -52,19 +55,22 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
-		Protected Function CRC32(NewData As MemoryBlock, LastCRC As UInt32) As UInt32
-		  ' You must call this method once with NIL to initialize, and then pass back the returned value to each pass.
-		  '    Dim crc As UInt32 = zlib.CRC32(Nil, 0) //initialize
+		Protected Function CRC32(NewData As MemoryBlock, LastCRC As UInt32 = 0, NewDataSize As Integer = -1) As UInt32
+		  ' Calculate the CRC32 checksum for the NewData. Pass back the returned value
+		  ' to continue processing.
+		  '    Dim crc As UInt32
 		  '    While True
-		  '      crc = CRC32(NextInputData, crc)
+		  '      crc = zlib.CRC32(NextInputData, crc)
 		  '    Wend
 		  
 		  If Not zlib.IsAvailable Then Return 0
-		  If NewData <> Nil Then
-		    Return _crc32(LastCRC, NewData, NewData.Size)
-		  Else
-		    Return _crc32(0, Nil, 0)
-		  End If
+		  Static CRC_POLYNOMIAL As UInt32
+		  If CRC_POLYNOMIAL = 0 Then CRC_POLYNOMIAL = _crc32(0, Nil, 0)
+		  
+		  If NewDataSize = -1 Then NewDataSize = NewData.Size
+		  If LastCRC = 0 Then LastCRC = CRC_POLYNOMIAL
+		  If NewData <> Nil Then Return _crc32(LastCRC, NewData, NewDataSize)
+		  
 		End Function
 	#tag EndMethod
 
