@@ -14,7 +14,7 @@ Protected Module zlib
 		  
 		  If NewDataSize = -1 Then NewDataSize = NewData.Size
 		  If LastAdler = 0 Then LastAdler = ADLER_POLYNOMIAL
-		  If NewData <> Nil Then Return _adler32(LastAdler, NewData, NewData.Size)
+		  If NewData <> Nil Then Return _adler32(LastAdler, NewData, NewDataSize)
 		  
 		End Function
 	#tag EndMethod
