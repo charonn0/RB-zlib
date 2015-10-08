@@ -20,33 +20,37 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION) As MemoryBlock
+		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = -1) As MemoryBlock
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
-		  Dim cb As UInt32 = zlib.compressBound(Data.Size)
-		  Dim out As New MemoryBlock(cb)
+		  
+		  If DataSize = -1 Then DataSize = Data.Size
+		  Dim OutSize As UInt32 = zlib.compressBound(DataSize)
+		  Dim OutBuffer As New MemoryBlock(OutSize)
 		  Dim err As Integer
+		  
 		  Do
 		    If CompressionLevel = Z_DEFAULT_COMPRESSION Then
-		      err = zlib._compress(out, cb, Data, Data.Size)
+		      err = zlib._compress(OutBuffer, OutSize, Data, DataSize)
 		    Else
-		      err = zlib._compress2(out, cb, Data, Data.Size, CompressionLevel)
+		      err = zlib._compress2(OutBuffer, OutSize, Data, DataSize, CompressionLevel)
 		    End If
 		    Select Case err
 		    Case Z_STREAM_ERROR
 		      Break ' CompressionLevel is invalid; using default
-		      Return Compress(Data)
+		      Return Compress(Data, Z_DEFAULT_COMPRESSION, DataSize)
 		      
 		    Case Z_BUF_ERROR
-		      out = New MemoryBlock(out.Size * 2)
-		      cb = out.Size
+		      OutSize = OutSize * 2
+		      OutBuffer = New MemoryBlock(OutSize)
 		      
 		    Case Z_MEM_ERROR
 		      Raise New OutOfMemoryException
 		      
 		    End Select
 		  Loop Until err <> Z_BUF_ERROR
+		  
 		  If err <> Z_OK Then Raise New zlibException(err)
-		  Return out.StringValue(0, cb)
+		  Return OutBuffer.StringValue(0, OutSize)
 		End Function
 	#tag EndMethod
 
@@ -213,16 +217,19 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1) As MemoryBlock
+		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1, DataSize As Integer = -1) As MemoryBlock
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
-		  If ExpandedSize <= 0 Then ExpandedSize = Data.Size * 1.1 + 12
-		  Dim out As MemoryBlock
-		  Dim outsz As UInt32
+		  
+		  If DataSize = -1 Then DataSize = Data.Size
+		  If ExpandedSize <= 0 Then ExpandedSize = DataSize * 1.1 + 12
+		  Dim OutputBuffer As MemoryBlock
+		  Dim OutSize As UInt32
 		  Dim err As Integer
+		  
 		  Do
-		    out = New MemoryBlock(ExpandedSize)
-		    outsz = out.Size
-		    err = zlib._uncompress(out, outsz, Data, Data.Size)
+		    OutputBuffer = New MemoryBlock(ExpandedSize)
+		    OutSize = OutputBuffer.Size
+		    err = zlib._uncompress(OutputBuffer, OutSize, Data, DataSize)
 		    ExpandedSize = ExpandedSize * 2
 		    Select Case err
 		    Case Z_MEM_ERROR
@@ -235,7 +242,7 @@ Protected Module zlib
 		  Loop Until err <> Z_BUF_ERROR
 		  
 		  If err <> Z_OK Then Raise New zlibException(err)
-		  Return out.StringValue(0, outsz)
+		  Return OutputBuffer.StringValue(0, OutSize)
 		End Function
 	#tag EndMethod
 
