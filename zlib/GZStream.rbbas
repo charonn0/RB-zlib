@@ -167,7 +167,6 @@ Implements Readable,Writeable
 		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
 		  ' Reads the requested number of DEcompressed bytes from the compressed stream.
-		  ' zlib will pad the data with NULLs if there is not enough bytes to read.
 		  
 		  If mIsWriteable Then Raise New IOException ' opened for writing!
 		  If gzFile = Nil Then Raise New NilObjectException
