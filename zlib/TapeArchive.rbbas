@@ -2,22 +2,37 @@
 Protected Class TapeArchive
 	#tag Method, Flags = &h0
 		Function AppendFile(File As FolderItem) As Boolean
-		  Dim header As FileHeader
-		  header.Name = File.Name
-		  header.Length = Oct(File.Length)
-		  header.Checksum = Encodings.ASCII.Chr(32) + Encodings.ASCII.Chr(32) + Oct(GetCheckSum(header))
-		  Me.Reset
-		  While Me.MoveNext()
-		    App.YieldToNextThread
-		  Wend
+		  Dim bs As BinaryStream = BinaryStream.Open(File)
+		  Return Me.AppendFile(File.Name, bs)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function AppendFile(FileName As String, FileData As Readable) As Boolean
+		  Me.Reset(True)
 		  Me.Pad()
+		  Dim hpos As Integer = mArchive.Position
+		  
+		  mArchive.Write(Chr(0))
+		  Me.Pad
+		  
+		  Dim i As Integer
+		  Do Until FileData.EOF
+		    Dim data As String = FileData.Read(4096)
+		    mArchive.Write(data)
+		    i = i + data.LenB
+		  Loop
+		  
+		  mArchive.Position = hpos
+		  Dim header As FileHeader
+		  header.Name = FileName
+		  header.Length = Oct(i)
+		  header.TypeFlag = Asc("7")
+		  header.Checksum = Encodings.ASCII.Chr(32) + Encodings.ASCII.Chr(32) + Oct(GetCheckSum(header))
 		  Dim mb As New MemoryBlock(512)
 		  mb.StringValue(0, header.Size) = header.StringValue(TargetLittleEndian)
 		  mArchive.Write(mb)
-		  Dim bs As BinaryStream = BinaryStream.Open(File)
-		  Dim sz As Integer = bs.Length
-		  mArchive.Write(bs.Read(sz))
-		  bs.Close
+		  mArchive.Position = mArchive.Length
 		  Me.Pad()
 		  mIndex = mIndex + 1
 		  mDirty = True
@@ -79,6 +94,30 @@ Protected Class TapeArchive
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function CurrentType() As Integer
+		  If mIndex > -1 Then
+		    Select Case Encodings.ASCII.Chr(mHeader.TypeFlag)
+		    Case "1"
+		      Return 1
+		    Case "2"
+		      Return 2
+		    Case "3"
+		      Return 3
+		    Case "4"
+		      Return 4
+		    Case "5"
+		      Return 5
+		    Case "6"
+		      Return 6
+		    Case "7"
+		      Return 7
+		    End Select
+		  End If
+		  Return -1
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close
@@ -122,6 +161,14 @@ Protected Class TapeArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function MoveNext(ExtractTo As FolderItem) As Boolean
+		  Dim bs As BinaryStream
+		  If ExtractTo <> Nil Then bs = BinaryStream.Open(ExtractTo, False)
+		  Return Me.MoveNext(bs)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable = Nil) As Boolean
 		  ' Advances to the next file in the archive. If there are no more files then this method returns False.
 		  ' If ExtractTo is not Nil then the current file is written to that object *before* advancing.
@@ -150,8 +197,15 @@ Protected Class TapeArchive
 		    mArchive.Position = lastpos
 		    Return False
 		  End Try
-		  If ValidateChecksums And Val("&o" + header.Checksum.Trim) <> GetCheckSum(header) Then
-		    Raise New IOException
+		  If ValidateChecksums Then
+		    Dim chksm As Integer = Val("&o" + header.Checksum.Trim)
+		    Dim hsum As Integer = GetCheckSum(header)
+		    If chksm <> hsum Then
+		      Dim err As New IOException
+		      err.Message = "Invalid header checksum for entry " + Str(mIndex + 1, "###,###,##0") + _
+		      ". Expected '" + Oct(chksm) + "' but got '" + Oct(hsum) + "'."
+		      Raise err
+		    End If
 		  End If
 		  mHeader = header
 		  mIndex = mIndex + 1
@@ -178,10 +232,11 @@ Protected Class TapeArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Reset()
+		Sub Reset(MoveToEnd As Boolean = False)
 		  mArchive.Position = 0
 		  mIndex = -1
-		  Call MoveNext()
+		  Do Until Not Me.MoveNext()
+		  Loop Until Not MoveToEnd
 		End Sub
 	#tag EndMethod
 
@@ -260,6 +315,12 @@ Protected Class TapeArchive
 			Group="Position"
 			InitialValue="0"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ValidateChecksums"
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
