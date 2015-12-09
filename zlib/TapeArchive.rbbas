@@ -1,6 +1,31 @@
 #tag Class
 Protected Class TapeArchive
 	#tag Method, Flags = &h0
+		Function AppendDirectory(DirectoryName As String) As Boolean
+		  Me.Reset()
+		  Dim name, path() As String
+		  path = Split(DirectoryName, "/")
+		  name = path(0)
+		  path.Remove(0)
+		  Do Until Not Me.MoveNext()
+		    If CurrentName = DirectoryName Then Return False
+		  Loop
+		  Me.Pad()
+		  Dim header As FileHeader
+		  header.Name = DirectoryName
+		  header.TypeFlag = Asc("5")
+		  header.Checksum = Encodings.ASCII.Chr(32) + Encodings.ASCII.Chr(32) + Oct(GetCheckSum(header))
+		  Dim mb As New MemoryBlock(512)
+		  mb.StringValue(0, header.Size) = header.StringValue(TargetLittleEndian)
+		  mArchive.Write(mb)
+		  Me.Pad()
+		  mIndex = mIndex + 1
+		  mDirty = True
+		  Return True
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function AppendFile(File As FolderItem) As Boolean
 		  Dim bs As BinaryStream = BinaryStream.Open(File)
 		  Return Me.AppendFile(File.Name, bs)
