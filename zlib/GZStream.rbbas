@@ -31,7 +31,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(OutputFile As FolderItem, Append As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY) As zlib.GZStream
-		  ' Creates an empty gzip stream
+		  ' Creates an empty gzip stream, or opens an existing stream for appending
 		  If OutputFile = Nil Or OutputFile.Directory Then Raise New IOException
 		  Dim mode As String = "wb"
 		  If Append Then mode = "ab"
@@ -157,7 +157,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function Open(GzipFile As FolderItem) As zlib.GZStream
-		  ' Opens an existing gzip stream
+		  ' Opens an existing gzip stream for reading only
 		  If GzipFile = Nil Or GzipFile.Directory Or Not GzipFile.Exists Then Raise New IOException
 		  Return gzOpen(GzipFile, "rb")
 		End Function
