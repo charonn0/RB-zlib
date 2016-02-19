@@ -11,7 +11,7 @@ This example compresses and decompresses a string in memory:
 This example gzips a file:
 
 ```vbnet
-  Dim f As FolderItem = GetSaveFolderItem("") ' a file to be gzipped
+  Dim f As FolderItem = GetOpenFolderItem("") ' a file to be gzipped
   If f <> Nil Then
     Dim bs As BinaryStream = BinaryStream.Open(f)
     Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
