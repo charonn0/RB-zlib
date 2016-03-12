@@ -3,7 +3,7 @@ Protected Class ZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
-		  If zstream <> Nil Then 
+		  If zstream <> Nil Then
 		    zstream.Close()
 		    mLastError = zstream.LastError
 		  End If
@@ -15,7 +15,7 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub Constructor(zStruct As Ptr, Deflate As Boolean)
+		Protected Sub Constructor(zStruct As z_stream, Deflate As Boolean)
 		  zstream = New ZStreamPtr(zStruct, Deflate)
 		  AddHandler zstream.DataAvailable, WeakAddressOf _DataAvailableHandler
 		  AddHandler zstream.DataNeeded, WeakAddressOf _DataNeededHandler
@@ -24,8 +24,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZStream
-		  Dim zstruct As New MemoryBlock(z_stream.Size)
-		  zstruct.Ptr(40) = GenOpaque()
+		  Dim zstruct As z_stream
 		  Dim err As Integer = deflateInit_(zstruct, CompressionLevel, zlib.Version, zstruct.Size)
 		  If err = Z_OK Then
 		    Dim stream As New zlib.ZStream(zstruct, True)
@@ -60,18 +59,9 @@ Implements Readable,Writeable
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Shared Function GenOpaque() As Ptr
-		  Static opaque As Integer
-		  opaque = opaque + 1
-		  Return Ptr(opaque)
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		 Shared Function Open(InputStream As Readable) As zlib.ZStream
-		  Dim zstruct As New MemoryBlock(z_stream.Size)
-		  zstruct.Ptr(40) = GenOpaque()
+		  Dim zstruct As z_stream
 		  Dim err As Integer = inflateInit_(zstruct, zlib.Version, zstruct.Size)
 		  If err = Z_OK Then
 		    Dim stream As New zlib.ZStream(zstruct, False)
@@ -88,7 +78,7 @@ Implements Readable,Writeable
 		  // Part of the Readable interface.
 		  
 		  Dim bs As BinaryStream
-		  If mOutStream = Nil Then 
+		  If mOutStream = Nil Then
 		    mReadBuffer = New MemoryBlock(0)
 		    bs = New BinaryStream(mReadBuffer)
 		    bs.Position = bs.Length
@@ -136,6 +126,7 @@ Implements Readable,Writeable
 		  Do Until mInStream.EOF
 		    mLastError = zstream.Poll
 		  Loop Until mLastError <> Z_OK
+		  mLastError = zstream.Poll(Z_PARTIAL_FLUSH)
 		  
 		End Sub
 	#tag EndMethod
@@ -150,7 +141,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h21
 		Private Sub _DataAvailableHandler(Sender As ZStreamPtr, NewData As MemoryBlock)
 		  #pragma Unused Sender
-		  If NewData <> Nil Then 
+		  If NewData <> Nil Then
 		    mOutStream.Write(NewData)
 		  End If
 		End Sub
@@ -159,7 +150,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h21
 		Private Function _DataNeededHandler(Sender As ZStreamPtr, ByRef Data As MemoryBlock, MaxLength As Integer) As Boolean
 		  #pragma Unused Sender
-		  If mInStream <> Nil Then 
+		  If mInStream <> Nil Then
 		    Data = mInStream.Read(MaxLength)
 		  End If
 		  Return Data <> Nil And Data.Size > 0

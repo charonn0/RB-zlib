@@ -2,11 +2,12 @@
 Private Class ZStreamPtr
 	#tag Method, Flags = &h0
 		Sub Close()
-		  zstream.avail_in = 0
-		  zstream.avail_out = 0
+		  'zstream.avail_in = 0
+		  'zstream.avail_out = 0
 		  Do
-		    mLastError = Me.Poll(Z_FINISH)
-		  Loop Until mLastError <> Z_STREAM_END
+		    Me.Flush(Z_FINISH)
+		  Loop Until mLastError <> Z_OK
+		  If mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
 		  
 		  If Me.IsDeflateStream Then ' Compressing
 		    mLastError = zlib.deflateEnd(zstream)
@@ -18,23 +19,20 @@ Private Class ZStreamPtr
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(zOpaque As Ptr, Deflate As Boolean)
-		  Dim mb As MemoryBlock = zOpaque
-		  zstream.StringValue(TargetLittleEndian) = mb.StringValue(0, zstream.Size)
+		Sub Constructor(zStruct As z_stream, Deflate As Boolean)
+		  zstream = zStruct
 		  mDeflate = Deflate
-		  InBuffer = New MemoryBlock(BufferSize)
-		  OutBuffer = New MemoryBlock(BufferSize)
-		  zstream.next_in = InBuffer
-		  zstream.avail_in = 0
-		  zstream.next_out = OutBuffer
-		  zstream.avail_out = OutBuffer.Size
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Flush()
+		Sub Flush(Flushing As Integer = Z_PARTIAL_FLUSH)
 		  Do
-		    mLastError = Me.Poll(Z_PARTIAL_FLUSH)
+		    If mDeflate Then
+		      mLastError = zlib.deflate(zstream, Flushing)
+		    Else
+		      mLastError = zlib.inflate(zstream, Flushing)
+		    End If
 		  Loop Until mLastError <> Z_OK
 		End Sub
 	#tag EndMethod
@@ -53,15 +51,16 @@ Private Class ZStreamPtr
 
 	#tag Method, Flags = &h0
 		Function Poll(Flushing As Integer = zlib.Z_NO_FLUSH) As Integer
-		  Dim mb As MemoryBlock
-		  If RaiseEvent DataNeeded(mb, BufferSize - zstream.avail_in) Then
-		    InBuffer.StringValue(0, mb.Size) = mb.StringValue(0, mb.Size)
+		  
+		  If InBuffer = Nil Then InBuffer = New MemoryBlock(BufferSize)
+		  Dim sz As UInt32 = BufferSize - zstream.avail_in
+		  If RaiseEvent DataNeeded(InBuffer, sz) Then
 		    zstream.avail_in = InBuffer.Size
+		    zstream.next_in = InBuffer
 		  End If
 		  
-		  mb = OutBuffer.StringValue(0, BufferSize - zstream.avail_out)
-		  RaiseEvent DataAvailable(mb)
-		  OutBuffer = New MemoryBlock(BufferSize)
+		  If OutBuffer = Nil Then OutBuffer = New MemoryBlock(BufferSize)
+		  RaiseEvent DataAvailable(OutBuffer.StringValue(0, BufferSize - zstream.avail_out))
 		  zstream.next_out = OutBuffer
 		  zstream.avail_out = OutBuffer.Size
 		  

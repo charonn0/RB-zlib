@@ -1,9 +1,9 @@
 #tag Module
 Protected Module zlib
 	#tag Method, Flags = &h1
-		Protected Function Adler32(NewData As MemoryBlock, LastAdler As UInt32 = 0, NewDataSize As Integer = -1) As UInt32
-		  ' Calculate the Adler32 checksum for the NewData. Pass back the returned value 
-		  ' to continue processing. 
+		Protected Function Adler32(NewData As MemoryBlock, LastAdler As UInt32 = 0, NewDataSize As Integer = - 1) As UInt32
+		  ' Calculate the Adler32 checksum for the NewData. Pass back the returned value
+		  ' to continue processing.
 		  '    Dim adler As UInt32
 		  '    While True
 		  '      adler = zlib.Adler32(NextInputData, adler)
@@ -20,7 +20,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = -1) As MemoryBlock
+		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = - 1) As MemoryBlock
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  
 		  If DataSize = -1 Then DataSize = Data.Size
@@ -59,7 +59,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
-		Protected Function CRC32(NewData As MemoryBlock, LastCRC As UInt32 = 0, NewDataSize As Integer = -1) As UInt32
+		Protected Function CRC32(NewData As MemoryBlock, LastCRC As UInt32 = 0, NewDataSize As Integer = - 1) As UInt32
 		  ' Calculate the CRC32 checksum for the NewData. Pass back the returned value
 		  ' to continue processing.
 		  '    Dim crc As UInt32
@@ -79,15 +79,15 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflate Lib "zlib1" (Stream As z_stream, Flush As Integer) As Integer
+		Private Soft Declare Function deflate Lib "zlib1" (ByRef Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateEnd Lib "zlib1" (Stream As z_stream) As Integer
+		Private Soft Declare Function deflateEnd Lib "zlib1" (ByRef Stream As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateInit_ Lib "zlib1" (Stream As Ptr, CompressionLevel As Integer, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function deflateInit_ Lib "zlib1" (ByRef Stream As z_stream, CompressionLevel As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -159,15 +159,15 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflate Lib "zlib1" (Stream As z_stream, Flush As Integer) As Integer
+		Private Soft Declare Function inflate Lib "zlib1" (ByRef Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateEnd Lib "zlib1" (Stream As z_stream) As Integer
+		Private Soft Declare Function inflateEnd Lib "zlib1" (ByRef Stream As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateInit_ Lib "zlib1" (Stream As Ptr, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function inflateInit_ Lib "zlib1" (ByRef Stream As z_stream, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -217,7 +217,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1, DataSize As Integer = -1) As MemoryBlock
+		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1, DataSize As Integer = - 1) As MemoryBlock
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  
 		  If DataSize = -1 Then DataSize = Data.Size
