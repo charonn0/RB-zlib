@@ -3,7 +3,6 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  ''If Not TestZStreamRead(TestZStreamWrite) Then MsgBox("ZStream failed")
 		  'If Not TestCompress() Then MsgBox("Compression failed")
 		  'If Not TestGZAppend() Then MsgBox("gzip append failed")
 		  'If Not TestGZWrite() Then MsgBox("gzip failed")
@@ -156,36 +155,6 @@ Inherits Application
 		  Loop Until Not tar.MoveNext(bs)
 		  tar.Close
 		  Return True
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function TestZStreamRead(Deflated As MemoryBlock) As Boolean
-		  Dim dstream As New BinaryStream(Deflated)
-		  Dim zipstream As zlib.ZStream = zlib.ZStream.Open(dstream)
-		  Dim out As New MemoryBlock(0)
-		  Dim outs As New BinaryStream(out)
-		  While not zipstream.EOF
-		    outs.Write(zipstream.Read(2048))
-		  Wend
-		  zipstream.Close
-		  dstream.Close
-		  outs.Close
-		  Break
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function TestZStreamWrite() As MemoryBlock
-		  Dim data As New MemoryBlock(0)
-		  Dim dstream As New BinaryStream(data)
-		  Dim zipstream As zlib.ZStream = zlib.ZStream.Create(dstream)
-		  For i As Integer = 0 To 99
-		    zipstream.Write("Hello! ")
-		  Next
-		  zipstream.Close
-		  dstream.Close
-		  Return data
 		End Function
 	#tag EndMethod
 
