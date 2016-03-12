@@ -87,7 +87,7 @@ Implements Readable,Writeable
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
 		  mLastError = zlib.gzflush(gzFile, Flushing)
-		  Return mLastError <> Z_OK
+		  Return mLastError = Z_OK
 		End Function
 	#tag EndMethod
 
