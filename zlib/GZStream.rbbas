@@ -2,6 +2,13 @@
 Protected Class GZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
+		Sub ClearError()
+		  ' Clears the last error and EOF
+		  zlib.gzclearerr(gzFile)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Close()
 		  If gzFile <> Nil Then 
 		    mLastError = zlib.gzclose(gzFile)

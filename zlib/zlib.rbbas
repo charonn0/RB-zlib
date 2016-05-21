@@ -111,6 +111,10 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Sub gzclearerr Lib "zlib1" (gzFile As Ptr)
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function gzclose Lib "zlib1" (gzFile As Ptr) As Integer
 	#tag EndExternalMethod
 
