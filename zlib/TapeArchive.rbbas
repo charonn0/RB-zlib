@@ -122,7 +122,6 @@ Protected Class TapeArchive
 	#tag Method, Flags = &h0
 		Function CurrentType() As zlib.TapeArchive.EntryType
 		  If mIndex > -1 Then
-		    Dim t As Byte = mHeader.TypeFlag
 		    Dim c As String = Encodings.ASCII.Chr(mHeader.TypeFlag)
 		    Select Case c
 		    Case "1"
