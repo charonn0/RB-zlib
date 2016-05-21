@@ -120,26 +120,28 @@ Protected Class TapeArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CurrentType() As Integer
+		Function CurrentType() As zlib.TapeArchive.EntryType
 		  If mIndex > -1 Then
-		    Select Case Encodings.ASCII.Chr(mHeader.TypeFlag)
+		    Dim t As Byte = mHeader.TypeFlag
+		    Dim c As String = Encodings.ASCII.Chr(mHeader.TypeFlag)
+		    Select Case c
 		    Case "1"
-		      Return 1
+		      Return EntryType(1)
 		    Case "2"
-		      Return 2
+		      Return EntryType(2)
 		    Case "3"
-		      Return 3
+		      Return EntryType(3)
 		    Case "4"
-		      Return 4
+		      Return EntryType(4)
 		    Case "5"
-		      Return 5
+		      Return EntryType(5)
 		    Case "6"
-		      Return 6
+		      Return EntryType(6)
 		    Case "7"
-		      Return 7
+		      Return EntryType(7)
 		    End Select
 		  End If
-		  Return -1
+		  Return EntryType(0)
 		End Function
 	#tag EndMethod
 
@@ -222,7 +224,7 @@ Protected Class TapeArchive
 		    mArchive.Position = lastpos
 		    Return False
 		  End Try
-		  If ValidateChecksums Then
+		  If ValidateChecksums And Not CurrentType = EntryType.Directory Then
 		    Dim chksm As Integer = Val("&o" + header.Checksum.Trim)
 		    Dim hsum As Integer = GetCheckSum(header)
 		    If chksm <> hsum Then
@@ -305,6 +307,18 @@ Protected Class TapeArchive
 		  devminor As String*8
 		Prefix As String*155
 	#tag EndStructure
+
+
+	#tag Enum, Name = EntryType, Type = Integer, Flags = &h0
+		Normal=0
+		  HardLink
+		  SymLink
+		  CharacterSpecial
+		  BlockSpecial
+		  Directory
+		  FIFO
+		Contiguous
+	#tag EndEnum
 
 
 	#tag ViewBehavior
