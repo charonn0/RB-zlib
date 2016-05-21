@@ -8,6 +8,8 @@ Protected Module zlib
 		  '    While True
 		  '      adler = zlib.Adler32(NextInputData, adler)
 		  '    Wend
+		  ' If NewData.Size is not known (-1) then specify the size as NewDataSize
+		  
 		  If Not zlib.IsAvailable Then Return 0
 		  Static ADLER_POLYNOMIAL As UInt32
 		  If ADLER_POLYNOMIAL = 0 Then ADLER_POLYNOMIAL = _adler32(0, Nil, 0)
@@ -21,6 +23,8 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = - 1) As MemoryBlock
+		  ' Compress the Data using deflate. If Data.Size is not known (-1) then specify the size as DataSize
+		  
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  
 		  If DataSize = -1 Then DataSize = Data.Size
@@ -66,6 +70,7 @@ Protected Module zlib
 		  '    While True
 		  '      crc = zlib.CRC32(NextInputData, crc)
 		  '    Wend
+		  ' If NewData.Size is not known (-1) then specify the size as NewDataSize
 		  
 		  If Not zlib.IsAvailable Then Return 0
 		  Static CRC_POLYNOMIAL As UInt32
@@ -92,7 +97,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(InputFile As FolderItem, OutputStream As Writeable) As Boolean
-		  ' Decompress the InputFile and write it into OutputStream
+		  ' Decompress the InputFile as a gzip archive and write it into OutputStream
 		  
 		  If Not zlib.IsAvailable Then Return False
 		  Dim gz As zlib.GZStream = zlib.GZStream.Open(InputFile)
@@ -119,7 +124,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function GZip(InputStream As Readable, OutputFile As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Strategy As Integer = zlib.Z_DEFAULT_STRATEGY) As Boolean
-		  ' Compress the InputStream and write it to OutputFile
+		  ' Compress the InputStream using gzip and write it to OutputFile
 		  
 		  If Not zlib.IsAvailable Then Return False
 		  Dim gz As zlib.GZStream = zlib.GZStream.Create(OutputFile)
@@ -218,6 +223,9 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1, DataSize As Integer = - 1) As MemoryBlock
+		  ' Decompress the Data using deflate. If Data.Size is not known (-1) then specify the size as DataSize
+		  ' If the size of the decompressed data is known then pass it as ExpandedSize
+		  
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  
 		  If DataSize = -1 Then DataSize = Data.Size
