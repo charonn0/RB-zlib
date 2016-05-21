@@ -254,6 +254,25 @@ Implements Readable,Writeable
 		Private mStrategy As Integer = Z_DEFAULT_STRATEGY
 	#tag EndProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Const SEEK_CUR = 1
+			  Return gzseek(gzFile, 0, SEEK_CUR)
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Const SEEK_SET = 0
+			  If gzseek(gzFile, value, SEEK_SET) <> value Then
+			    gzError() ' set LastError
+			    Raise New zlibException(mLastError)
+			  End If
+			End Set
+		#tag EndSetter
+		Position As Integer
+	#tag EndComputedProperty
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
