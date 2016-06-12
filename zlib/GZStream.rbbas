@@ -143,26 +143,6 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Level() As Integer
-		  Return mLevel
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Level(Assigns NewLevel As Integer)
-		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
-		  If gzFile = Nil Then Raise New NilObjectException
-		  mLastError = zlib.gzsetparams(gzFile, NewLevel, mStrategy)
-		  If mLastError = Z_OK Then
-		    mLevel = NewLevel
-		  Else
-		    Raise New zlibException(mLastError)
-		  End If
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		 Shared Function Open(GzipFile As FolderItem) As zlib.GZStream
 		  ' Opens an existing gzip stream for reading only
 		  If GzipFile = Nil Or GzipFile.Directory Or Not GzipFile.Exists Then Raise New IOException
@@ -194,25 +174,6 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Strategy() As Integer
-		  Return mStrategy
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Strategy(Assigns NewStrategy As Integer)
-		  If Not mIsWriteable Or gzFile = Nil Then Raise New IOException
-		  mLastError = zlib.gzsetparams(gzFile, mLevel, NewStrategy)
-		  If mLastError = Z_OK Then
-		    mStrategy = NewStrategy
-		  Else
-		    Raise New zlibException(mLastError)
-		  End If
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub Write(text As String)
 		  // Part of the Writeable interface.
 		  ' Compresses the data and writes it to the stream
@@ -240,6 +201,28 @@ Implements Readable,Writeable
 	#tag Property, Flags = &h1
 		Protected gzFile As Ptr
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mLevel
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If Not mIsWriteable Then Raise New IOException ' opened for reading!
+			  If gzFile = Nil Then Raise New NilObjectException
+			  mLastError = zlib.gzsetparams(gzFile, value, mStrategy)
+			  If mLastError = Z_OK Then
+			    mLevel = value
+			  Else
+			    Raise New zlibException(mLastError)
+			  End If
+			  
+			End Set
+		#tag EndSetter
+		Level As Integer
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
 		Private mIsWriteable As Boolean
@@ -278,6 +261,27 @@ Implements Readable,Writeable
 			End Set
 		#tag EndSetter
 		Position As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mStrategy
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If Not mIsWriteable Or gzFile = Nil Then Raise New IOException
+			  mLastError = zlib.gzsetparams(gzFile, mLevel, value)
+			  If mLastError = Z_OK Then
+			    mStrategy = value
+			  Else
+			    Raise New zlibException(mLastError)
+			  End If
+			  
+			End Set
+		#tag EndSetter
+		Strategy As Integer
 	#tag EndComputedProperty
 
 
