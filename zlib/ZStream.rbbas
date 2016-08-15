@@ -22,7 +22,6 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h1
 		Protected Sub Constructor(Engine As zlib.Inflater, Source As Readable)
 		  mInflater = Engine
-		  mDeflater = Nil
 		  mSource = Source
 		  
 		End Sub
