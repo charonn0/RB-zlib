@@ -17,4 +17,13 @@
 		Name=application/x-gzip
 	#tag EndFileType
 
+	#tag FileType
+		CodeName=ApplicationXCompress
+		Extension=.taz;.Z
+		Flags=&h0
+		MacCreator=????
+		MacType=ZIVU
+		Name=application/x-compress
+	#tag EndFileType
+
 #tag EndFileTypeSet
