@@ -1,12 +1,6 @@
 #tag Class
 Protected Class Deflater
 	#tag Method, Flags = &h0
-		Sub Close()
-		  mLastError = zlib.deflateEnd(zstream)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION)
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
@@ -22,7 +16,7 @@ Protected Class Deflater
 		  Dim ret As New MemoryBlock(0)
 		  Dim retstream As New BinaryStream(ret)
 		  Dim instream As New BinaryStream(Data)
-		  Do Until instream.EOF
+		  Do
 		    Dim chunk As MemoryBlock = instream.Read(CHUNK_SIZE)
 		    zstream.avail_in = chunk.Size
 		    zstream.next_in = chunk
@@ -33,7 +27,7 @@ Protected Class Deflater
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
 		      If have > 0 Then retstream.Write(outbuff.StringValue(0, have))
 		    Loop Until mLastError <> Z_OK Or zstream.avail_out = 0
-		  Loop
+		  Loop Until instream.EOF
 		  retstream.Close
 		  Return ret
 		  
@@ -43,7 +37,9 @@ Protected Class Deflater
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  Me.Close()
+		  If zstream.zfree <> Nil Then mLastError = zlib.deflateEnd(zstream)
+		  zstream.zfree = Nil
+		  
 		End Sub
 	#tag EndMethod
 

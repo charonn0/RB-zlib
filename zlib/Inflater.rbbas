@@ -1,12 +1,6 @@
 #tag Class
 Protected Class Inflater
 	#tag Method, Flags = &h0
-		Sub Close()
-		  mLastError = zlib.inflateEnd(zstream)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub Constructor()
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
@@ -20,7 +14,8 @@ Protected Class Inflater
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  Me.Close()
+		  If zstream.zfree <> Nil Then mLastError = zlib.inflateEnd(zstream)
+		  zstream.zfree = Nil
 		End Sub
 	#tag EndMethod
 

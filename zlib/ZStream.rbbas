@@ -3,36 +3,36 @@ Protected Class ZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
-		  If zstream <> Nil Then
-		    zstream.Close()
-		    mLastError = zstream.LastError
-		  End If
-		  zstream = Nil
-		  mReadBuffer = Nil
-		  mOutStream = Nil
-		  mInStream = Nil
+		  If mDeflater <> Nil Then Me.Flush()
+		  mSource = Nil
+		  mDestination = Nil
+		  mDeflater = Nil
+		  mInflater = Nil
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub Constructor(zStruct As z_stream, Deflate As Boolean)
-		  zstream = New ZStreamPtr(zStruct, Deflate)
-		  AddHandler zstream.DataAvailable, WeakAddressOf _DataAvailableHandler
-		  AddHandler zstream.DataNeeded, WeakAddressOf _DataNeededHandler
+		Protected Sub Constructor(Engine As zlib.Deflater, Destination As Writeable)
+		  mDeflater = Engine
+		  mDestination = Destination
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub Constructor(Engine As zlib.Inflater, Source As Readable)
+		  mInflater = Engine
+		  mDeflater = Nil
+		  mSource = Source
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZStream
-		  Dim zstruct As z_stream
-		  Dim err As Integer = deflateInit_(zstruct, CompressionLevel, zlib.Version, zstruct.Size)
-		  If err = Z_OK Then
-		    Dim stream As New zlib.ZStream(zstruct, True)
-		    stream.mOutStream = Output
-		    Return stream
-		  Else
-		    Raise New zlibException(err)
-		  End If
+		  Dim zstruct As New Deflater(CompressionLevel)
+		  Return New zlib.ZStream(zstruct, Output)
+		  
 		End Function
 	#tag EndMethod
 
@@ -45,31 +45,26 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
-		  Return mInStream.EOF
+		  Return mSource.EOF
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Flush()
 		  // Part of the Writeable interface.
-		  Do Until mInStream.EOF
-		    mLastError = zstream.Poll(Z_PARTIAL_FLUSH)
-		  Loop Until mLastError <> Z_OK
-		  mOutStream.Flush
+		  If mDeflater <> Nil Then
+		    mDestination.Write(mDeflater.Deflate("", Z_FINISH))
+		  Else
+		    Raise New IOException
+		  End If
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		 Shared Function Open(InputStream As Readable) As zlib.ZStream
-		  Dim zstruct As z_stream
-		  Dim err As Integer = inflateInit_(zstruct, zlib.Version, zstruct.Size)
-		  If err = Z_OK Then
-		    Dim stream As New zlib.ZStream(zstruct, False)
-		    stream.mInStream = InputStream
-		    Return stream
-		  Else
-		    Raise New zlibException(err)
-		  End If
+		  Dim zstruct As New Inflater()
+		  Return New zlib.ZStream(zstruct, InputStream)
+		  
 		End Function
 	#tag EndMethod
 
@@ -77,89 +72,58 @@ Implements Readable,Writeable
 		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
 		  
-		  Dim bs As BinaryStream
-		  If mOutStream = Nil Then
-		    mReadBuffer = New MemoryBlock(0)
-		    bs = New BinaryStream(mReadBuffer)
-		    bs.Position = bs.Length
-		    mOutStream = bs
-		  End If
-		  
-		  Do Until mInStream.EOF
-		    mLastError = zstream.Poll()
-		  Loop Until mLastError <> Z_OK
-		  
-		  If mLastError = Z_OK Or mLastError = Z_STREAM_END Then
-		    If bs = Nil Then bs = BinaryStream(mOutStream)
-		    bs.Position = 0
-		    Dim data As String = bs.Read(Count, encoding)
-		    bs.Position = Min(bs.Length - Count, Count)
-		    Return data
+		  Dim data As String
+		  If mDeflater <> Nil Then
+		    data = mDeflater.Deflate(mSource.Read(Count, encoding))
+		  ElseIf mInflater <> Nil Then
+		    data = mInflater.Inflate(mSource.Read(Count))
+		    If encoding <> Nil Then data = DefineEncoding(data, encoding)
 		  Else
-		    Raise New zlibException(mLastError)
+		    Raise New IOException
 		  End If
+		  Return data
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function ReadError() As Boolean
 		  // Part of the Readable interface.
-		  Return mInStream.ReadError
+		  Return mSource.ReadError
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Write(text As String)
 		  // Part of the Writeable interface.
-		  'writes to a compressed stream
 		  
-		  Dim bs As BinaryStream
-		  If mInStream = Nil Then
-		    bs = New BinaryStream(text)
-		    mInStream = bs
+		  If mDeflater <> Nil Then
+		    mDestination.Write(mDeflater.Deflate(text))
+		  ElseIf mInflater <> Nil Then
+		    mDestination.Write(mInflater.Inflate(text))
 		  Else
-		    bs = BinaryStream(mInStream)
-		    bs.Position = bs.Length
-		    bs.Write(text)
+		    Raise New IOException
 		  End If
-		  bs.Position = 0
-		  Do Until mInStream.EOF
-		    mLastError = zstream.Poll
-		  Loop Until mLastError <> Z_OK
-		  mLastError = zstream.Poll(Z_PARTIAL_FLUSH)
-		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function WriteError() As Boolean
 		  // Part of the Writeable interface.
-		  Return mOutStream.WriteError
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub _DataAvailableHandler(Sender As ZStreamPtr, NewData As MemoryBlock)
-		  #pragma Unused Sender
-		  If NewData <> Nil Then
-		    mOutStream.Write(NewData)
-		  End If
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function _DataNeededHandler(Sender As ZStreamPtr, ByRef Data As MemoryBlock, MaxLength As Integer) As Boolean
-		  #pragma Unused Sender
-		  If mInStream <> Nil Then
-		    Data = mInStream.Read(MaxLength)
-		  End If
-		  Return Data <> Nil And Data.Size > 0
+		  Return mDestination.WriteError
 		End Function
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h21
-		Private mInStream As Readable
+		Private mDeflater As zlib.Deflater
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mDestination As Writeable
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mInflater As zlib.Inflater
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
@@ -167,23 +131,8 @@ Implements Readable,Writeable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mOutStream As Writeable
+		Private mSource As Readable
 	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mReadBuffer As MemoryBlock
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private zstream As ZStreamPtr
-	#tag EndProperty
-
-
-	#tag Constant, Name = BufferSize, Type = Double, Dynamic = False, Default = \"262144", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = Z_STREAM_END, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
-	#tag EndConstant
 
 
 	#tag ViewBehavior
