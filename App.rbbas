@@ -3,13 +3,14 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  'If Not TestCompress() Then MsgBox("Compression failed")
-		  'If Not TestGZAppend() Then MsgBox("gzip append failed")
-		  'If Not TestGZWrite() Then MsgBox("gzip failed")
-		  'If Not TestGZRead() Then MsgBox("gunzip failed")
+		  If Not TestCompress() Then MsgBox("Compression failed")
+		  If Not TestGZAppend() Then MsgBox("gzip append failed")
+		  If Not TestGZWrite() Then MsgBox("gzip failed")
+		  If Not TestGZRead() Then MsgBox("gunzip failed")
 		  If Not TestTar() Then MsgBox("Tar failed")
-		  'If Not TestUntar() Then MsgBox("Untar failed")
+		  If Not TestUntar() Then MsgBox("Untar failed")
 		  If Not TestTarAppend() Then MsgBox("Tar append failed")
+		  If Not TestZStream() Then MsgBox("ZStream failed")
 		End Sub
 	#tag EndEvent
 
@@ -155,6 +156,26 @@ Inherits Application
 		  Loop Until Not tar.MoveNext(bs)
 		  tar.Close
 		  Return True
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestZStream() As Boolean
+		  Dim cmp As New MemoryBlock(0)
+		  Dim bs As New BinaryStream(cmp)
+		  Dim z As zlib.ZStream = zlib.ZStream.Create(bs)
+		  Dim src As String = "TestData123TestData123TestData123TestData123TestData123TestData123"
+		  z.Write(src)
+		  z.Close
+		  bs.Close
+		  If DecodeHex("789C0B492D2E71492C493434320E218F0900F29E1621") <> cmp Then Return False
+		  bs = New BinaryStream(cmp)
+		  z = z.Open(bs)
+		  Dim decm As String
+		  Do Until z.EOF
+		    decm = decm + z.Read(64)
+		  Loop
+		  Return decm = src
 		End Function
 	#tag EndMethod
 

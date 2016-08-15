@@ -13,6 +13,7 @@ Protected Class Deflater
 		  zstream.opaque = Nil
 		  mLastError = deflateInit_(zstream, CompressionLevel, zlib.Version, zstream.Size)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  mLevel = CompressionLevel
 		End Sub
 	#tag EndMethod
 
@@ -44,10 +45,16 @@ Protected Class Deflater
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If zstream.zfree <> Nil Then mLastError = zlib.deflateEnd(zstream)
+		  If IsOpen Then mLastError = zlib.deflateEnd(zstream)
 		  zstream.zfree = Nil
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsOpen() As Boolean
+		  Return zstream.zfree <> Nil
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -56,10 +63,68 @@ Protected Class Deflater
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Reset()
+		  If zstream.zalloc <> Nil Then
+		    mLastError = deflateReset(zstream)
+		  End If
+		End Sub
+	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mLevel
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If Not IsOpen Then Raise New NilObjectException
+			  mLastError = deflateParams(zstream, value, mStrategy)
+			  If mLastError = Z_OK Then
+			    mLevel = value
+			  Else
+			    Raise New zlibException(mLastError)
+			  End If
+			  
+			End Set
+		#tag EndSetter
+		Level As Integer
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
 	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mLevel As Integer = Z_DEFAULT_COMPRESSION
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mStrategy As Integer = Z_DEFAULT_STRATEGY
+	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mStrategy
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If Not IsOpen Then Raise New NilObjectException
+			  mLastError = deflateParams(zstream, mLevel, value)
+			  If mLastError = Z_OK Then
+			    mStrategy = value
+			  Else
+			    Raise New zlibException(mLastError)
+			  End If
+			  
+			End Set
+		#tag EndSetter
+		Strategy As Integer
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
 		Protected zstream As z_stream

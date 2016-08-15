@@ -88,11 +88,23 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateBound Lib "zlib1" (sourceLen As UInt64) As UInt32
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function deflateEnd Lib "zlib1" (ByRef Stream As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function deflateInit_ Lib "zlib1" (ByRef Stream As z_stream, CompressionLevel As Integer, Version As CString, StreamSz As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateParams Lib "zlib1" (ByRef Stream As z_stream, Level As Integer, Strategy As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateReset Lib "zlib1" (ByRef Stream As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -177,6 +189,10 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateInit_ Lib "zlib1" (ByRef Stream As z_stream, Version As CString, StreamSz As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflateReset Lib "zlib1" (ByRef Stream As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1

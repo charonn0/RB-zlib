@@ -50,9 +50,23 @@ Protected Class Inflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function IsOpen() As Boolean
+		  Return zstream.zfree <> Nil
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function LastError() As Integer
 		  Return mLastError
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Reset()
+		  If zstream.zalloc <> Nil Then
+		    mLastError = inflateReset(zstream)
+		  End If
+		End Sub
 	#tag EndMethod
 
 
