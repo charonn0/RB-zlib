@@ -44,7 +44,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
-		  Return mSource.EOF
+		  Return mSource.EOF And (mInflater <> Nil And mInflater.Avail_In = 0)
 		End Function
 	#tag EndMethod
 
@@ -72,22 +72,20 @@ Implements Readable,Writeable
 		  // Part of the Readable interface.
 		  
 		  Dim data As String
-		  If mDeflater <> Nil Then
-		    data = mDeflater.Deflate(mSource.Read(Count, encoding))
-		  ElseIf mInflater <> Nil Then
+		  If mInflater <> Nil Then
 		    data = mInflater.Inflate(mSource.Read(Count))
 		    If encoding <> Nil Then data = DefineEncoding(data, encoding)
+		    Return data
 		  Else
 		    Raise New IOException
-		  End If
-		  Return data
+		  End IF
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function ReadError() As Boolean
 		  // Part of the Readable interface.
-		  Return mSource.ReadError
+		  Return mSource.ReadError Or (mInflater <> Nil And mInflater.LastError <> 0)
 		End Function
 	#tag EndMethod
 
@@ -97,8 +95,6 @@ Implements Readable,Writeable
 		  
 		  If mDeflater <> Nil Then
 		    mDestination.Write(mDeflater.Deflate(text))
-		  ElseIf mInflater <> Nil Then
-		    mDestination.Write(mInflater.Inflate(text))
 		  Else
 		    Raise New IOException
 		  End If
@@ -108,7 +104,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function WriteError() As Boolean
 		  // Part of the Writeable interface.
-		  Return mDestination.WriteError
+		  Return mDestination.WriteError Or (mDeflater <> Nil And mDeflater.LastError <> 0)
 		End Function
 	#tag EndMethod
 
@@ -123,10 +119,6 @@ Implements Readable,Writeable
 
 	#tag Property, Flags = &h21
 		Private mInflater As zlib.Inflater
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mLastError As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

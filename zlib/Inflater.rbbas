@@ -1,6 +1,12 @@
 #tag Class
 Protected Class Inflater
 	#tag Method, Flags = &h0
+		Function Avail_In() As UInt32
+		  Return zstream.avail_in
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor()
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
@@ -25,7 +31,7 @@ Protected Class Inflater
 		  Dim ret As New MemoryBlock(0)
 		  Dim retstream As New BinaryStream(ret)
 		  Dim instream As New BinaryStream(Data)
-		  Do Until instream.EOF
+		  Do
 		    Dim chunk As MemoryBlock = instream.Read(CHUNK_SIZE)
 		    zstream.avail_in = chunk.Size
 		    zstream.next_in = chunk
@@ -36,7 +42,7 @@ Protected Class Inflater
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
 		      If have > 0 Then retstream.Write(outbuff.StringValue(0, have))
 		    Loop Until mLastError <> Z_OK Or zstream.avail_out = 0
-		  Loop
+		  Loop Until instream.EOF
 		  retstream.Close
 		  Return ret
 		  
