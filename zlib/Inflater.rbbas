@@ -39,14 +39,13 @@ Protected Class Inflater
 		      zstream.next_out = outbuff
 		      zstream.avail_out = outbuff.Size
 		      mLastError = zlib.inflate(zstream, Z_NO_FLUSH)
+		      If mLastError <> Z_OK And mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
 		      If have > 0 Then retstream.Write(outbuff.StringValue(0, have))
-		    Loop Until mLastError <> Z_OK Or zstream.avail_out = 0
+		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
 		  Loop Until instream.EOF
 		  retstream.Close
 		  Return ret
-		  
-		  
 		End Function
 	#tag EndMethod
 

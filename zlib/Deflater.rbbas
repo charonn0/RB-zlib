@@ -1,6 +1,12 @@
 #tag Class
 Protected Class Deflater
 	#tag Method, Flags = &h0
+		Function Avail_In() As UInt32
+		  Return zstream.avail_in
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION)
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
@@ -24,9 +30,10 @@ Protected Class Deflater
 		      zstream.next_out = outbuff
 		      zstream.avail_out = outbuff.Size
 		      mLastError = zlib.deflate(zstream, Flushing)
+		      If mLastError = Z_STREAM_ERROR Then Raise New zlibException(mLastError)
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
 		      If have > 0 Then retstream.Write(outbuff.StringValue(0, have))
-		    Loop Until mLastError <> Z_OK Or zstream.avail_out = 0
+		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
 		  Loop Until instream.EOF
 		  retstream.Close
 		  Return ret
