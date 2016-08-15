@@ -53,7 +53,7 @@ Protected Class Inflater
 		      zstream.next_out = outbuff
 		      zstream.avail_out = outbuff.Size
 		      mLastError = zlib.inflate(zstream, Z_NO_FLUSH)
-		      If mLastError <> Z_OK And mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
+		      If mLastError <> Z_OK And mLastError <> Z_STREAM_END And mLastError <> Z_BUF_ERROR Then Raise New zlibException(mLastError)
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
 		      If have > 0 Then retstream.Write(outbuff.StringValue(0, have))
 		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
@@ -76,9 +76,24 @@ Protected Class Inflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Reset()
-		  If IsOpen Then mLastError = inflateReset(zstream)
+		Sub Reset(WindowBits As Integer = 0)
+		  If Not IsOpen Then Return
+		  If WindowBits = 0 Then
+		    mLastError = inflateReset(zstream)
+		  Else
+		    mLastError = inflateReset2(zstream, WindowBits)
+		  End If
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function SyncToFlush() As Boolean
+		  // locates the next point in the stream that is likely a Z_FULL_FLUSH point, where new inflation can begin
+		  
+		  If Not IsOpen Then Return False
+		  mLastError = inflateSync(zstream)
+		  Return mLastError = 0
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0

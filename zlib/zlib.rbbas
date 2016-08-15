@@ -23,7 +23,8 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = - 1) As MemoryBlock
-		  ' Compress the Data using deflate. If Data.Size is not known (-1) then specify the size as DataSize
+		  ' Compress memory in one operation using deflate. If Data.Size is not known (-1) then specify the size as DataSize
+		  ' Use Uncompress to reverse.
 		  
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  
@@ -87,8 +88,28 @@ Protected Module zlib
 		Private Soft Declare Function deflate Lib "zlib1" (ByRef Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
+	#tag Method, Flags = &h1
+		Protected Function Deflate(Source As Readable, Destination As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		  ' Compress the Source stream and write the output to the Destination stream. Use Inflate to reverse.
+		  
+		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel)
+		  Do Until Source.EOF
+		    z.Write(Source.Read(CHUNK_SIZE))
+		  Loop
+		  z.Close
+		  Return True
+		  
+		Exception
+		  Return False
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateBound Lib "zlib1" (sourceLen As UInt64) As UInt32
+		Private Soft Declare Function deflateBound Lib "zlib1" (ByRef Stream As z_stream, DataLength As UInt32) As UInt32
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateCopy Lib "zlib1" (ByRef Dst As z_stream, Src As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -104,7 +125,15 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflatePending Lib "zlib1" (ByRef Stream As z_stream, ByRef Pending As UInt32, ByRef Bits As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function deflateReset Lib "zlib1" (ByRef Stream As z_stream) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateSetDictionary Lib "zlib1" (ByRef Stream As z_stream, Dictionary As Ptr, DictLength As UInt32) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -183,8 +212,32 @@ Protected Module zlib
 		Private Soft Declare Function inflate Lib "zlib1" (ByRef Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
+	#tag Method, Flags = &h1
+		Protected Function Inflate(Source As Readable, Destination As Writeable) As Boolean
+		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
+		  
+		  Dim z As ZStream = ZStream.Open(Source)
+		  Do Until z.EOF
+		    Destination.Write(z.Read(CHUNK_SIZE))
+		  Loop
+		  z.Close
+		  Return True
+		  
+		Exception
+		  Return False
+		End Function
+	#tag EndMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflateCopy Lib "zlib1" (ByRef Dst As z_stream, Src As z_stream) As Integer
+	#tag EndExternalMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateEnd Lib "zlib1" (ByRef Stream As z_stream) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflateGetDictionary Lib "zlib1" (ByRef Stream As z_stream, Dictionary As Ptr, ByRef DictLength As UInt32) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -193,6 +246,18 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateReset Lib "zlib1" (ByRef Stream As z_stream) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflateReset2 Lib "zlib1" (ByRef Stream As z_stream, WindowBits As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflateSetDictionary Lib "zlib1" (ByRef Stream As z_stream, Dictionary As Ptr, DictLength As UInt32) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflateSync Lib "zlib1" (ByRef Dst As z_stream) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -243,8 +308,8 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1, DataSize As Integer = - 1) As MemoryBlock
-		  ' Decompress the Data using deflate. If Data.Size is not known (-1) then specify the size as DataSize
-		  ' If the size of the decompressed data is known then pass it as ExpandedSize
+		  ' Decompress memory in one operation using deflate. If Data.Size is not known (-1) then specify the size as DataSize
+		  ' If the size of the decompressed data is known then pass it as ExpandedSize. Reverses the Compress method
 		  
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  
