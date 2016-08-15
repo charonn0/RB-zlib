@@ -7,6 +7,12 @@ Protected Class Deflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Avail_Out() As UInt32
+		  Return zstream.avail_out
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION)
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
@@ -14,6 +20,16 @@ Protected Class Deflater
 		  mLastError = deflateInit_(zstream, CompressionLevel, zlib.Version, zstream.Size)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mLevel = CompressionLevel
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(CopyStream As zlib.Deflater)
+		  mLastError = deflateCopy(zstream, CopyStream.zstream)
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  mLevel = CopyStream.Level
+		  mStrategy = CopyStream.Strategy
+		  mDictionary = CopyStream.mDictionary
 		End Sub
 	#tag EndMethod
 
@@ -71,6 +87,35 @@ Protected Class Deflater
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function Total_In() As UInt32
+		  Return zstream.total_in
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Total_Out() As UInt32
+		  Return zstream.total_out
+		End Function
+	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mDictionary
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If Not IsOpen Then Return
+			  mLastError = deflateSetDictionary(zstream, value, value.Size)
+			  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+			  mDictionary = value
+			End Set
+		#tag EndSetter
+		Dictionary As MemoryBlock
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -92,6 +137,10 @@ Protected Class Deflater
 		#tag EndSetter
 		Level As Integer
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private mDictionary As MemoryBlock
+	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
@@ -151,10 +200,20 @@ Protected Class Deflater
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="Level"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Strategy"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"

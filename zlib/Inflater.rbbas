@@ -7,6 +7,12 @@ Protected Class Inflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Avail_Out() As UInt32
+		  Return zstream.avail_out
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor()
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
@@ -18,9 +24,17 @@ Protected Class Inflater
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(CopyStream As zlib.Inflater)
+		  mLastError = inflateCopy(zstream, CopyStream.zstream)
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  mDictionary = CopyStream.mDictionary
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If zstream.zfree <> Nil Then mLastError = zlib.inflateEnd(zstream)
+		  If IsOpen Then mLastError = zlib.inflateEnd(zstream)
 		  zstream.zfree = Nil
 		End Sub
 	#tag EndMethod
@@ -63,12 +77,47 @@ Protected Class Inflater
 
 	#tag Method, Flags = &h0
 		Sub Reset()
-		  If zstream.zalloc <> Nil Then
-		    mLastError = inflateReset(zstream)
-		  End If
+		  If IsOpen Then mLastError = inflateReset(zstream)
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function Total_In() As UInt32
+		  Return zstream.total_in
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Total_Out() As UInt32
+		  Return zstream.total_out
+		End Function
+	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If Not IsOpen Then Return Nil
+			  Dim sz As UInt32 = 32768
+			  Dim mb As New MemoryBlock(sz)
+			  mLastError = inflateGetDictionary(zstream, mb, sz)
+			  If mLastError <> Z_OK Then Return Nil
+			  Return mb.StringValue(0, sz)
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If Not IsOpen Then Return
+			  mLastError = inflateSetDictionary(zstream, value, value.Size)
+			  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+			End Set
+		#tag EndSetter
+		Dictionary As MemoryBlock
+	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private mDictionary As MemoryBlock
+	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer

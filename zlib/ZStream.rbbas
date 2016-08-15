@@ -109,6 +109,42 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mDeflater <> Nil Then
+			    Return mDeflater.Dictionary
+			  ElseIf mInflater <> Nil Then
+			    Return mInflater.Dictionary
+			  End If
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If mDeflater <> Nil Then
+			    mDeflater.Dictionary = value
+			  ElseIf mInflater <> Nil Then
+			    mInflater.Dictionary = value
+			  End If
+			End Set
+		#tag EndSetter
+		Dictionary As MemoryBlock
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mDeflater <> Nil Then Return mDeflater.Level
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If mDeflater <> Nil Then mDeflater.Level = value
+			End Set
+		#tag EndSetter
+		Level As Integer
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h21
 		Private mDeflater As zlib.Deflater
 	#tag EndProperty
@@ -124,6 +160,20 @@ Implements Readable,Writeable
 	#tag Property, Flags = &h21
 		Private mSource As Readable
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mDeflater <> Nil Then Return mDeflater.Strategy
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If mDeflater <> Nil Then mDeflater.Strategy = value
+			End Set
+		#tag EndSetter
+		Strategy As Integer
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior
