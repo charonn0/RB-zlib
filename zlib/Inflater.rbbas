@@ -128,10 +128,6 @@ Protected Class Inflater
 	#tag EndProperty
 
 
-	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"16384", Scope = Private
-	#tag EndConstant
-
-
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
