@@ -87,6 +87,16 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function LastError() As Integer
+		  If mInflater <> Nil Then
+		    Return mInflater.LastError
+		  ElseIf mDeflater <> Nil Then
+		    Return mDeflater.LastError
+		  End IF
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		 Shared Function Open(InputStream As Readable, WindowBits As Integer = 0) As zlib.ZStream
 		  ' process zlib-wrapped deflate data
 		  Dim zstruct As New Inflater(WindowBits)
