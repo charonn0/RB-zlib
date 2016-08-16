@@ -3,7 +3,7 @@ Protected Class ZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
-		  If mDeflater <> Nil Then Me.Flush()
+		  If mDeflater <> Nil Then Me.Flush(Z_FINISH)
 		  mSource = Nil
 		  mDestination = Nil
 		  mDeflater = Nil
@@ -28,8 +28,17 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZStream
-		  Dim zstruct As New Deflater(CompressionLevel)
+		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = 15) As zlib.ZStream
+		  Dim zstruct As Deflater
+		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> 15 Then
+		    ' Open the compressed stream using custom options
+		    zstruct =  New Deflater(CompressionLevel, CompressionStrategy, WindowBits)
+		    
+		  Else
+		    ' process zlib-wrapped deflate data
+		    zstruct = New Deflater(CompressionLevel)
+		    
+		  End If
 		  Return New zlib.ZStream(zstruct, Output)
 		  
 		End Function
@@ -37,10 +46,22 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function CreateAsGZ(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZStream
-		  Const GZIP_ENCODING = 16
-		  Const WindowBits = 15
-		  Dim zstruct As New Deflater(CompressionLevel, WindowBits Or GZIP_ENCODING)
-		  Return New zlib.ZStream(zstruct, Output)
+		  ' process gzip-wrapped deflate data
+		  Return Create(Output, CompressionLevel, Z_DEFAULT_STRATEGY, GZIP_ENCODING)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function CreateAsRaw(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZStream
+		  ' process raw deflate data with no header or trailer
+		  Return Create(Output, CompressionLevel, Z_DEFAULT_STRATEGY, RAW_ENCODING)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function CreateAsRLE(Output As Writeable) As zlib.ZStream
+		  ' process run-length encoded data
+		  Return Create(Output, Z_DEFAULT_COMPRESSION, Z_RLE, DEFLATE_ENCODING)
 		End Function
 	#tag EndMethod
 
@@ -57,11 +78,17 @@ Implements Readable,Writeable
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Flush()
+	#tag Method, Flags = &h21
+		Private Sub Flush()
 		  // Part of the Writeable interface.
+		  Me.Flush(Z_SYNC_FLUSH)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Flush(Flushing As Integer)
 		  If mDeflater <> Nil Then
-		    mDestination.Write(mDeflater.Deflate("", Z_FINISH))
+		    mDestination.Write(mDeflater.Deflate("", Flushing))
 		  Else
 		    Raise New IOException
 		  End If
@@ -69,8 +96,9 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Open(InputStream As Readable) As zlib.ZStream
-		  Dim zstruct As New Inflater()
+		 Shared Function Open(InputStream As Readable, WindowBits As Integer = 0) As zlib.ZStream
+		  ' process zlib-wrapped deflate data
+		  Dim zstruct As New Inflater(WindowBits)
 		  Return New zlib.ZStream(zstruct, InputStream)
 		  
 		End Function
@@ -78,11 +106,18 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function OpenAsGZ(InputStream As Readable) As zlib.ZStream
-		  Const GZIP_ENCODING = 16
-		  Const WindowBits = 15
-		  Dim zstruct As New Inflater(WindowBits Or GZIP_ENCODING)
-		  Return New zlib.ZStream(zstruct, InputStream)
+		  ' process gzip-wrapped deflate data
+		  Const GZIP_ENCODING = 31
+		  Return Open(InputStream, GZIP_ENCODING)
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function OpenAsRaw(InputStream As Readable) As zlib.ZStream
+		  ' process raw deflate data with no header or trailer
+		  Const DEFLATE_RAW = -15
+		  Return Open(InputStream, DEFLATE_RAW)
 		End Function
 	#tag EndMethod
 
@@ -112,9 +147,7 @@ Implements Readable,Writeable
 		Sub Write(text As String)
 		  // Part of the Writeable interface.
 		  
-		  If mDeflater <> Nil Then
-		    mDestination.Write(mDeflater.Deflate(text))
-		  Else
+		  If mDeflater <> Nil And Not mDeflater.Deflate(text, mDestination) Then
 		    Raise New IOException
 		  End If
 		End Sub
@@ -211,10 +244,20 @@ Implements Readable,Writeable
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="Level"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Strategy"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"

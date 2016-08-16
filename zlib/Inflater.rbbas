@@ -19,14 +19,6 @@ Protected Class Inflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CopyStream As zlib.Inflater)
-		  mLastError = inflateCopy(zstream, CopyStream.zstream)
-		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
-		  mDictionary = CopyStream.mDictionary
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub Constructor(WindowBits As Integer = 0)
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
@@ -42,6 +34,14 @@ Protected Class Inflater
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(CopyStream As zlib.Inflater)
+		  mLastError = inflateCopy(zstream, CopyStream.zstream)
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  mDictionary = CopyStream.mDictionary
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  If IsOpen Then mLastError = zlib.inflateEnd(zstream)
@@ -51,9 +51,17 @@ Protected Class Inflater
 
 	#tag Method, Flags = &h0
 		Function Inflate(Data As MemoryBlock) As MemoryBlock
-		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
 		  Dim ret As New MemoryBlock(0)
 		  Dim retstream As New BinaryStream(ret)
+		  If Not Me.Inflate(Data, retstream) Then Return Nil
+		  retstream.Close
+		  Return ret
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Inflate(Data As MemoryBlock, WriteTo As Writeable) As Boolean
+		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
 		  Dim instream As New BinaryStream(Data)
 		  Do
 		    Dim chunk As MemoryBlock = instream.Read(CHUNK_SIZE)
@@ -63,13 +71,12 @@ Protected Class Inflater
 		      zstream.next_out = outbuff
 		      zstream.avail_out = outbuff.Size
 		      mLastError = zlib.inflate(zstream, Z_NO_FLUSH)
-		      If mLastError <> Z_OK And mLastError <> Z_STREAM_END And mLastError <> Z_BUF_ERROR Then Raise New zlibException(mLastError)
+		      If mLastError <> Z_OK And mLastError <> Z_STREAM_END And mLastError <> Z_BUF_ERROR Then Return False
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
-		      If have > 0 Then retstream.Write(outbuff.StringValue(0, have))
+		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
 		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
 		  Loop Until instream.EOF
-		  retstream.Close
-		  Return ret
+		  Return True
 		End Function
 	#tag EndMethod
 

@@ -19,6 +19,31 @@ Protected Class Deflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Constructor(CompressionLevel As Integer)
+		  Const MAX_MEM_LEVEL = 8
+		  zstream.zalloc = Nil
+		  zstream.zfree = Nil
+		  zstream.opaque = Nil
+		  mLastError = deflateInit_(zstream, CompressionLevel, zlib.Version, zstream.Size)
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  mLevel = CompressionLevel
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer)
+		  Const MAX_MEM_LEVEL = 8
+		  zstream.zalloc = Nil
+		  zstream.zfree = Nil
+		  zstream.opaque = Nil
+		  mLastError = deflateInit2_(zstream, CompressionLevel, Z_DEFLATED, WindowBits, MAX_MEM_LEVEL, CompressionStrategy, zlib.Version, zstream.Size)
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  mLevel = CompressionLevel
+		  mStrategy = CompressionStrategy
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(CopyStream As zlib.Deflater)
 		  mLastError = deflateCopy(zstream, CopyStream.zstream)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
@@ -29,27 +54,18 @@ Protected Class Deflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, WindowBits As Integer = 0)
-		  Const MAX_MEM_LEVEL = 8
-		  zstream.zalloc = Nil
-		  zstream.zfree = Nil
-		  zstream.opaque = Nil
-		  If WindowBits = 0 Then
-		    mLastError = deflateInit_(zstream, CompressionLevel, zlib.Version, zstream.Size)
-		  Else
-		    mLastError = deflateInit2_(zstream, CompressionLevel, Z_DEFLATED, WindowBits, _
-		    MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY, zlib.Version, zstream.Size)
-		  End If
-		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
-		  mLevel = CompressionLevel
-		End Sub
+		Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
+		  Dim ret As New MemoryBlock(0)
+		  Dim retstream As New BinaryStream(ret)
+		  If Not Me.Deflate(Data, retstream, Flushing) Then Return Nil
+		  retstream.Close
+		  Return ret
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
+		Function Deflate(Data As MemoryBlock, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH) As Boolean
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
-		  Dim ret As New MemoryBlock(0)
-		  Dim retstream As New BinaryStream(ret)
 		  Dim instream As New BinaryStream(Data)
 		  Do
 		    Dim chunk As MemoryBlock = instream.Read(CHUNK_SIZE)
@@ -59,13 +75,12 @@ Protected Class Deflater
 		      zstream.next_out = outbuff
 		      zstream.avail_out = outbuff.Size
 		      mLastError = zlib.deflate(zstream, Flushing)
-		      If mLastError = Z_STREAM_ERROR Then Raise New zlibException(mLastError)
+		      If mLastError = Z_STREAM_ERROR Then Return False
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
-		      If have > 0 Then retstream.Write(outbuff.StringValue(0, have))
+		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
 		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
 		  Loop Until instream.EOF
-		  retstream.Close
-		  Return ret
+		  Return True
 		  
 		  
 		End Function
