@@ -1,23 +1,6 @@
 #tag Class
 Protected Class Inflater
-	#tag Method, Flags = &h0
-		Function Avail_In() As UInt32
-		  Return zstream.avail_in
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Avail_Out() As UInt32
-		  Return zstream.avail_out
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Checksum() As UInt32
-		  If IsOpen Then Return zstream.adler
-		End Function
-	#tag EndMethod
-
+Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Sub Constructor(WindowBits As Integer = 0)
 		  zstream.zalloc = Nil
@@ -50,21 +33,30 @@ Protected Class Inflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function GetHeader(ByRef HeaderStruct As zlib.gz_headerp) As Boolean
+		  If Not IsOpen Then Return False
+		  mLastError = inflateGetHeader(zstream, HeaderStruct)
+		  Return mLastError = Z_OK
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Inflate(Data As MemoryBlock) As MemoryBlock
 		  Dim ret As New MemoryBlock(0)
 		  Dim retstream As New BinaryStream(ret)
-		  If Not Me.Inflate(Data, retstream) Then Return Nil
+		  Dim instream As New BinaryStream(Data)
+		  If Not Me.Inflate(instream, retstream) Then Return Nil
 		  retstream.Close
 		  Return ret
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(Data As MemoryBlock, WriteTo As Writeable) As Boolean
+		Function Inflate(Source As Readable, WriteTo As Writeable) As Boolean
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
-		  Dim instream As New BinaryStream(Data)
 		  Do
-		    Dim chunk As MemoryBlock = instream.Read(CHUNK_SIZE)
+		    Dim chunk As MemoryBlock = Source.Read(CHUNK_SIZE)
 		    zstream.avail_in = chunk.Size
 		    zstream.next_in = chunk
 		    Do
@@ -75,20 +67,15 @@ Protected Class Inflater
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
 		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
 		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
-		  Loop Until instream.EOF
+		  Loop Until Source.EOF
 		  Return True
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function IsOpen() As Boolean
-		  Return zstream.zfree <> Nil
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
-		Function LastError() As Integer
-		  Return mLastError
+		Function InflateMark() As UInt32
+		  If Not IsOpen Then Return 0
+		  Return inflateMark(zstream)
 		End Function
 	#tag EndMethod
 
@@ -104,24 +91,12 @@ Protected Class Inflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function SyncToFlush() As Boolean
-		  // locates the next point in the stream that is likely a Z_FULL_FLUSH point, where new inflation can begin
+		Function SyncToNextFlush() As Boolean
+		  ' Skips invalid compressed data until a possible full flush point can be found, or until all available input is skipped.
 		  
 		  If Not IsOpen Then Return False
 		  mLastError = inflateSync(zstream)
 		  Return mLastError = Z_OK
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Total_In() As UInt32
-		  Return zstream.total_in
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Total_Out() As UInt32
-		  Return zstream.total_out
 		End Function
 	#tag EndMethod
 
@@ -146,18 +121,6 @@ Protected Class Inflater
 		#tag EndSetter
 		Dictionary As MemoryBlock
 	#tag EndComputedProperty
-
-	#tag Property, Flags = &h21
-		Private mDictionary As MemoryBlock
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mLastError As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected zstream As z_stream
-	#tag EndProperty
 
 
 	#tag ViewBehavior

@@ -1,23 +1,6 @@
 #tag Class
 Protected Class Deflater
-	#tag Method, Flags = &h0
-		Function Avail_In() As UInt32
-		  Return zstream.avail_in
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Avail_Out() As UInt32
-		  Return zstream.avail_out
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Checksum() As UInt32
-		  If IsOpen Then Return zstream.adler
-		End Function
-	#tag EndMethod
-
+Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Function CompressBound(DataLength As UInt32) As UInt32
 		  If Not IsOpen Then Return 0
@@ -27,7 +10,6 @@ Protected Class Deflater
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CompressionLevel As Integer)
-		  Const MAX_MEM_LEVEL = 8
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
 		  zstream.opaque = Nil
@@ -63,18 +45,18 @@ Protected Class Deflater
 		Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
 		  Dim ret As New MemoryBlock(0)
 		  Dim retstream As New BinaryStream(ret)
-		  If Not Me.Deflate(Data, retstream, Flushing) Then Return Nil
+		  Dim instream As New BinaryStream(Data)
+		  If Not Me.Deflate(instream, retstream, Flushing) Then Return Nil
 		  retstream.Close
 		  Return ret
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(Data As MemoryBlock, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH) As Boolean
+		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH) As Boolean
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
-		  Dim instream As New BinaryStream(Data)
 		  Do
-		    Dim chunk As MemoryBlock = instream.Read(CHUNK_SIZE)
+		    Dim chunk As MemoryBlock = ReadFrom.Read(CHUNK_SIZE)
 		    zstream.avail_in = chunk.Size
 		    zstream.next_in = chunk
 		    Do
@@ -85,7 +67,7 @@ Protected Class Deflater
 		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
 		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
 		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
-		  Loop Until instream.EOF
+		  Loop Until ReadFrom.EOF
 		  Return True
 		  
 		  
@@ -98,18 +80,6 @@ Protected Class Deflater
 		  zstream.zfree = Nil
 		  
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Function IsOpen() As Boolean
-		  Return zstream.zfree <> Nil
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function LastError() As Integer
-		  Return mLastError
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -146,18 +116,6 @@ Protected Class Deflater
 		  mLastError = deflateSetHeader(zstream, HeaderStruct)
 		  Return mLastError = Z_OK
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Total_In() As UInt32
-		  Return zstream.total_in
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Total_Out() As UInt32
-		  Return zstream.total_out
 		End Function
 	#tag EndMethod
 
@@ -208,22 +166,6 @@ Protected Class Deflater
 		Level As Integer
 	#tag EndComputedProperty
 
-	#tag Property, Flags = &h21
-		Private mDictionary As MemoryBlock
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mLastError As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mLevel As Integer = Z_DEFAULT_COMPRESSION
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mStrategy As Integer = Z_DEFAULT_STRATEGY
-	#tag EndProperty
-
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
@@ -244,10 +186,6 @@ Protected Class Deflater
 		#tag EndSetter
 		Strategy As Integer
 	#tag EndComputedProperty
-
-	#tag Property, Flags = &h1
-		Protected zstream As z_stream
-	#tag EndProperty
 
 
 	#tag ViewBehavior
