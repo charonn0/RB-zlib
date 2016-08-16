@@ -90,7 +90,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Deflate(Source As FolderItem, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False) As Boolean
-		  ' Compress the Source data and return it. Use Inflate to reverse.
+		  ' Compress the Source file into the Destination file. Use Inflate to reverse.
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
@@ -106,7 +106,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Deflate(Source As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As MemoryBlock
-		  ' Compress the Source data and return it. Use Inflate to reverse.
+		  ' Compress the Source file and return it. Use Inflate to reverse.
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
@@ -191,6 +191,10 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflatePrime Lib "zlib1" (ByRef Stream As z_stream, Bits As Integer, Value As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function deflateReset Lib "zlib1" (ByRef Stream As z_stream) As Integer
 	#tag EndExternalMethod
 
@@ -198,9 +202,17 @@ Protected Module zlib
 		Private Soft Declare Function deflateSetDictionary Lib "zlib1" (ByRef Stream As z_stream, Dictionary As Ptr, DictLength As UInt32) As Integer
 	#tag EndExternalMethod
 
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateSetHeader Lib "zlib1" (ByRef Stream As z_stream, Header As gz_headerp) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflateTune Lib "zlib1" (ByRef Stream As z_stream, GoodLength As Integer, MaxLazy As Integer, NiceLength As Integer, MaxChain As Integer) As Integer
+	#tag EndExternalMethod
+
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(Source As FolderItem) As MemoryBlock
-		  ' GUnZip the Source stream and write the output to the Destination stream. Reverses the GZip method
+		  ' GUnZip the Source file and return it. Reverses the GZip method
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
@@ -217,7 +229,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(Source As FolderItem, Destination As FolderItem, Overwrite As Boolean = False) As Boolean
-		  ' GUnZip the Source stream and write the output to the Destination stream. Reverses the GZip method
+		  ' GUnZip the Source file and write the output to the Destination file. Reverses the GZip method
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
@@ -233,20 +245,16 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(Source As MemoryBlock) As MemoryBlock
-		  ' GUnZip the Source stream and write the output to the Destination stream. Reverses the GZip method
+		  ' GUnZip the Source data and return it. Reverses the GZip method
 		  
-		  Dim buffer As New MemoryBlock(0)
-		  Dim dst As New BinaryStream(buffer)
 		  Dim src As New BinaryStream(Source)
-		  If Not GUnZip(src, dst) Then Return Nil
-		  dst.Close
-		  Return buffer
+		  Return GUnZip(src)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(Source As Readable) As MemoryBlock
-		  ' GUnZip the Source stream and write the output to the Destination stream. Reverses the GZip method
+		  ' GUnZip the Source stream and Return it. Reverses the GZip method
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim stream As New BinaryStream(buffer)
@@ -290,7 +298,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function GZip(Source As FolderItem, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False) As Boolean
-		  ' GZip the Source data and return it. Use GUnZip to reverse.
+		  ' GZip the Source file into the Destination file. Use GUnZip to reverse.
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
@@ -306,7 +314,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function GZip(Source As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As MemoryBlock
-		  ' GZip the Source data and return it. Use GUnZip to reverse.
+		  ' GZip the Source file and return it. Use GUnZip to reverse.
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
@@ -325,12 +333,8 @@ Protected Module zlib
 		Protected Function GZip(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As MemoryBlock
 		  ' GZip the Source data and return it. Use GUnZip to reverse.
 		  
-		  Dim buffer As New MemoryBlock(0)
-		  Dim dst As New BinaryStream(buffer)
 		  Dim src As New BinaryStream(Source)
-		  If Not GZip(src, dst, CompressionLevel) Then Return Nil
-		  dst.Close
-		  Return buffer
+		  Return GZip(src, CompressionLevel)
 		End Function
 	#tag EndMethod
 
@@ -350,7 +354,7 @@ Protected Module zlib
 		Protected Function GZip(Source As Readable, Destination As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  ' GZip the Source stream and write the output to the Destination stream. Use GUnZip to reverse.
 		  
-		  Dim z As ZStream = ZStream.CreateAsGZ(Destination, CompressionLevel)
+		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Z_DEFAULT_STRATEGY, GZIP_ENCODING)
 		  Do Until Source.EOF
 		    z.Write(Source.Read(CHUNK_SIZE))
 		  Loop
@@ -392,7 +396,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As FolderItem, Destination As FolderItem, Dictionary As MemoryBlock = Nil, Overwrite As Boolean = False) As Boolean
-		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
+		  ' Decompress the Source file and write the output to the Destination file. Reverses the Deflate method
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
@@ -408,8 +412,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As FolderItem, Dictionary As MemoryBlock = Nil) As MemoryBlock
-		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
-		  
+		  ' Decompress the Source file and return it. Reverses the Deflate method
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
@@ -426,20 +429,16 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As MemoryBlock, Dictionary As MemoryBlock = Nil) As MemoryBlock
-		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
+		  ' Decompress the Source data and return it. Reverses the Deflate method
 		  
-		  Dim buffer As New MemoryBlock(0)
-		  Dim dst As New BinaryStream(buffer)
 		  Dim src As New BinaryStream(Source)
-		  If Not Inflate(src, dst, Dictionary) Then Return Nil
-		  dst.Close
-		  Return buffer
+		  Return Inflate(src, Dictionary)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As Readable, Dictionary As MemoryBlock = Nil) As MemoryBlock
-		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
+		  ' Decompress the Source stream and return it. Reverses the Deflate method
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim stream As New BinaryStream(buffer)
@@ -747,6 +746,22 @@ Protected Module zlib
 	#tag Constant, Name = Z_VERSION_ERROR, Type = Double, Dynamic = False, Default = \"-6", Scope = Private
 	#tag EndConstant
 
+
+	#tag Structure, Name = gz_headerp, Flags = &h1
+		comm_max As UInt32
+		  Comment As Ptr
+		  Done As Integer
+		  Extra As Ptr
+		  ExtraLen As UInt32
+		  ExtraMax As UInt32
+		  hcrc As Integer
+		  Name As Ptr
+		  NameMax As UInt32
+		  OS As Integer
+		  Text As Integer
+		  Time As UInt32
+		xflags As Integer
+	#tag EndStructure
 
 	#tag Structure, Name = z_stream, Flags = &h21
 		next_in as Ptr

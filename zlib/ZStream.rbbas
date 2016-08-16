@@ -28,11 +28,11 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = 15) As zlib.ZStream
+		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = 15, MemoryLevel As Integer = 8) As zlib.ZStream
 		  Dim zstruct As Deflater
-		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> 15 Then
+		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> 15 Or MemoryLevel <> 8 Then
 		    ' Open the compressed stream using custom options
-		    zstruct =  New Deflater(CompressionLevel, CompressionStrategy, WindowBits)
+		    zstruct =  New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
 		    
 		  Else
 		    ' process zlib-wrapped deflate data
@@ -41,13 +41,6 @@ Implements Readable,Writeable
 		  End If
 		  Return New zlib.ZStream(zstruct, Output)
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		 Shared Function CreateAsGZ(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZStream
-		  ' process gzip-wrapped deflate data
-		  Return Create(Output, CompressionLevel, Z_DEFAULT_STRATEGY, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
 
@@ -127,7 +120,8 @@ Implements Readable,Writeable
 		  
 		  Dim data As String
 		  If mInflater <> Nil Then
-		    data = mInflater.Inflate(mSource.Read(Count))
+		    Dim tmp As String = mSource.Read(Count)
+		    data = mInflater.Inflate(tmp)
 		    If encoding <> Nil Then data = DefineEncoding(data, encoding)
 		    Return data
 		  Else

@@ -19,6 +19,13 @@ Protected Class Deflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function CompressBound(DataLength As UInt32) As UInt32
+		  If Not IsOpen Then Return 0
+		  Return deflateBound(zstream, DataLength)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(CompressionLevel As Integer)
 		  Const MAX_MEM_LEVEL = 8
 		  zstream.zalloc = Nil
@@ -31,12 +38,11 @@ Protected Class Deflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer)
-		  Const MAX_MEM_LEVEL = 8
+		Sub Constructor(CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer, MemoryLevel As Integer)
 		  zstream.zalloc = Nil
 		  zstream.zfree = Nil
 		  zstream.opaque = Nil
-		  mLastError = deflateInit2_(zstream, CompressionLevel, Z_DEFLATED, WindowBits, MAX_MEM_LEVEL, CompressionStrategy, zlib.Version, zstream.Size)
+		  mLastError = deflateInit2_(zstream, CompressionLevel, Z_DEFLATED, WindowBits, MemoryLevel, CompressionStrategy, zlib.Version, zstream.Size)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mLevel = CompressionLevel
 		  mStrategy = CompressionStrategy
@@ -94,8 +100,8 @@ Protected Class Deflater
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function IsOpen() As Boolean
+	#tag Method, Flags = &h1
+		Protected Function IsOpen() As Boolean
 		  Return zstream.zfree <> Nil
 		End Function
 	#tag EndMethod
@@ -103,6 +109,26 @@ Protected Class Deflater
 	#tag Method, Flags = &h0
 		Function LastError() As Integer
 		  Return mLastError
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Pending() As Single
+		  If Not IsOpen Then Return 0.0
+		  Dim bytes As UInt32
+		  Dim bits As Integer
+		  mLastError = deflatePending(zstream, bytes, bits)
+		  If mLastError = Z_OK Then Return CDbl(Str(bytes) + "." + Str(bits))
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Prime(Bits As Integer, Value As Integer) As Boolean
+		  If Not IsOpen Then Return False
+		  mLastError = deflatePrime(zstream, Bits, Value)
+		  Return mLastError = Z_OK
+		  
 		End Function
 	#tag EndMethod
 
@@ -115,6 +141,15 @@ Protected Class Deflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function SetHeader(HeaderStruct As zlib.gz_headerp) As Boolean
+		  If Not IsOpen Then Return False
+		  mLastError = deflateSetHeader(zstream, HeaderStruct)
+		  Return mLastError = Z_OK
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Total_In() As UInt32
 		  Return zstream.total_in
 		End Function
@@ -123,6 +158,14 @@ Protected Class Deflater
 	#tag Method, Flags = &h0
 		Function Total_Out() As UInt32
 		  Return zstream.total_out
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Tune(GoodLength As Integer, MaxLazy As Integer, NiceLength As Integer, MaxChain As Integer) As Boolean
+		  If Not IsOpen Then Return False
+		  mLastError = deflateTune(zstream, GoodLength, MaxLazy, NiceLength, MaxChain)
+		  Return mLastError = Z_OK
 		End Function
 	#tag EndMethod
 
