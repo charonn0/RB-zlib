@@ -3,17 +3,24 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  If Not TestCompress() Then MsgBox("Compression failed")
-		  If Not TestGZAppend() Then MsgBox("gzip append failed")
-		  If Not TestGZWrite() Then MsgBox("gzip failed")
-		  If Not TestGZRead() Then MsgBox("gunzip failed")
-		  If Not TestTar() Then MsgBox("Tar failed")
-		  If Not TestUntar() Then MsgBox("Untar failed")
-		  If Not TestTarAppend() Then MsgBox("Tar append failed")
-		  If Not TestZStream() Then MsgBox("ZStream failed")
-		  If Not TestZWrite() Then MsgBox("Z write failed")
-		  If Not TestZRead() Then MsgBox("Z read failed")
-		  If Not TestGZStream() Then MsgBox("Z read failed")
+		  'If Not TestCompress() Then MsgBox("Compression failed")
+		  'If Not TestGZAppend() Then MsgBox("gzip append failed")
+		  'If Not TestGZWrite() Then MsgBox("gzip failed")
+		  'If Not TestGZRead() Then MsgBox("gunzip failed")
+		  'If Not TestTar() Then MsgBox("Tar failed")
+		  'If Not TestUntar() Then MsgBox("Untar failed")
+		  'If Not TestTarAppend() Then MsgBox("Tar append failed")
+		  'If Not TestZStream() Then MsgBox("ZStream failed")
+		  'If Not TestZWrite() Then MsgBox("Z write failed")
+		  'If Not TestZRead() Then MsgBox("Z read failed")
+		  'If Not TestGZStream() Then MsgBox("Z read failed")
+		  
+		  Dim f As FolderItem = GetFolderItem("C:\Users\BH1\Downloads\xubuntu-14.04.4-desktop-amd64.iso")
+		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
+		  If Not zlib.GZip(f, g) Then Break
+		  'f = f.Parent.Child(f.Name + ".iso")
+		  'If Not zlib.GUnZip(g, f) Then Break
+		  
 		End Sub
 	#tag EndEvent
 
