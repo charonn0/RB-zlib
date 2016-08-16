@@ -89,76 +89,83 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Deflate(Source As FolderItem, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False) As Boolean
+		Protected Function Deflate(Source As FolderItem, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Compress the Source file into the Destination file. Use Inflate to reverse.
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  If Not Deflate(src, dst, CompressionLevel) Then Return False
-		  src.Close
-		  dst.Close
-		  Return True
-		  
-		Exception
-		  Return False
+		  Dim ok As Boolean
+		  Try
+		    ok = Deflate(src, dst, CompressionLevel, Encoding)
+		  Finally
+		    src.Close
+		    dst.Close
+		  End Try
+		  Return ok
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Deflate(Source As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As MemoryBlock
+		Protected Function Deflate(Source As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As Integer = zlib.DEFLATE_ENCODING) As MemoryBlock
 		  ' Compress the Source file and return it. Use Inflate to reverse.
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  If Not Deflate(src, dst, CompressionLevel) Then Return Nil
-		  src.Close
-		  dst.Close
-		  Return buffer
-		  
-		Exception
-		  Return Nil
+		  Dim ok As Boolean
+		  Try
+		    ok = Deflate(src, dst, CompressionLevel, Encoding)
+		  Finally
+		    src.Close
+		    dst.Close
+		  End Try
+		  If ok Then Return buffer
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Deflate(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As MemoryBlock
+		Protected Function Deflate(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As Integer = zlib.DEFLATE_ENCODING) As MemoryBlock
 		  ' Compress the Source data and return it. Use Inflate to reverse.
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
 		  Dim src As New BinaryStream(Source)
-		  If Not Deflate(src, dst, CompressionLevel) Then Return Nil
+		  If Not Deflate(src, dst, CompressionLevel, Encoding) Then Return Nil
 		  dst.Close
 		  Return buffer
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Deflate(Source As Readable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As MemoryBlock
+		Protected Function Deflate(Source As Readable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As Integer = zlib.DEFLATE_ENCODING) As MemoryBlock
 		  ' Compress the Source stream and return it. Use Inflate to reverse.
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim stream As New BinaryStream(buffer)
-		  If Not Deflate(Source, stream, CompressionLevel) Then Return Nil
+		  If Not Deflate(Source, stream, CompressionLevel, Encoding) Then Return Nil
 		  stream.Close
 		  Return buffer
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Deflate(Source As Readable, Destination As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Protected Function Deflate(Source As Readable, Destination As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Compress the Source stream and write the output to the Destination stream. Use Inflate to reverse.
 		  
-		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel)
-		  Do Until Source.EOF
-		    z.Write(Source.Read(CHUNK_SIZE))
-		  Loop
-		  z.Close
+		  Dim z As ZStream
+		  If Encoding = DEFLATE_ENCODING Then
+		    z = ZStream.Create(Destination, CompressionLevel)
+		  Else
+		    z = ZStream.Create(Destination, CompressionLevel, Z_DEFAULT_STRATEGY, Encoding)
+		  End If
+		  Try
+		    Do Until Source.EOF
+		      z.Write(Source.Read(CHUNK_SIZE))
+		    Loop
+		  Finally
+		    z.Close
+		  End Try
 		  Return True
-		  
-		Exception
-		  Return False
 		End Function
 	#tag EndMethod
 
@@ -217,13 +224,14 @@ Protected Module zlib
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  If Not GUnZip(src, dst) Then Return Nil
-		  src.Close
-		  dst.Close
-		  Return buffer
-		  
-		Exception
-		  Return Nil
+		  Dim ok As Boolean
+		  Try
+		    ok = GUnZip(src, dst)
+		  Finally
+		    src.Close
+		    dst.Close
+		  End Try
+		  If ok Then Return buffer
 		End Function
 	#tag EndMethod
 
@@ -233,13 +241,14 @@ Protected Module zlib
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  If Not GUnZip(src, dst) Then Return False
-		  src.Close
-		  dst.Close
-		  Return True
-		  
-		Exception
-		  Return False
+		  Dim ok As Boolean
+		  Try
+		    ok = GUnZip(src, dst)
+		  Finally
+		    src.Close
+		    dst.Close
+		  End Try
+		  Return ok
 		End Function
 	#tag EndMethod
 
@@ -268,15 +277,7 @@ Protected Module zlib
 		Protected Function GUnZip(Source As Readable, Destination As Writeable) As Boolean
 		  ' gunzip the Source stream and write the output to the Destination stream. Reverses the GZip method
 		  
-		  Dim z As ZStream = ZStream.OpenAsGZ(Source)
-		  Do Until z.EOF
-		    Destination.Write(z.Read(CHUNK_SIZE))
-		  Loop
-		  z.Close
-		  Return True
-		  
-		Exception
-		  Return False
+		  Return Inflate(Source, Destination, Nil, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
 
@@ -302,13 +303,14 @@ Protected Module zlib
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  If Not GZip(src, dst, CompressionLevel) Then Return False
-		  src.Close
-		  dst.Close
-		  Return True
-		  
-		Exception
-		  Return False
+		  Dim ok As Boolean
+		  Try
+		    ok = GZip(src, dst, CompressionLevel)
+		  Finally
+		    src.Close
+		    dst.Close
+		  End Try
+		  Return ok
 		End Function
 	#tag EndMethod
 
@@ -319,13 +321,14 @@ Protected Module zlib
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  If Not GZip(src, dst, CompressionLevel) Then Return Nil
-		  src.Close
-		  dst.Close
-		  Return buffer
-		  
-		Exception
-		  Return Nil
+		  Dim ok As Boolean
+		  Try
+		    ok = GZip(src, dst, CompressionLevel)
+		  Finally
+		    src.Close
+		    dst.Close
+		  End Try
+		  If ok Then Return buffer
 		End Function
 	#tag EndMethod
 
@@ -354,15 +357,7 @@ Protected Module zlib
 		Protected Function GZip(Source As Readable, Destination As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  ' GZip the Source stream and write the output to the Destination stream. Use GUnZip to reverse.
 		  
-		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Z_DEFAULT_STRATEGY, GZIP_ENCODING)
-		  Do Until Source.EOF
-		    z.Write(Source.Read(CHUNK_SIZE))
-		  Loop
-		  z.Close
-		  Return True
-		  
-		Exception
-		  Return False
+		  Return Deflate(Source, Destination, CompressionLevel, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
 
@@ -395,73 +390,80 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Inflate(Source As FolderItem, Destination As FolderItem, Dictionary As MemoryBlock = Nil, Overwrite As Boolean = False) As Boolean
+		Protected Function Inflate(Source As FolderItem, Destination As FolderItem, Dictionary As MemoryBlock = Nil, Overwrite As Boolean = False, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Decompress the Source file and write the output to the Destination file. Reverses the Deflate method
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  If Not Inflate(src, dst, Dictionary) Then Return False
-		  src.Close
-		  dst.Close
-		  Return True
-		  
-		Exception
-		  Return False
+		  Dim ok As Boolean
+		  Try
+		    ok = Inflate(src, dst, Dictionary, Encoding)
+		  Finally
+		    src.Close
+		    dst.Close
+		  End Try
+		  Return ok
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Inflate(Source As FolderItem, Dictionary As MemoryBlock = Nil) As MemoryBlock
+		Protected Function Inflate(Source As FolderItem, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As MemoryBlock
 		  ' Decompress the Source file and return it. Reverses the Deflate method
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim dst As New BinaryStream(buffer)
 		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  If Not Inflate(src, dst, Dictionary) Then Return Nil
-		  src.Close
-		  dst.Close
-		  Return buffer
-		  
-		Exception
-		  Return Nil
+		  Dim ok As Boolean
+		  Try
+		    ok = Inflate(src, dst, Dictionary, Encoding)
+		  Finally
+		    src.Close
+		    dst.Close
+		  End Try
+		  If ok Then Return buffer
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Inflate(Source As MemoryBlock, Dictionary As MemoryBlock = Nil) As MemoryBlock
+		Protected Function Inflate(Source As MemoryBlock, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As MemoryBlock
 		  ' Decompress the Source data and return it. Reverses the Deflate method
 		  
 		  Dim src As New BinaryStream(Source)
-		  Return Inflate(src, Dictionary)
+		  Return Inflate(src, Dictionary, Encoding)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Inflate(Source As Readable, Dictionary As MemoryBlock = Nil) As MemoryBlock
+		Protected Function Inflate(Source As Readable, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As MemoryBlock
 		  ' Decompress the Source stream and return it. Reverses the Deflate method
 		  
 		  Dim buffer As New MemoryBlock(0)
 		  Dim stream As New BinaryStream(buffer)
-		  If Not Inflate(Source, stream, Dictionary) Then Return Nil
+		  If Not Inflate(Source, stream, Dictionary, Encoding) Then Return Nil
 		  stream.Close
 		  Return buffer
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Inflate(Source As Readable, Destination As Writeable, Dictionary As MemoryBlock = Nil) As Boolean
+		Protected Function Inflate(Source As Readable, Destination As Writeable, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
 		  
-		  Dim z As ZStream = ZStream.Open(Source)
-		  z.Dictionary = Dictionary
-		  Do Until z.EOF
-		    Destination.Write(z.Read(CHUNK_SIZE))
-		  Loop
-		  z.Close
+		  Dim z As ZStream
+		  If Encoding = DEFLATE_ENCODING Then
+		    z = ZStream.Open(Source)
+		  Else
+		    z = ZStream.Open(Source, Encoding)
+		  End If
+		  Try
+		    z.Dictionary = Dictionary
+		    Do Until z.EOF
+		      Destination.Write(z.Read(CHUNK_SIZE))
+		    Loop
+		  Finally
+		    z.Close
+		  End Try
 		  Return True
-		  
-		Exception
-		  Return False
 		End Function
 	#tag EndMethod
 
