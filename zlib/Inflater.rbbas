@@ -13,15 +13,9 @@ Protected Class Inflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor()
-		  zstream.zalloc = Nil
-		  zstream.zfree = Nil
-		  zstream.opaque = Nil
-		  zstream.avail_in = 0
-		  zstream.next_in = Nil
-		  mLastError = inflateInit_(zstream, zlib.Version, zstream.Size)
-		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
-		End Sub
+		Function Checksum() As UInt32
+		  If IsOpen Then Return zstream.adler
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -29,6 +23,22 @@ Protected Class Inflater
 		  mLastError = inflateCopy(zstream, CopyStream.zstream)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mDictionary = CopyStream.mDictionary
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(WindowBits As Integer = 0)
+		  zstream.zalloc = Nil
+		  zstream.zfree = Nil
+		  zstream.opaque = Nil
+		  zstream.avail_in = 0
+		  zstream.next_in = Nil
+		  If WindowBits = 0 Then
+		    mLastError = inflateInit_(zstream, zlib.Version, zstream.Size)
+		  Else
+		    mLastError = inflateInit2_(zstream, WindowBits, zlib.Version, zstream.Size)
+		  End If
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		End Sub
 	#tag EndMethod
 
@@ -122,7 +132,7 @@ Protected Class Inflater
 		#tag EndGetter
 		#tag Setter
 			Set
-			  If Not IsOpen Then Return
+			  If value = Nil Or Not IsOpen Then Return
 			  mLastError = inflateSetDictionary(zstream, value, value.Size)
 			  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 			End Set

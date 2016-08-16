@@ -35,6 +35,15 @@ Implements Readable,Writeable
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		 Shared Function CreateAsGZ(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZStream
+		  Const GZIP_ENCODING = 16
+		  Const WindowBits = 15
+		  Dim zstruct As New Deflater(CompressionLevel, WindowBits Or GZIP_ENCODING)
+		  Return New zlib.ZStream(zstruct, Output)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
@@ -62,6 +71,16 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		 Shared Function Open(InputStream As Readable) As zlib.ZStream
 		  Dim zstruct As New Inflater()
+		  Return New zlib.ZStream(zstruct, InputStream)
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function OpenAsGZ(InputStream As Readable) As zlib.ZStream
+		  Const GZIP_ENCODING = 16
+		  Const WindowBits = 15
+		  Dim zstruct As New Inflater(WindowBits Or GZIP_ENCODING)
 		  Return New zlib.ZStream(zstruct, InputStream)
 		  
 		End Function

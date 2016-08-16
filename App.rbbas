@@ -3,14 +3,23 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  If Not TestCompress() Then MsgBox("Compression failed")
-		  If Not TestGZAppend() Then MsgBox("gzip append failed")
-		  If Not TestGZWrite() Then MsgBox("gzip failed")
-		  If Not TestGZRead() Then MsgBox("gunzip failed")
-		  If Not TestTar() Then MsgBox("Tar failed")
-		  If Not TestUntar() Then MsgBox("Untar failed")
-		  If Not TestTarAppend() Then MsgBox("Tar append failed")
-		  If Not TestZStream() Then MsgBox("ZStream failed")
+		  'If Not TestCompress() Then MsgBox("Compression failed")
+		  'If Not TestGZAppend() Then MsgBox("gzip append failed")
+		  'If Not TestGZWrite() Then MsgBox("gzip failed")
+		  'If Not TestGZRead() Then MsgBox("gunzip failed")
+		  'If Not TestTar() Then MsgBox("Tar failed")
+		  'If Not TestUntar() Then MsgBox("Untar failed")
+		  'If Not TestTarAppend() Then MsgBox("Tar append failed")
+		  'If Not TestZStream() Then MsgBox("ZStream failed")
+		  'If Not TestZWrite() Then MsgBox("Z write failed")
+		  'If Not TestZRead() Then MsgBox("Z read failed")
+		  'If Not TestGZStream() Then MsgBox("Z read failed")
+		  
+		  
+		  Dim f As FolderItem = GetOpenFolderItem("")
+		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
+		  If Not zlib.GZip(f, g) Then Break
+		  Break
 		End Sub
 	#tag EndEvent
 
@@ -65,6 +74,26 @@ Inherits Application
 		  gz.Close
 		  Return True
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestGZStream() As Boolean
+		  Dim cmp As New MemoryBlock(0)
+		  Dim bs As New BinaryStream(cmp)
+		  Dim z As zlib.ZStream = zlib.ZStream.CreateAsGZ(bs)
+		  Dim src As String = "TestData123TestData123TestData123TestData123TestData123TestData123"
+		  z.Write(src)
+		  z.Close
+		  bs.Close
+		  If DecodeHex("1F8B080000000000000B0B492D2E71492C493434320E218F0900CFC2014542000000") <> cmp Then Return False
+		  bs = New BinaryStream(cmp)
+		  z = z.OpenAsGZ(bs)
+		  Dim decm As String
+		  Do Until z.EOF
+		    decm = decm + z.Read(64)
+		  Loop
+		  Return decm = src
 		End Function
 	#tag EndMethod
 
@@ -160,6 +189,19 @@ Inherits Application
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function TestZRead() As Boolean
+		  Dim dlg As New OpenDialog
+		  dlg.Title = CurrentMethodName + " - Select a Z-compressed file to read"
+		  Dim f As FolderItem = dlg.ShowModal
+		  dlg.Filter = FileTypes1.ApplicationXCompress
+		  If f = Nil Then Return False
+		  Dim g As FolderItem = f.Parent.Child(f.Name + "_uncompressed")
+		  If Not zlib.Inflate(f, g) Then Return False
+		  Return True
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function TestZStream() As Boolean
 		  Dim cmp As New MemoryBlock(0)
 		  Dim bs As New BinaryStream(cmp)
@@ -176,6 +218,18 @@ Inherits Application
 		    decm = decm + z.Read(64)
 		  Loop
 		  Return decm = src
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestZWrite() As Boolean
+		  Dim dlg As New OpenDialog
+		  dlg.Title = CurrentMethodName + " - Select a file to Z-compress"
+		  Dim f As FolderItem = dlg.ShowModal
+		  If f = Nil Then Return False
+		  Dim g As FolderItem = f.Parent.Child(f.Name + ".z")
+		  If Not zlib.Deflate(f, g, 9) Then Return False
+		  Return True
 		End Function
 	#tag EndMethod
 

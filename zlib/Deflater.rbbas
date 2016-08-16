@@ -13,14 +13,9 @@ Protected Class Deflater
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION)
-		  zstream.zalloc = Nil
-		  zstream.zfree = Nil
-		  zstream.opaque = Nil
-		  mLastError = deflateInit_(zstream, CompressionLevel, zlib.Version, zstream.Size)
-		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
-		  mLevel = CompressionLevel
-		End Sub
+		Function Checksum() As UInt32
+		  If IsOpen Then Return zstream.adler
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -30,6 +25,23 @@ Protected Class Deflater
 		  mLevel = CopyStream.Level
 		  mStrategy = CopyStream.Strategy
 		  mDictionary = CopyStream.mDictionary
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, WindowBits As Integer = 0)
+		  Const MAX_MEM_LEVEL = 8
+		  zstream.zalloc = Nil
+		  zstream.zfree = Nil
+		  zstream.opaque = Nil
+		  If WindowBits = 0 Then
+		    mLastError = deflateInit_(zstream, CompressionLevel, zlib.Version, zstream.Size)
+		  Else
+		    mLastError = deflateInit2_(zstream, CompressionLevel, Z_DEFLATED, WindowBits, _
+		    MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY, zlib.Version, zstream.Size)
+		  End If
+		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  mLevel = CompressionLevel
 		End Sub
 	#tag EndMethod
 
@@ -108,7 +120,7 @@ Protected Class Deflater
 		#tag EndGetter
 		#tag Setter
 			Set
-			  If Not IsOpen Then Return
+			  If value = Nil Or Not IsOpen Then Return
 			  mLastError = deflateSetDictionary(zstream, value, value.Size)
 			  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 			  mDictionary = value
