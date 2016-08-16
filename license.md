@@ -1,4 +1,4 @@
-Copyright (c)2015 Andrew Lambert, all rights reserved
+Copyright (c)2015-16 Andrew Lambert, all rights reserved
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
