@@ -3,23 +3,17 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  'If Not TestCompress() Then MsgBox("Compression failed")
-		  'If Not TestGZAppend() Then MsgBox("gzip append failed")
-		  'If Not TestGZWrite() Then MsgBox("gzip failed")
-		  'If Not TestGZRead() Then MsgBox("gunzip failed")
-		  'If Not TestTar() Then MsgBox("Tar failed")
-		  'If Not TestUntar() Then MsgBox("Untar failed")
-		  'If Not TestTarAppend() Then MsgBox("Tar append failed")
-		  'If Not TestZStream() Then MsgBox("ZStream failed")
-		  'If Not TestZWrite() Then MsgBox("Z write failed")
-		  'If Not TestZRead() Then MsgBox("Z read failed")
-		  'If Not TestGZStream() Then MsgBox("Z read failed")
-		  
-		  
-		  Dim f As FolderItem = GetOpenFolderItem("")
-		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
-		  If Not zlib.GZip(f, g) Then Break
-		  Break
+		  If Not TestCompress() Then MsgBox("Compression failed")
+		  If Not TestGZAppend() Then MsgBox("gzip append failed")
+		  If Not TestGZWrite() Then MsgBox("gzip failed")
+		  If Not TestGZRead() Then MsgBox("gunzip failed")
+		  If Not TestTar() Then MsgBox("Tar failed")
+		  If Not TestUntar() Then MsgBox("Untar failed")
+		  If Not TestTarAppend() Then MsgBox("Tar append failed")
+		  If Not TestZStream() Then MsgBox("ZStream failed")
+		  If Not TestZWrite() Then MsgBox("Z write failed")
+		  If Not TestZRead() Then MsgBox("Z read failed")
+		  If Not TestGZStream() Then MsgBox("Z read failed")
 		End Sub
 	#tag EndEvent
 
@@ -79,21 +73,12 @@ Inherits Application
 
 	#tag Method, Flags = &h0
 		Function TestGZStream() As Boolean
-		  Dim cmp As New MemoryBlock(0)
-		  Dim bs As New BinaryStream(cmp)
-		  Dim z As zlib.ZStream = zlib.ZStream.CreateAsGZ(bs)
 		  Dim src As String = "TestData123TestData123TestData123TestData123TestData123TestData123"
-		  z.Write(src)
-		  z.Close
-		  bs.Close
-		  If DecodeHex("1F8B080000000000000B0B492D2E71492C493434320E218F0900CFC2014542000000") <> cmp Then Return False
-		  bs = New BinaryStream(cmp)
-		  z = z.OpenAsGZ(bs)
-		  Dim decm As String
-		  Do Until z.EOF
-		    decm = decm + z.Read(64)
-		  Loop
-		  Return decm = src
+		  Dim cmp As String = zlib.GZip(src)
+		  Dim tst As String = "1F8B080000000000000B0B492D2E71492C493434320E218F0900CFC2014542000000"
+		  Dim gun As String = zlib.GUnZip(cmp)
+		  Return tst = EncodeHex(cmp) And gun = src
+		  
 		End Function
 	#tag EndMethod
 
