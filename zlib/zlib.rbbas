@@ -748,19 +748,19 @@ Protected Module zlib
 
 
 	#tag Structure, Name = gz_headerp, Flags = &h1
-		comm_max As UInt32
-		  Comment As Ptr
-		  Done As Integer
+		Text As Integer
+		  Time As UInt32
+		  xflags As Integer
+		  OS As Integer
 		  Extra As Ptr
 		  ExtraLen As UInt32
 		  ExtraMax As UInt32
-		  hcrc As Integer
 		  Name As Ptr
 		  NameMax As UInt32
-		  OS As Integer
-		  Text As Integer
-		  Time As UInt32
-		xflags As Integer
+		  Comment As Ptr
+		  CommentMax As UInt32
+		  hcrc As Integer
+		Done As Integer
 	#tag EndStructure
 
 	#tag Structure, Name = z_stream, Flags = &h21
