@@ -2,13 +2,13 @@
 Protected Class Inflater
 Inherits FlateEngine
 	#tag Method, Flags = &h0
-		Sub Constructor(WindowBits As Integer = 0)
+		Sub Constructor(WindowBits As Integer = zlib.DEFLATE_ENCODING)
 		  zstruct.zalloc = Nil
 		  zstruct.zfree = Nil
 		  zstruct.opaque = Nil
 		  zstruct.avail_in = 0
 		  zstruct.next_in = Nil
-		  If WindowBits = 0 Then
+		  If WindowBits = zlib.DEFLATE_ENCODING Then
 		    mLastError = inflateInit_(zstruct, zlib.Version, zstruct.Size)
 		  Else
 		    mLastError = inflateInit2_(zstruct, WindowBits, zlib.Version, zstruct.Size)
