@@ -100,12 +100,23 @@ Implements Readable,Writeable
 		  '   Z_FULL_FLUSH:    like Z_SYNC_FLUSH, and the compression state is reset so that decompression can restart from this point.
 		  '   Z_FINISH:        processing is finished and flushed.
 		  
-		  If mDeflater <> Nil Then
-		    mDestination.Write(mDeflater.Deflate("", Flushing))
-		  Else
-		    Raise New IOException
-		  End If
+		  If mDeflater = Nil Then Raise New IOException
+		  mDestination.Write(mDeflater.Deflate("", Flushing))
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsReadable() As Boolean
+		  ' Returns True if the stream is in decompression mode
+		  Return mInflater <> Nil
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsWriteable() As Boolean
+		  ' Returns True if the stream is in compression mode
+		  Return mDeflater <> Nil
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -135,14 +146,17 @@ Implements Readable,Writeable
 		  ' This is not an error; the decompressor merely needs more input before more output can be 
 		  ' provided. Keep reading until EOF=True even if zero bytes are returned.
 		  
-		  Dim data As MemoryBlock
-		  If mInflater <> Nil Then
-		    Dim tmp As String = mSource.Read(Count)
-		    data = mInflater.Inflate(tmp)
-		    If data <> Nil Then Return DefineEncoding(data, encoding)
-		  Else
-		    Raise New IOException
-		  End IF
+		  If mInflater = Nil Then Raise New IOException
+		  Dim data As New MemoryBlock(0)
+		  Dim ret As New BinaryStream(data)
+		  Dim tmp As MemoryBlock = mSource.Read(Count)
+		  Dim src As New BinaryStream(tmp)
+		  If Not mInflater.Inflate(src, ret) And mInflater.LastError <> Z_STREAM_END Then 
+		    Raise New zlibException(mInflater.LastError)
+		  End If
+		  src.Close
+		  ret.Close
+		  If data <> Nil Then Return DefineEncoding(data, encoding)
 		End Function
 	#tag EndMethod
 
@@ -161,10 +175,9 @@ Implements Readable,Writeable
 		  ' to the output at times dictated by the compression parameters. Use the Flush method to
 		  ' forcibly write pending output.
 		  
+		  If mDeflater = Nil Then Raise New IOException
 		  Dim tmp As New BinaryStream(Data)
-		  If mDeflater <> Nil And Not mDeflater.Deflate(tmp, mDestination) Then
-		    Raise New IOException
-		  End If
+		  If Not mDeflater.Deflate(tmp, mDestination) Then Raise New zlibException(mDeflater.LastError)
 		End Sub
 	#tag EndMethod
 
