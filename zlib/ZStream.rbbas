@@ -18,11 +18,25 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		Sub Constructor(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.Z_DETECT, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
 		  Select Case Source.Size
 		  Case 0 'compress
+		    If WindowBits = Z_DETECT Then WindowBits = DEFLATE_ENCODING
 		    Me.Constructor(New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel), New BinaryStream(Source))
 		  Case Is > 0 ' decompress
+		    If WindowBits = Z_DETECT Then
+		      Dim Isgz, Isde As Boolean
+		      Isgz = Source.IsGZipped
+		      Isde = Source.IsDeflated
+		      Select Case True
+		      Case Isde
+		        WindowBits = DEFLATE_ENCODING
+		      Case Isgz
+		        WindowBits = GZIP_ENCODING
+		      Else
+		        WindowBits = RAW_ENCODING
+		      End Select
+		    End If
 		    Me.Constructor(New Inflater(WindowBits), New BinaryStream(Source))
 		  Else
 		    Raise New OutOfBoundsException ' can't use memoryblocks of unknown size!!
