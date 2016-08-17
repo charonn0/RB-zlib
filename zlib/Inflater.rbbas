@@ -34,6 +34,10 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Function GetHeader(ByRef HeaderStruct As zlib.gz_headerp) As Boolean
+		  ' This method must be called BEFORE Inflate. Provide a gz_headerp structure to contain the 
+		  ' gzip header for the stream (if any). zlib will update the referenced structure as the 
+		  ' stream is processed.
+		  
 		  If Not IsOpen Then Return False
 		  mLastError = inflateGetHeader(zstream, HeaderStruct)
 		  Return mLastError = Z_OK
