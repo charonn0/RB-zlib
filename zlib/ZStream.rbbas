@@ -65,6 +65,17 @@ Implements Readable,Writeable
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		 Shared Function CreatePipe(InputStream As Readable, Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
+		  Dim ret As zlib.ZStream = Create(Output, CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
+		  If ret = Nil Then Return Nil
+		  ret.mSource = InputStream
+		  ret.mInflater = New Inflater(WindowBits)
+		  Return ret
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
