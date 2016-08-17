@@ -4,16 +4,16 @@ Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Function CompressBound(DataLength As UInt32) As UInt32
 		  If Not IsOpen Then Return 0
-		  Return deflateBound(zstream, DataLength)
+		  Return deflateBound(zstruct, DataLength)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CompressionLevel As Integer)
-		  zstream.zalloc = Nil
-		  zstream.zfree = Nil
-		  zstream.opaque = Nil
-		  mLastError = deflateInit_(zstream, CompressionLevel, zlib.Version, zstream.Size)
+		  zstruct.zalloc = Nil
+		  zstruct.zfree = Nil
+		  zstruct.opaque = Nil
+		  mLastError = deflateInit_(zstruct, CompressionLevel, zlib.Version, zstruct.Size)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mLevel = CompressionLevel
 		End Sub
@@ -21,10 +21,10 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer, MemoryLevel As Integer)
-		  zstream.zalloc = Nil
-		  zstream.zfree = Nil
-		  zstream.opaque = Nil
-		  mLastError = deflateInit2_(zstream, CompressionLevel, Z_DEFLATED, WindowBits, MemoryLevel, CompressionStrategy, zlib.Version, zstream.Size)
+		  zstruct.zalloc = Nil
+		  zstruct.zfree = Nil
+		  zstruct.opaque = Nil
+		  mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, WindowBits, MemoryLevel, CompressionStrategy, zlib.Version, zstruct.Size)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mLevel = CompressionLevel
 		  mStrategy = CompressionStrategy
@@ -33,7 +33,7 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CopyStream As zlib.Deflater)
-		  mLastError = deflateCopy(zstream, CopyStream.zstream)
+		  mLastError = deflateCopy(zstruct, CopyStream.zstruct)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mLevel = CopyStream.Level
 		  mStrategy = CopyStream.Strategy
@@ -57,18 +57,19 @@ Inherits FlateEngine
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
 		  Do
 		    Dim chunk As MemoryBlock = ReadFrom.Read(CHUNK_SIZE)
-		    zstream.avail_in = chunk.Size
-		    zstream.next_in = chunk
+		    zstruct.avail_in = chunk.Size
+		    zstruct.next_in = chunk
 		    Do
-		      zstream.next_out = outbuff
-		      zstream.avail_out = outbuff.Size
-		      mLastError = zlib.deflate(zstream, Flushing)
+		      zstruct.next_out = outbuff
+		      zstruct.avail_out = outbuff.Size
+		      mLastError = zlib.deflate(zstruct, Flushing)
 		      If mLastError = Z_STREAM_ERROR Then Return False
-		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
+		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
 		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
-		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
+		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
 		  Loop Until ReadFrom.EOF
-		  Return True
+		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(Z_UNFINISHED_ERROR)
+		  Return zstruct.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
 		  
 		  
 		End Function
@@ -76,8 +77,8 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If IsOpen Then mLastError = zlib.deflateEnd(zstream)
-		  zstream.zfree = Nil
+		  If IsOpen Then mLastError = zlib.deflateEnd(zstruct)
+		  zstruct.zfree = Nil
 		  
 		End Sub
 	#tag EndMethod
@@ -87,7 +88,7 @@ Inherits FlateEngine
 		  If Not IsOpen Then Return 0.0
 		  Dim bytes As UInt32
 		  Dim bits As Integer
-		  mLastError = deflatePending(zstream, bytes, bits)
+		  mLastError = deflatePending(zstruct, bytes, bits)
 		  If mLastError = Z_OK Then Return CDbl(Str(bytes) + "." + Str(bits))
 		  
 		End Function
@@ -96,7 +97,7 @@ Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Function Prime(Bits As Integer, Value As Integer) As Boolean
 		  If Not IsOpen Then Return False
-		  mLastError = deflatePrime(zstream, Bits, Value)
+		  mLastError = deflatePrime(zstruct, Bits, Value)
 		  Return mLastError = Z_OK
 		  
 		End Function
@@ -104,8 +105,8 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Sub Reset()
-		  If zstream.zalloc <> Nil Then
-		    mLastError = deflateReset(zstream)
+		  If zstruct.zalloc <> Nil Then
+		    mLastError = deflateReset(zstruct)
 		  End If
 		End Sub
 	#tag EndMethod
@@ -113,7 +114,7 @@ Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Function SetHeader(HeaderStruct As zlib.gz_headerp) As Boolean
 		  If Not IsOpen Then Return False
-		  mLastError = deflateSetHeader(zstream, HeaderStruct)
+		  mLastError = deflateSetHeader(zstruct, HeaderStruct)
 		  Return mLastError = Z_OK
 		  
 		End Function
@@ -122,7 +123,7 @@ Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Function Tune(GoodLength As Integer, MaxLazy As Integer, NiceLength As Integer, MaxChain As Integer) As Boolean
 		  If Not IsOpen Then Return False
-		  mLastError = deflateTune(zstream, GoodLength, MaxLazy, NiceLength, MaxChain)
+		  mLastError = deflateTune(zstruct, GoodLength, MaxLazy, NiceLength, MaxChain)
 		  Return mLastError = Z_OK
 		End Function
 	#tag EndMethod
@@ -137,7 +138,7 @@ Inherits FlateEngine
 		#tag Setter
 			Set
 			  If value = Nil Or Not IsOpen Then Return
-			  mLastError = deflateSetDictionary(zstream, value, value.Size)
+			  mLastError = deflateSetDictionary(zstruct, value, value.Size)
 			  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 			  mDictionary = value
 			End Set
@@ -154,7 +155,7 @@ Inherits FlateEngine
 		#tag Setter
 			Set
 			  If Not IsOpen Then Raise New NilObjectException
-			  mLastError = deflateParams(zstream, value, mStrategy)
+			  mLastError = deflateParams(zstruct, value, mStrategy)
 			  If mLastError = Z_OK Then
 			    mLevel = value
 			  Else
@@ -175,7 +176,7 @@ Inherits FlateEngine
 		#tag Setter
 			Set
 			  If Not IsOpen Then Raise New NilObjectException
-			  mLastError = deflateParams(zstream, mLevel, value)
+			  mLastError = deflateParams(zstruct, mLevel, value)
 			  If mLastError = Z_OK Then
 			    mStrategy = value
 			  Else

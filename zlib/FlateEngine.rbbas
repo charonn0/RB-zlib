@@ -2,25 +2,25 @@
 Private Class FlateEngine
 	#tag Method, Flags = &h0
 		Function Avail_In() As UInt32
-		  Return zstream.avail_in
+		  Return zstruct.avail_in
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Avail_Out() As UInt32
-		  Return zstream.avail_out
+		  Return zstruct.avail_out
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Checksum() As UInt32
-		  If IsOpen Then Return zstream.adler
+		  If IsOpen Then Return zstruct.adler
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function IsOpen() As Boolean
-		  Return zstream.zfree <> Nil
+	#tag Method, Flags = &h0
+		Function IsOpen() As Boolean
+		  Return zstruct.zfree <> Nil
 		End Function
 	#tag EndMethod
 
@@ -32,13 +32,13 @@ Private Class FlateEngine
 
 	#tag Method, Flags = &h0
 		Function Total_In() As UInt32
-		  Return zstream.total_in
+		  Return zstruct.total_in
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Total_Out() As UInt32
-		  Return zstream.total_out
+		  Return zstruct.total_out
 		End Function
 	#tag EndMethod
 
@@ -60,7 +60,7 @@ Private Class FlateEngine
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected zstream As z_stream
+		Protected zstruct As z_stream
 	#tag EndProperty
 
 
