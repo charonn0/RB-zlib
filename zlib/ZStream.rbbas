@@ -3,11 +3,32 @@ Protected Class ZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
+		  ' End the stream. If the stream is being written/compressed then all pending output is flushed.
+		  ' If the stream is being read/decompressed then all pending output is discarded; check EOF to
+		  ' determine whether there is pending output. After this method returns all calls to Read/Write 
+		  ' will raise an exception.
+		  
 		  If mDeflater <> Nil Then Me.Flush(Z_FINISH)
 		  mSource = Nil
 		  mDestination = Nil
 		  mDeflater = Nil
 		  mInflater = Nil
+		  mSourceMB = Nil
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		  Select Case Source.Size
+		  Case 0 'compress
+		    Me.Constructor(New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel), New BinaryStream(Source))
+		  Case Is > 0 ' decompress
+		    Me.Constructor(New Inflater(WindowBits), New BinaryStream(Source))
+		  Else
+		    Raise New OutOfBoundsException ' can't use memoryblocks of unknown size!!
+		  End Select
+		  mSourceMB = Source
+		  
 		End Sub
 	#tag EndMethod
 
@@ -28,9 +49,9 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = 15, MemoryLevel As Integer = 8) As zlib.ZStream
+		 Shared Function Create(Output As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
 		  Dim zstruct As Deflater
-		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> 15 Or MemoryLevel <> 8 Then
+		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
 		    ' Open the compressed stream using custom options
 		    zstruct =  New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
 		    
@@ -53,7 +74,8 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
-		  Return mSource.EOF And (mInflater <> Nil And mInflater.Avail_In = 0)
+		  ' Returns True if there is more output to read (decompression only)
+		  Return mSource <> Nil And mSource.EOF And mInflater <> Nil And mInflater.Avail_In = 0
 		End Function
 	#tag EndMethod
 
@@ -108,13 +130,16 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
-		  ' Read Count compressed bytes, inflate and return them
-		  Dim data As String
+		  ' Read Count compressed bytes, inflate and return any output
+		  ' NOTE: the returned string may contain more or fewer bytes than requested, including zero.
+		  ' This is not an error; the decompressor merely needs more input before more output can be 
+		  ' provided. Keep reading until EOF=True even if zero bytes are returned.
+		  
+		  Dim data As MemoryBlock
 		  If mInflater <> Nil Then
 		    Dim tmp As String = mSource.Read(Count)
 		    data = mInflater.Inflate(tmp)
-		    If encoding <> Nil Then data = DefineEncoding(data, encoding)
-		    Return data
+		    If data <> Nil Then Return DefineEncoding(data, encoding)
 		  Else
 		    Raise New IOException
 		  End IF
@@ -129,11 +154,15 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Write(text As String)
+		Sub Write(Data As String)
 		  // Part of the Writeable interface.
-		  ' Compress text and write it to the output
-		  Dim data As New BinaryStream(text)
-		  If mDeflater <> Nil And Not mDeflater.Deflate(data, mDestination) Then
+		  ' Write Data to the compressed stream. 
+		  ' NOTE: the Data may not be immediately written to the output; the compressor will write
+		  ' to the output at times dictated by the compression parameters. Use the Flush method to
+		  ' forcibly write pending output.
+		  
+		  Dim tmp As New BinaryStream(Data)
+		  If mDeflater <> Nil And Not mDeflater.Deflate(tmp, mDestination) Then
 		    Raise New IOException
 		  End If
 		End Sub
@@ -199,6 +228,10 @@ Implements Readable,Writeable
 		Private mSource As Readable
 	#tag EndProperty
 
+	#tag Property, Flags = &h21
+		Private mSourceMB As MemoryBlock
+	#tag EndProperty
+
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
@@ -221,6 +254,32 @@ Implements Readable,Writeable
 			End Set
 		#tag EndSetter
 		Strategy As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mDeflater <> Nil Then
+			    Return mDeflater.Total_In
+			  ElseIf mInflater <> Nil Then
+			    Return mInflater.Total_In
+			  End If
+			End Get
+		#tag EndGetter
+		TotalIn As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mDeflater <> Nil Then
+			    Return mDeflater.Total_Out
+			  ElseIf mInflater <> Nil Then
+			    Return mInflater.Total_Out
+			  End If
+			End Get
+		#tag EndGetter
+		TotalOut As UInt32
 	#tag EndComputedProperty
 
 
