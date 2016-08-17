@@ -102,6 +102,7 @@ Implements Readable,Writeable
 		  
 		  If mDeflater = Nil Then Raise New IOException
 		  mDestination.Write(mDeflater.Deflate("", Flushing))
+		  mDestination.Flush()
 		End Sub
 	#tag EndMethod
 
