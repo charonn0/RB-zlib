@@ -14,13 +14,7 @@ Inherits Application
 		  'If Not TestZWrite() Then MsgBox("Z write failed")
 		  'If Not TestZRead() Then MsgBox("Z read failed")
 		  'If Not TestGZStream() Then MsgBox("Z read failed")
-		  
-		  Dim f As FolderItem = GetFolderItem("C:\Users\BH1\Downloads\xubuntu-14.04.4-desktop-amd64.iso")
-		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
-		  If Not zlib.GZip(f, g) Then Break
-		  'f = f.Parent.Child(f.Name + ".iso")
-		  'If Not zlib.GUnZip(g, f) Then Break
-		  
+		  If Not TestDeflate() Then MsgBox("Deflate read failed")
 		End Sub
 	#tag EndEvent
 
@@ -37,6 +31,33 @@ Inherits Application
 		  (zlib.Uncompress(zlib.Compress(data, 9)) = data) And _
 		  (zlib.Uncompress(zlib.Compress(data), data.LenB) = data) And _
 		  (zlib.Uncompress(zlib.Compress(data, 9), data.LenB) = data)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestDeflate() As Boolean
+		  Dim dlg As New OpenDialog
+		  dlg.Title = CurrentMethodName + " - Select a file to deflate"
+		  Dim f As FolderItem = dlg.ShowModal
+		  If f = Nil Then Return False
+		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
+		  
+		  If Not zlib.Deflate(f, g) Then
+		    If g.Exists Then g.Delete
+		    Return False
+		  End If
+		  
+		  Dim output As New MemoryBlock(0)
+		  Dim oustrt As New BinaryStream(output)
+		  Dim bs As BinaryStream = BinaryStream.Open(f)
+		  If Not zlib.Deflate(bs, oustrt) Then Return False
+		  bs.Close
+		  oustrt.Close
+		  
+		  Dim inf As MemoryBlock = zlib.Inflate(output)
+		  Dim def As String = zlib.Deflate(inf)
+		  Return def = output
+		  
 		End Function
 	#tag EndMethod
 
