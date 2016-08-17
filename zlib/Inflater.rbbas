@@ -3,15 +3,15 @@ Protected Class Inflater
 Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Sub Constructor(WindowBits As Integer = 0)
-		  zstream.zalloc = Nil
-		  zstream.zfree = Nil
-		  zstream.opaque = Nil
-		  zstream.avail_in = 0
-		  zstream.next_in = Nil
+		  zstruct.zalloc = Nil
+		  zstruct.zfree = Nil
+		  zstruct.opaque = Nil
+		  zstruct.avail_in = 0
+		  zstruct.next_in = Nil
 		  If WindowBits = 0 Then
-		    mLastError = inflateInit_(zstream, zlib.Version, zstream.Size)
+		    mLastError = inflateInit_(zstruct, zlib.Version, zstruct.Size)
 		  Else
-		    mLastError = inflateInit2_(zstream, WindowBits, zlib.Version, zstream.Size)
+		    mLastError = inflateInit2_(zstruct, WindowBits, zlib.Version, zstruct.Size)
 		  End If
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		End Sub
@@ -19,7 +19,7 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CopyStream As zlib.Inflater)
-		  mLastError = inflateCopy(zstream, CopyStream.zstream)
+		  mLastError = inflateCopy(zstruct, CopyStream.zstruct)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mDictionary = CopyStream.mDictionary
 		End Sub
@@ -27,8 +27,8 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If IsOpen Then mLastError = zlib.inflateEnd(zstream)
-		  zstream.zfree = Nil
+		  If IsOpen Then mLastError = zlib.inflateEnd(zstruct)
+		  zstruct.zfree = Nil
 		End Sub
 	#tag EndMethod
 
@@ -39,7 +39,7 @@ Inherits FlateEngine
 		  ' stream is processed.
 		  
 		  If Not IsOpen Then Return False
-		  mLastError = inflateGetHeader(zstream, HeaderStruct)
+		  mLastError = inflateGetHeader(zstruct, HeaderStruct)
 		  Return mLastError = Z_OK
 		  
 		End Function
@@ -61,25 +61,29 @@ Inherits FlateEngine
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
 		  Do
 		    Dim chunk As MemoryBlock = Source.Read(CHUNK_SIZE)
-		    zstream.avail_in = chunk.Size
-		    zstream.next_in = chunk
+		    zstruct.avail_in = chunk.Size
+		    zstruct.next_in = chunk
 		    Do
-		      zstream.next_out = outbuff
-		      zstream.avail_out = outbuff.Size
-		      mLastError = zlib.inflate(zstream, Z_NO_FLUSH)
-		      If mLastError <> Z_OK And mLastError <> Z_STREAM_END And mLastError <> Z_BUF_ERROR Then Return False
-		      Dim have As UInt32 = CHUNK_SIZE - zstream.avail_out
+		      zstruct.next_out = outbuff
+		      zstruct.avail_out = outbuff.Size
+		      mLastError = zlib.inflate(zstruct, Z_NO_FLUSH)
+		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
 		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
-		    Loop Until mLastError <> Z_OK Or zstream.avail_out <> 0
+		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
 		  Loop Until Source.EOF
-		  Return True
+		  Select Case mLastError
+		  Case Z_OK, Z_STREAM_END, Z_BUF_ERROR
+		    Return True
+		  Else
+		    Return False
+		  End Select
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function InflateMark() As UInt32
 		  If Not IsOpen Then Return 0
-		  Return inflateMark(zstream)
+		  Return inflateMark(zstruct)
 		End Function
 	#tag EndMethod
 
@@ -87,9 +91,9 @@ Inherits FlateEngine
 		Sub Reset(WindowBits As Integer = 0)
 		  If Not IsOpen Then Return
 		  If WindowBits = 0 Then
-		    mLastError = inflateReset(zstream)
+		    mLastError = inflateReset(zstruct)
 		  Else
-		    mLastError = inflateReset2(zstream, WindowBits)
+		    mLastError = inflateReset2(zstruct, WindowBits)
 		  End If
 		End Sub
 	#tag EndMethod
@@ -99,7 +103,7 @@ Inherits FlateEngine
 		  ' Skips invalid compressed data until a possible full flush point can be found, or until all available input is skipped.
 		  
 		  If Not IsOpen Then Return False
-		  mLastError = inflateSync(zstream)
+		  mLastError = inflateSync(zstruct)
 		  Return mLastError = Z_OK
 		End Function
 	#tag EndMethod
@@ -111,7 +115,7 @@ Inherits FlateEngine
 			  If Not IsOpen Then Return Nil
 			  Dim sz As UInt32 = 32768
 			  Dim mb As New MemoryBlock(sz)
-			  mLastError = inflateGetDictionary(zstream, mb, sz)
+			  mLastError = inflateGetDictionary(zstruct, mb, sz)
 			  If mLastError <> Z_OK Then Return Nil
 			  Return mb.StringValue(0, sz)
 			End Get
@@ -119,7 +123,7 @@ Inherits FlateEngine
 		#tag Setter
 			Set
 			  If value = Nil Or Not IsOpen Then Return
-			  mLastError = inflateSetDictionary(zstream, value, value.Size)
+			  mLastError = inflateSetDictionary(zstruct, value, value.Size)
 			  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 			End Set
 		#tag EndSetter
