@@ -56,7 +56,8 @@ Inherits FlateEngine
 		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH) As Boolean
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
 		  Do
-		    Dim chunk As MemoryBlock = ReadFrom.Read(CHUNK_SIZE)
+		    Dim chunk As MemoryBlock
+		    If ReadFrom <> Nil Then chunk = ReadFrom.Read(CHUNK_SIZE) Else chunk = ""
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
 		    Do
@@ -67,7 +68,7 @@ Inherits FlateEngine
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
 		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
 		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
-		  Loop Until ReadFrom.EOF
+		  Loop Until ReadFrom = Nil Or ReadFrom.EOF
 		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(Z_UNFINISHED_ERROR)
 		  Return zstruct.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
 		  

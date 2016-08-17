@@ -126,8 +126,8 @@ Implements Readable,Writeable
 		  '   Z_FINISH:        processing is finished and flushed.
 		  
 		  If mDeflater = Nil Then Raise New IOException
-		  mDestination.Write(mDeflater.Deflate("", Flushing))
-		  mDestination.Flush()
+		  If Not mDeflater.Deflate(Nil, mDestination, Flushing) Then Raise New zlibException(mDeflater.LastError)
+		  
 		End Sub
 	#tag EndMethod
 
