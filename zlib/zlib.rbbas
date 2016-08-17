@@ -616,16 +616,96 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function IsDeflated(Extends Target As BinaryStream) As Boolean
+		  //Checks the deflate magic number. Returns True if the Target is likely a deflate stream
+		  
+		  Dim IsDeflate As Boolean
+		  If Target.ReadByte = &h78 Then IsDeflate = True 'maybe
+		  Target.Position = Target.Position - 1
+		  Return IsDeflate
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsDeflated(Extends TargetFile As FolderItem) As Boolean
+		  //Checks the deflate magic number. Returns True if the TargetFile is likely a deflate stream
+		  
+		  If Not TargetFile.Exists Then Return False
+		  If TargetFile.Directory Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsDeflate As Boolean
+		  Try
+		    bs = BinaryStream.Open(TargetFile)
+		    IsDeflate = bs.IsDeflated()
+		  Catch
+		    IsDeflate = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsDeflate
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsDeflated(Extends Target As MemoryBlock) As Boolean
+		  //Checks the deflate magic number. Returns True if the Target is likely a deflate stream
+		  
+		  If Target.Size = -1 Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsDeflate As Boolean
+		  Try
+		    bs = New BinaryStream(Target)
+		    IsDeflate = bs.IsDeflated()
+		  Catch
+		    IsDeflate = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsDeflate
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function IsGZipped(Extends Target As BinaryStream) As Boolean
+		  //Checks the GZip magic number. Returns True if the Target is likely a GZip stream
+		  
+		  Dim IsGZ As Boolean
+		  If Target.ReadByte = &h1F And Target.ReadByte = &h8B Then IsGZ = True
+		  Target.Position = Target.Position - 2
+		  Return IsGZ
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function IsGZipped(Extends TargetFile As FolderItem) As Boolean
-		  //Checks the GZip magic number. Returns True if the source file is likely a GZip archive
+		  //Checks the GZip magic number. Returns True if the TargetFile is likely a GZip stream
 		  
 		  If TargetFile.Directory Or Not TargetFile.Exists Then Return False
 		  Dim bs As BinaryStream
 		  Dim IsGZ As Boolean
 		  Try
 		    bs = bs.Open(TargetFile)
-		    If bs.ReadByte = &h1F And bs.ReadByte = &h8B Then IsGZ = True
+		    IsGZ = bs.IsGZipped()
+		  Catch
+		    IsGZ = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsGZ
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsGZipped(Extends Target As MemoryBlock) As Boolean
+		  //Checks the GZip magic number. Returns True if the Target is likely a GZip stream
+		  
+		  If Target.Size = -1 Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsGZ As Boolean
+		  Try
+		    bs = New BinaryStream(Target)
+		    IsGZ = bs.IsGZipped()
 		  Catch
 		    IsGZ = False
 		  Finally
