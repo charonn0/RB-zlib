@@ -130,8 +130,8 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Open(InputStream As Readable, WindowBits As Integer = 0) As zlib.ZStream
-		  ' process zlib-wrapped deflate data
+		 Shared Function Open(InputStream As Readable, WindowBits As Integer = zlib.Z_DETECT) As zlib.ZStream
+		  ' read data from a deflate or gzip stream 
 		  Dim zstruct As New Inflater(WindowBits)
 		  Return New zlib.ZStream(zstruct, InputStream)
 		  

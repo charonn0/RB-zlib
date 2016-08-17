@@ -58,6 +58,7 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Function Inflate(Source As Readable, WriteTo As Writeable) As Boolean
+		  ' Reads from Source until Source.EOF and writes all output to WriteTo
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
 		  Do
 		    Dim chunk As MemoryBlock = Source.Read(CHUNK_SIZE)
