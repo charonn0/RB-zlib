@@ -10,7 +10,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		Sub Close()
-		  If gzFile <> Nil Then 
+		  If gzFile <> Nil Then
 		    mLastError = zlib.gzclose(gzFile)
 		    If mLastError = Z_ERRNO Then
 		      #If TargetWin32 Then
@@ -79,8 +79,8 @@ Implements Readable,Writeable
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Flush()
+	#tag Method, Flags = &h21
+		Private Sub Flush() Implements Writeable.Flush
 		  // Part of the Writeable interface.
 		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary.
 		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long.
@@ -89,8 +89,8 @@ Implements Readable,Writeable
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function Flush(Flushing As Integer) As Boolean
+	#tag Method, Flags = &h0
+		Function Flush(Flushing As Integer) As Boolean
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
 		  mLastError = zlib.gzflush(gzFile, Flushing)
