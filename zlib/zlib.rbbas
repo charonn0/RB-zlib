@@ -550,6 +550,14 @@ Protected Module zlib
 		Protected Function Inflate(Source As Readable, Destination As Writeable, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
 		  
+		  If Source IsA BinaryStream Then
+		    If Encoding = GZIP_ENCODING And Not BinaryStream(Source).IsGZipped Then 
+		      Encoding = Z_DETECT
+		    ElseIf Encoding <> DEFLATE_ENCODING And BinaryStream(Source).IsDeflated Then 
+		      Encoding = DEFLATE_ENCODING
+		    End If
+		  End If
+		  
 		  Dim z As ZStream = ZStream.Open(Source, Encoding)
 		  Try
 		    z.Dictionary = Dictionary
