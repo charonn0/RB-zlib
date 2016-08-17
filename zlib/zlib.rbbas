@@ -716,7 +716,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem) As FolderItem()
+		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a TAR file to the ExtractTo directory
 		  Dim tar As TapeArchive = zlib.TapeArchive.Open(TarFile)
 		  Dim bs As BinaryStream
@@ -724,7 +724,7 @@ Protected Module zlib
 		  Do
 		    If bs <> Nil Then bs.Close
 		    Dim g As FolderItem = ExtractTo.Child(tar.CurrentName)
-		    bs = BinaryStream.Create(g)
+		    bs = BinaryStream.Create(g, Overwrite)
 		    fs.Append(g)
 		  Loop Until Not tar.MoveNext(bs)
 		  bs.Close
