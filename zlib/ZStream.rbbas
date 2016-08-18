@@ -17,13 +17,13 @@ Implements Readable,Writeable
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Constructor(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.Z_DETECT, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
-		  Select Case Source.Size
-		  Case 0 'compress
+	#tag Method, Flags = &h1
+		Protected Sub Constructor(Source As BinaryStream, CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer, MemoryLevel As Integer)
+		  Select Case True
+		  Case Source.Length = 0 'compress into file
 		    If WindowBits = Z_DETECT Then WindowBits = DEFLATE_ENCODING
-		    Me.Constructor(New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel), New BinaryStream(Source))
-		  Case Is > 0 ' decompress
+		    Me.Constructor(New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel), Source)
+		  Case Source.Length > 0 ' decompress from file
 		    If WindowBits = Z_DETECT Then
 		      Dim Isgz, Isde As Boolean
 		      Isgz = Source.IsGZipped
@@ -37,10 +37,20 @@ Implements Readable,Writeable
 		        WindowBits = RAW_ENCODING
 		      End Select
 		    End If
-		    Me.Constructor(New Inflater(WindowBits), New BinaryStream(Source))
+		    Me.Constructor(New Inflater(WindowBits), Source)
 		  Else
-		    Raise New OutOfBoundsException ' can't use memoryblocks of unknown size!!
+		    Raise New zlibException(Z_DATA_ERROR)
 		  End Select
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.Z_DETECT, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		  If Source.Size >= 0 Then
+		    Me.Constructor(New BinaryStream(Source), CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
+		  Else
+		    Raise New zlibException(Z_DATA_ERROR) ' can't use memoryblocks of unknown size!!
+		  End If
 		  mSourceMB = Source
 		  
 		End Sub
