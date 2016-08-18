@@ -189,35 +189,41 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
-		  ' Read Count compressed bytes, inflate and return any output
-		  ' NOTE: the returned string may contain more or fewer bytes than requested, including zero.
-		  ' This is not an error; the decompressor merely needs more input before more output can be 
-		  ' provided. Keep reading until EOF=True even if zero bytes are returned.
+		  ' Read Count decompressed bytes
 		  
 		  If mInflater = Nil Then Raise New IOException
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
-		  If Count <= mReadBuffer.LenB Then
-		    ret.Write(LeftB(mReadBuffer, Count))
-		    Dim sz As Integer = mReadBuffer.LenB - Count
-		    mReadBuffer = RightB(mReadBuffer, sz)
-		    ret.Close
+		  Dim tmp As MemoryBlock
+		  If BufferedReading Then
+		    If Count <= mReadBuffer.LenB Then
+		      ret.Write(LeftB(mReadBuffer, Count))
+		      Dim sz As Integer = mReadBuffer.LenB - Count
+		      mReadBuffer = RightB(mReadBuffer, sz)
+		      ret.Close
+		    Else
+		      ret.Write(mReadBuffer)
+		      mReadBuffer = ""
+		      tmp = mSource.Read(Max(Count, CHUNK_SIZE))
+		    End If
 		  Else
-		    ret.Write(mReadBuffer)
-		    mReadBuffer = ""
-		    Dim tmp As MemoryBlock = mSource.Read(Max(Count, CHUNK_SIZE))
+		    tmp = mSource.Read(Count)
+		  End If
+		  If tmp <> Nil Then
 		    Dim src As New BinaryStream(tmp)
 		    If Not mInflater.Inflate(src, ret) And mInflater.LastError <> Z_STREAM_END Then
 		      Raise New zlibException(mInflater.LastError)
 		    End If
 		    src.Close
 		    ret.Close
-		    If data.Size >= Count Then
-		      mReadBuffer = RightB(data, data.Size - Count)
-		      data = LeftB(data, Count)
-		    ElseIf Not Me.EOF Then
-		      mReadBuffer = data
-		      Return Me.Read(Count, encoding)
+		    If BufferedReading Then
+		      If data.Size >= Count Then
+		        mReadBuffer = RightB(data, data.Size - Count)
+		        data = LeftB(data, Count)
+		      ElseIf Not Me.EOF Then
+		        mReadBuffer = data
+		        Return Me.Read(Count, encoding)
+		      End If
 		    End If
 		  End If
 		  
@@ -252,7 +258,7 @@ Implements Readable,Writeable
 		  ' Read compressed bytes until EOL, inflate and return any output.
 		  ' If EOL is not specified then the target platform EOL marker is used by default.
 		  
-		  If mInflater = Nil Then Raise New IOException
+		  If mInflater = Nil Or Not BufferedReading Then Raise New IOException
 		  If EOL = "" Then
 		    #If TargetWin32 Then
 		      EOL = EndOfLine.Windows
@@ -327,6 +333,10 @@ Implements Readable,Writeable
 		End Sub
 	#tag EndMethod
 
+
+	#tag Property, Flags = &h0
+		BufferedReading As Boolean = True
+	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
