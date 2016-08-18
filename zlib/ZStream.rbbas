@@ -100,7 +100,7 @@ Implements Readable,Writeable
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
 		  ' Returns True if there is more output to read (decompression only)
-		  Return mSource <> Nil And mSource.EOF And mInflater <> Nil And mInflater.Avail_In = 0 And mNextPartialLine = ""
+		  Return mSource <> Nil And mSource.EOF And mInflater <> Nil And mInflater.Avail_In = 0 And mReadBuffer = ""
 		End Function
 	#tag EndMethod
 
@@ -175,13 +175,30 @@ Implements Readable,Writeable
 		  If mInflater = Nil Then Raise New IOException
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
-		  Dim tmp As MemoryBlock = mSource.Read(Count)
-		  Dim src As New BinaryStream(tmp)
-		  If Not mInflater.Inflate(src, ret) And mInflater.LastError <> Z_STREAM_END Then 
-		    Raise New zlibException(mInflater.LastError)
+		  If Count <= mReadBuffer.LenB Then
+		    ret.Write(LeftB(mReadBuffer, Count))
+		    Dim sz As Integer = mReadBuffer.LenB - Count
+		    mReadBuffer = RightB(mReadBuffer, sz)
+		    ret.Close
+		  Else
+		    ret.Write(mReadBuffer)
+		    mReadBuffer = ""
+		    Dim tmp As MemoryBlock = mSource.Read(Max(Count, CHUNK_SIZE))
+		    Dim src As New BinaryStream(tmp)
+		    If Not mInflater.Inflate(src, ret) And mInflater.LastError <> Z_STREAM_END Then
+		      Raise New zlibException(mInflater.LastError)
+		    End If
+		    src.Close
+		    ret.Close
+		    If data.Size >= Count Then
+		      mReadBuffer = RightB(data, data.Size - Count)
+		      data = LeftB(data, Count)
+		    ElseIf Not Me.EOF Then
+		      mReadBuffer = data
+		      Return Me.Read(Count, encoding)
+		    End If
 		  End If
-		  src.Close
-		  ret.Close
+		  
 		  If data <> Nil Then Return DefineEncoding(data, encoding)
 		End Function
 	#tag EndMethod
@@ -225,24 +242,23 @@ Implements Readable,Writeable
 		  End If
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
-		  ret.Write(mNextPartialLine)
-		  mNextPartialLine = ""
 		  Dim lastchar As String
 		  Do Until Me.EOF
 		    Dim char As String = Me.Read(1, encoding)
 		    If char = "" Then Continue
-		    Dim lineend As Integer = InstrB(lastchar + char, EOL)
+		    char = lastchar + char
+		    Dim lineend As Integer = InstrB(char, EOL)
 		    If lineend > 0 Then
-		      mNextPartialLine = Right(char, char.LenB - lineend)
-		      Dim n As String = mNextPartialLine
-		      char = Left(char, lineend + EOL.LenB)
+		      lastchar = RightB(char, char.LenB - lineend - (EOL.LenB - 1))
+		      char = LeftB(char, lineend + (EOL.LenB - 1))
 		      ret.Write(char)
 		      Exit Do
 		    Else
 		      lastchar = char
-		      ret.Write(char)
+		      'ret.Write(char)
 		    End If
 		  Loop
+		  If lastchar <> "" Then ret.Write(lastchar)
 		  ret.Close
 		  Return data
 		End Function
@@ -339,7 +355,7 @@ Implements Readable,Writeable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mNextPartialLine As String
+		Private mReadBuffer As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
