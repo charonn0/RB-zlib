@@ -100,7 +100,7 @@ Implements Readable,Writeable
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
 		  ' Returns True if there is more output to read (decompression only)
-		  Return mSource <> Nil And mSource.EOF And mInflater <> Nil And mInflater.Avail_In = 0
+		  Return mSource <> Nil And mSource.EOF And mInflater <> Nil And mInflater.Avail_In = 0 And mNextPartialLine = ""
 		End Function
 	#tag EndMethod
 
@@ -187,9 +187,64 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function ReadAll(encoding As TextEncoding = Nil) As String
+		  ' Read compressed bytes until EOF, inflate and return any output
+		  
+		  If mInflater = Nil Then Raise New IOException
+		  Dim data As New MemoryBlock(0)
+		  Dim ret As New BinaryStream(data)
+		  Do Until mSource.EOF
+		    ret.Write(Me.Read(CHUNK_SIZE, encoding))
+		  Loop
+		  ret.Close
+		  Return data
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function ReadError() As Boolean
 		  // Part of the Readable interface.
 		  Return mSource.ReadError Or (mInflater <> Nil And mInflater.LastError <> 0)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function ReadLine(encoding As TextEncoding = Nil, EOL As String = "") As String
+		  ' Read compressed bytes until EOL, inflate and return any output.
+		  ' If EOL is not specified then the target platform EOL marker is used by default.
+		  
+		  If mInflater = Nil Then Raise New IOException
+		  If EOL = "" Then
+		    #If TargetWin32 Then
+		      EOL = EndOfLine.Windows
+		    #ElseIf TargetMacOS Then
+		      EOL = EndOfLine.Macintosh
+		    #ElseIf TargetLinux Then
+		      EOL = EndOfLine.UNIX
+		    #endif
+		  End If
+		  Dim data As New MemoryBlock(0)
+		  Dim ret As New BinaryStream(data)
+		  ret.Write(mNextPartialLine)
+		  mNextPartialLine = ""
+		  Dim lastchar As String
+		  Do Until Me.EOF
+		    Dim char As String = Me.Read(1, encoding)
+		    If char = "" Then Continue
+		    Dim lineend As Integer = InstrB(lastchar + char, EOL)
+		    If lineend > 0 Then
+		      mNextPartialLine = Right(char, char.LenB - lineend)
+		      Dim n As String = mNextPartialLine
+		      char = Left(char, lineend + EOL.LenB)
+		      ret.Write(char)
+		      Exit Do
+		    Else
+		      lastchar = char
+		      ret.Write(char)
+		    End If
+		  Loop
+		  ret.Close
+		  Return data
 		End Function
 	#tag EndMethod
 
@@ -212,6 +267,26 @@ Implements Readable,Writeable
 		  // Part of the Writeable interface.
 		  Return mDestination.WriteError Or (mDeflater <> Nil And mDeflater.LastError <> 0)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub WriteLine(Data As String, EOL As String = "")
+		  ' Write Data to the compressed stream followed by an EOL marker.
+		  ' If EOL is not specified then the target platform EOL marker is used by default.
+		  
+		  If mDeflater = Nil Then Raise New IOException
+		  If EOL = "" Then
+		    #If TargetWin32 Then
+		      EOL = EndOfLine.Windows
+		    #ElseIf TargetMacOS Then
+		      EOL = EndOfLine.Macintosh
+		    #ElseIf TargetLinux Then
+		      EOL = EndOfLine.UNIX
+		    #endif
+		  End If
+		  Dim tmp As New BinaryStream(Data + EOL)
+		  If Not mDeflater.Deflate(tmp, mDestination) Then Raise New zlibException(mDeflater.LastError)
+		End Sub
 	#tag EndMethod
 
 
@@ -261,6 +336,10 @@ Implements Readable,Writeable
 
 	#tag Property, Flags = &h21
 		Private mInflater As zlib.Inflater
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mNextPartialLine As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
