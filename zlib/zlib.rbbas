@@ -629,8 +629,9 @@ Protected Module zlib
 		  //Checks the deflate magic number. Returns True if the Target is likely a deflate stream
 		  
 		  Dim IsDeflate As Boolean
+		  Dim pos As UInt64 = Target.Position
 		  If Target.ReadByte = &h78 Then IsDeflate = True 'maybe
-		  Target.Position = Target.Position - 1
+		  Target.Position = pos
 		  Return IsDeflate
 		End Function
 	#tag EndMethod
@@ -679,8 +680,9 @@ Protected Module zlib
 		  //Checks the GZip magic number. Returns True if the Target is likely a GZip stream
 		  
 		  Dim IsGZ As Boolean
+		  Dim pos As UInt64 = Target.Position
 		  If Target.ReadByte = &h1F And Target.ReadByte = &h8B Then IsGZ = True
-		  Target.Position = Target.Position - 2
+		  Target.Position = pos
 		  Return IsGZ
 		End Function
 	#tag EndMethod
