@@ -560,9 +560,11 @@ Protected Module zlib
 		  
 		  Dim z As ZStream = ZStream.Open(Source, Encoding)
 		  Try
+		    z.BufferedReading = False
 		    z.Dictionary = Dictionary
 		    Do Until z.EOF
-		      Destination.Write(z.Read(CHUNK_SIZE))
+		      Dim data As MemoryBlock = z.Read(CHUNK_SIZE)
+		      If data <> Nil And data.Size > 0 Then Destination.Write(Data)
 		    Loop
 		  Finally
 		    z.Close
