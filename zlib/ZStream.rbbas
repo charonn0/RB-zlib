@@ -73,6 +73,12 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		 Shared Function Create(OutputStream As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, Overwrite As Boolean = False, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
+		  Return Create(BinaryStream.Open(OutputStream, Overwrite), CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		 Shared Function Create(OutputStream As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
 		  Dim zstruct As Deflater
 		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
@@ -162,6 +168,12 @@ Implements Readable,Writeable
 		  ElseIf mDeflater <> Nil Then
 		    Return mDeflater.LastError
 		  End IF
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function Open(Source As FolderItem, WindowBits As Integer = zlib.Z_DETECT) As zlib.ZStream
+		  Return Open(BinaryStream.Open(Source), WindowBits)
 		End Function
 	#tag EndMethod
 
