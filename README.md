@@ -1,41 +1,83 @@
 ##Introduction
-**RB-zlib** is a [zlib](http://www.zlib.net/) [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested on Windows 7. 
+**RB-zlib** is a [zlib](http://www.zlib.net/) [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested on Windows 7. RB-zlib can compress and decompress file and memory streams using any combination of options and compression format.
 
-##Examples
-This example compresses and decompresses a string in memory:
+###Compression formats
+zlib offers three compression formats: DEFLATE, which is a deflate-compressed stream with headers; RAW which is a deflate-compressed stream without headers; and GZIP, which is a deflate-compressed stream with gzip-stye headers.
+
+###Utility methods
+This project provides several different ways to use zlib. The easiest are the utility methods in the zlib module: 
+
+* [**`Inflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate)
+* [**`Deflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate)
+* [**`GZip`**](https://github.com/charonn0/RB-zlib/wiki/zlib.GZip)
+* [**`GUnZip`**](https://github.com/charonn0/RB-zlib/wiki/zlib.GUnZip)
+
+All of these methods are overloaded with several useful variations on input and output parameters. All variations follow either this signature:
+
 ```vbnet
- Dim compressed As String = zlib.Compress("Hello, world!")
- Dim decompressed As String = zlib.Uncompress(compressed)
+ function(source, destination, options[...]) As Boolean
+```
+or this signature:
+```vbnet
+ function(source, options[...]) As MemoryBlock
+```
+
+where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements the `Readable` interface; and `destination` (when provided) is a `FolderItem` or an object which implements the `Writeable` interface. Methods which do not have a `Destination` parameter return output as a `MemoryBlock` instead.
+
+Additional optional arguments may be passed, to control the compression level, strategy, dictionary, and encoding. For example, `GZip` and `GUnZip` are just wrappers around `Deflate` and `Inflate` with options that specify the gzip format.
+
+###ZStream class
+The other way to use zlib is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike, and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
+
+Instances of `ZStream` can be created from MemoryBlocks, FolderItems, and objects that implement the `Readable` and/or `Writeable` interfaces. For example, creating an in-memory compression stream from a zero-length MemoryBlock and writing a string to it:
+
+```vbnet
+  Dim output As New MemoryBlock(0)
+  Dim z As New zlib.ZStream(output) ' zero-length creates a compressor
+  z.Write("Hello, world!")
+  z.Close
+```
+The string will be processed through the compressor and written to the `output` MemoryBlock. To create a decompressor pass a MemoryBlock whose size is > 0 (continuing from above):
+
+```vbnet
+  z = New zlib.ZStream(output) ' output contains the compressed string
+  MsgBox(z.ReadAll) ' read the decompressed string
+```
+
+##More examples
+This example compresses and decompresses a MemoryBlock using deflate compression:
+```vbnet
+  Dim data As MemoryBlock = "Potentially very large MemoryBlock goes here!"
+  Dim comp As MemoryBlock = zlib.Deflate(data)
+  Dim dcmp As MemoryBlock = zlib.Inflate(comp)
+```
+
+This example compresses and decompresses a MemoryBlock using GZip:
+```vbnet
+  Dim data As MemoryBlock = "Potentially very large MemoryBlock goes here!"
+  Dim comp As MemoryBlock = zlib.GZip(data)
+  Dim dcmp As MemoryBlock = zlib.GUnZip(comp)
 ```
 
 This example gzips a file:
 
 ```vbnet
-  Dim f As FolderItem = GetOpenFolderItem("") ' a file to be gzipped
-  If f <> Nil Then
-    Dim bs As BinaryStream = BinaryStream.Open(f)
-    Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
-    Dim gz As zlib.GZStream = zlib.GZStream.Create(g)
-    gz.Level = 9 ' set the compression level as desired
-    While Not bs.EOF
-      gz.Write(bs.Read(1024))
-    Wend
-    bs.Close
-    gz.Close
+  Dim src As FolderItem = GetOpenFolderItem("") ' a file to be gzipped
+  Dim dst As FolderItem = src.Parent.Child(src.Name + ".gz")
+  If zlib.GZip(src, dst) Then 
+    MsgBox("Compression succeeded!")
+  Else
+    MsgBox("Compression failed!")
   End If
 ```
 
 This example opens an existing gzip file and decompresses it into a `MemoryBlock`:
 ```vbnet
   Dim f As FolderItem = GetOpenFolderItem("") ' the gzip file to open
-  If f <> Nil Then
-    Dim gz As zlib.GZStream = zlib.GZStream.Open(f)
-    Dim uncompressed As New MemoryBlock(0)
-    Dim bs As BinaryStream = New BinaryStream(uncompressed)
-    While Not gz.EOF
-      bs.Write(gz.Read(1024))
-    Wend
-    bs.Close
-    gz.Close
+  Dim data As MemoryBlock = zlib.GUnZip(f)
+  If data <> Nil Then
+    MsgBox("Decompression succeeded!")
+  Else
+    MsgBox("Decompression failed!")
   End If
 ```
