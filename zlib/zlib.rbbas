@@ -518,6 +518,22 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function Inflate(Source As MemoryBlock, Destination As Writeable, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
+		  ' Decompress the Source data into the Destination stream. Reverses the Deflate method
+		  
+		  Dim src As New BinaryStream(Source)
+		  Dim ok As Boolean
+		  Try
+		    ' calls Inflate(Readable, Writeable, MemoryBlock, Integer) As Boolean
+		    ok = Inflate(src, Destination, Dictionary, Encoding)
+		  Finally
+		    src.Close
+		  End Try
+		  Return ok
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As Readable, Destination As FolderItem, Overwrite As Boolean = False, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Decompress the Source stream into the Destination file. Reverses the Deflate method
 		  
