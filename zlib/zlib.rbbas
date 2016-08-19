@@ -906,6 +906,9 @@ Protected Module zlib
 	#tag Constant, Name = Z_FIXED, Type = Double, Dynamic = False, Default = \"4", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = Z_FULL_FLUSH, Type = Double, Dynamic = False, Default = \"3", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = Z_HUFFMAN_ONLY, Type = Double, Dynamic = False, Default = \"2", Scope = Protected
 	#tag EndConstant
 
