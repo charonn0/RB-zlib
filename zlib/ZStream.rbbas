@@ -74,7 +74,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(OutputStream As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, Overwrite As Boolean = False, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
-		  Return Create(BinaryStream.Open(OutputStream, Overwrite), CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
+		  Return Create(BinaryStream.Create(OutputStream, Overwrite), CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
 		End Function
 	#tag EndMethod
 
