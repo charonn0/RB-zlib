@@ -80,17 +80,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(OutputStream As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
-		  Dim zstruct As Deflater
-		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
-		    ' Open the compressed stream using custom options
-		    zstruct =  New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
-		    
-		  Else
-		    ' process zlib-wrapped deflate data
-		    zstruct = New Deflater(CompressionLevel)
-		    
-		  End If
-		  Return New zlib.ZStream(zstruct, OutputStream)
+		  Return New zlib.ZStream(New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel), OutputStream)
 		  
 		End Function
 	#tag EndMethod
