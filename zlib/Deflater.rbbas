@@ -9,22 +9,21 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer)
+		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
 		  zstruct.zalloc = Nil
 		  zstruct.zfree = Nil
 		  zstruct.opaque = Nil
-		  mLastError = deflateInit_(zstruct, CompressionLevel, zlib.Version, zstruct.Size)
-		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
-		  mLevel = CompressionLevel
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer, MemoryLevel As Integer)
-		  zstruct.zalloc = Nil
-		  zstruct.zfree = Nil
-		  zstruct.opaque = Nil
-		  mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, WindowBits, MemoryLevel, CompressionStrategy, zlib.Version, zstruct.Size)
+		  
+		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
+		    ' Open the compressed stream using custom options
+		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, WindowBits, MemoryLevel, CompressionStrategy, zlib.Version, zstruct.Size)
+		    
+		  Else
+		    ' process zlib-wrapped deflate data
+		    mLastError = deflateInit_(zstruct, CompressionLevel, zlib.Version, zstruct.Size)
+		    
+		  End If
+		  
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mLevel = CompressionLevel
 		  mStrategy = CompressionStrategy
