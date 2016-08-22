@@ -96,6 +96,12 @@ Implements Readable,Writeable
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function Deflater() As zlib.Deflater
+		  Return mDeflater
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
@@ -138,16 +144,22 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Inflater() As zlib.Inflater
+		  Return mInflater
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function IsReadable() As Boolean
 		  ' Returns True if the stream is in decompression mode
-		  Return mInflater <> Nil
+		  Return Me.Inflater <> Nil
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function IsWriteable() As Boolean
 		  ' Returns True if the stream is in compression mode
-		  Return mDeflater <> Nil
+		  Return Me.Deflater <> Nil
 		End Function
 	#tag EndMethod
 
@@ -245,10 +257,19 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		Function ReadLine(encoding As TextEncoding = Nil, EOL As String = "") As String
-		  ' Read compressed bytes until EOL, inflate and return any output.
+		  ' Reads one line of decompressed text from the compressed stream. 
 		  ' If EOL is not specified then the target platform EOL marker is used by default.
 		  
-		  If mInflater = Nil Or Not BufferedReading Then Raise New IOException
+		  If mInflater = Nil Then
+		    Dim e As New NilObjectException
+		    e.Message = "The stream is not readable."
+		    Raise e
+		  ElseIf Not BufferedReading Then 
+		    Dim e As New IOException
+		    e.Message = "The stream is not buffered."
+		    Raise e
+		  End If
+		  
 		  If EOL = "" Then
 		    #If TargetWin32 Then
 		      EOL = EndOfLine.Windows
@@ -273,12 +294,11 @@ Implements Readable,Writeable
 		      Exit Do
 		    Else
 		      lastchar = char
-		      'ret.Write(char)
 		    End If
 		  Loop
 		  If lastchar <> "" Then ret.Write(lastchar)
 		  ret.Close
-		  Return data
+		  Return data.Trim
 		End Function
 	#tag EndMethod
 
