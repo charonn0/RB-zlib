@@ -12,17 +12,7 @@ Implements Readable,Writeable
 		Sub Close()
 		  If gzFile <> Nil Then
 		    mLastError = zlib.gzclose(gzFile)
-		    If mLastError = Z_ERRNO Then
-		      #If TargetWin32 Then
-		        If Not _get_errno(mLastError) Then
-		          Raise New IOException
-		        Else
-		          Raise New zlibException(mLastError)
-		        End If
-		      #Else
-		        Raise New IOException
-		      #EndIf
-		    End If
+		    If mLastError = Z_ERRNO Then mLastError = get_errno()
 		  End If
 		  gzFile = Nil
 		End Sub
@@ -113,16 +103,7 @@ Implements Readable,Writeable
 		    s.mIsWriteable = (mode <> "rb")
 		    Return s
 		  Else
-		    #If TargetWin32 Then
-		      Dim err As Integer
-		      If Not _get_errno(err) Then
-		        Raise New IOException
-		      Else
-		        Raise New zlibException(err)
-		      End If
-		    #Else
-		      Raise New IOException
-		    #EndIf
+		    Raise New zlibException(get_errno)
 		  End If
 		End Function
 	#tag EndMethod

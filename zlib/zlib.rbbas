@@ -282,6 +282,27 @@ Protected Module zlib
 		Private Soft Declare Function deflateTune Lib zlib1 (ByRef Stream As z_stream, GoodLength As Integer, MaxLazy As Integer, NiceLength As Integer, MaxChain As Integer) As Integer
 	#tag EndExternalMethod
 
+	#tag Method, Flags = &h21
+		Private Function get_errno() As Integer
+		  Dim err As Integer
+		  Dim mb As MemoryBlock
+		  #If TargetWin32 Then
+		    Declare Function _get_errno Lib "msvcrt" (Error As Ptr) As Boolean
+		    mb = New MemoryBlock(4)
+		    If Not _get_errno(mb) Then Return 0
+		  #elseif TargetLinux
+		    Declare Function __errno_location Lib "libc.so" () as Ptr
+		    mb = __errno_location()
+		  #elseif TargetMacOS
+		    Declare Function __error Lib "System" () as Ptr
+		    mb = __error()
+		  #endif
+		  If mb <> Nil Then err = mb.Int32Value(0)
+		  Return err
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(Source As FolderItem) As MemoryBlock
 		  ' GUnZip the Source file and return it. Reverses the GZip method
@@ -847,10 +868,6 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function _crc32 Lib zlib1 Alias "crc32" (crc As UInt32, Buffer As Ptr, BufferLen As UInt32) As UInt32
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function _get_errno Lib "msvcrt" (ByRef errno As Integer) As Boolean
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
