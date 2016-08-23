@@ -17,35 +17,37 @@ Implements Readable,Writeable
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Sub Constructor(Source As BinaryStream, CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer, MemoryLevel As Integer)
-		  Select Case True
-		  Case Source.Length = 0 'compress into file
+	#tag Method, Flags = &h0
+		Sub Constructor(Source As BinaryStream, CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer, MemoryLevel As Integer)
+		  ' Constructs a ZStream from the Source BinaryStream. If the Source's current position is equal
+		  ' to its length then compressed output will be appended, otherwise the Source will be used as 
+		  ' input to be decompressed.
+		  
+		  If Source.Length = Source.Position Then 'compress into Source
 		    If WindowBits = Z_DETECT Then WindowBits = DEFLATE_ENCODING
 		    Me.Constructor(New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel), Source)
-		  Case Source.Length > 0 ' decompress from file
+		  Else ' decompress from Source
 		    If WindowBits = Z_DETECT Then
-		      Dim Isgz, Isde As Boolean
-		      Isgz = Source.IsGZipped
-		      Isde = Source.IsDeflated
 		      Select Case True
-		      Case Isde
+		      Case Source.Length = 0, Source.IsDeflated
 		        WindowBits = DEFLATE_ENCODING
-		      Case Isgz
+		      Case Source.IsGZipped
 		        WindowBits = GZIP_ENCODING
 		      Else
 		        WindowBits = RAW_ENCODING
 		      End Select
 		    End If
 		    Me.Constructor(New Inflater(WindowBits), Source)
-		  Else
-		    Raise New zlibException(Z_DATA_ERROR)
-		  End Select
+		  End If
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.Z_DETECT, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		  ' Constructs a ZStream from the Source MemoryBlock. If the Source's size is zero then 
+		  ' compressed output will be appended, otherwise the Source will be used as input 
+		  ' to be decompressed.
+		  
 		  If Source.Size >= 0 Then
 		    Me.Constructor(New BinaryStream(Source), CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
 		  Else
@@ -58,6 +60,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h1
 		Protected Sub Constructor(Engine As zlib.Deflater, Destination As Writeable)
+		  ' Construct a compression stream using the Engine and Destination paramters
 		  mDeflater = Engine
 		  mDestination = Destination
 		  
@@ -66,6 +69,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h1
 		Protected Sub Constructor(Engine As zlib.Inflater, Source As Readable)
+		  ' Construct a decompression stream using the Engine and Source paramters
 		  mInflater = Engine
 		  mSource = Source
 		  
