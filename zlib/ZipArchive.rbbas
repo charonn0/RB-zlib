@@ -3,27 +3,26 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Sub Constructor(ArchiveStream As BinaryStream)
 		  mArchiveStream = ArchiveStream
-		  mArchiveStream.LittleEndian = True
+		  'mArchiveStream.LittleEndian = True
 		  If mArchiveStream.Length < 22 Then Raise New zlibException(ERR_NOT_ZIPPED)
 		  
 		  mArchiveStream.Position = mArchiveStream.Length - 4
-		  Do Until mDirectoryOffset > 0
+		  Do Until mDirectoryHeaderOffset > 0
 		    If mArchiveStream.ReadUInt32 = DIRECTORY_FOOTER_HEADER Then
 		      mArchiveStream.Position = mArchiveStream.Position - 4
-		      mDirectoryOffset = mArchiveStream.Position
+		      mDirectoryHeaderOffset = mArchiveStream.Position
 		      mDirectoryFooter.StringValue(True) = mArchiveStream.Read(mDirectoryFooter.Size)
 		      mArchiveStream.Position = mDirectoryFooter.Offset
 		      mDirectoryHeader.StringValue(True) = mArchiveStream.Read(mDirectoryHeader.Size)
 		      mArchiveName = mArchiveStream.Read(mDirectoryHeader.FilenameLength)
 		      mExtraData = mArchiveStream.Read(mDirectoryHeader.ExtraLength)
 		      mArchiveComment = mArchiveStream.Read(mDirectoryHeader.CommentLength)
-		      'mDirectoryOffset = mDirectoryHeader.Offset
 		    Else
 		      mArchiveStream.Position = mArchiveStream.Position - 5
 		    End If
 		  Loop Until mArchiveStream.Position < 22
 		  
-		  If mDirectoryOffset = 0 Then Raise New zlibException(ERR_NOT_ZIPPED)
+		  If mDirectoryHeaderOffset = 0 Then Raise New zlibException(ERR_NOT_ZIPPED)
 		End Sub
 	#tag EndMethod
 
@@ -35,7 +34,7 @@ Protected Class ZipArchive
 		  Do Until Not GetEntryHeader(i, header, name, extra)
 		    i = i + 1
 		  Loop
-		  
+		  Return i
 		End Function
 	#tag EndMethod
 
@@ -55,17 +54,31 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h1
 		Protected Function GetEntryHeader(Index As Integer, ByRef Header As FileHeader, ByRef FileName As String, ByRef Extra As String) As Boolean
-		  If mDirectoryOffset = 0 Then Raise New IOException
+		  If mDirectoryHeaderOffset = 0 Then Raise New IOException
 		  mArchiveStream.Position = mDirectoryHeader.Offset
 		  Dim i As Integer
-		  Do Until mArchiveStream.Position >= mDirectoryOffset
+		  Do Until mArchiveStream.Position >= mDirectoryHeaderOffset
 		    header.StringValue(True) = mArchiveStream.Read(header.Size)
-		    If header.Signature <> FILE_SIGNATURE Then 
+		    If header.Signature <> FILE_SIGNATURE Then
 		      mLastError = ERR_INVALID_ENTRY
 		      Return False
 		    Else
 		      FileName = mArchiveStream.Read(header.FilenameLength)
 		      Extra = mArchiveStream.Read(header.ExtraLength)
+		      If header.CompressedSize = 0 Then
+		        Dim footer As FileFooter
+		        Dim sig As UInt32 = &h08074b50
+		        Dim tmp As UInt32 = mArchiveStream.ReadUInt32
+		        If tmp <> sig Then 
+		          mArchiveStream.Position = mArchiveStream.Position - 1
+		        End If
+		        Dim sz, usz, crc As UInt32
+		        crc = mArchiveStream.ReadUInt32
+		        sz = mArchiveStream.ReadUInt32
+		        usz = mArchiveStream.ReadUInt32
+		        'footer.StringValue(True) = mArchiveStream.Read(FileFooter.Size)
+		        Break
+		      End If
 		      If i = Index Then Return True
 		    End If
 		    i = i + 1
@@ -126,7 +139,7 @@ Protected Class ZipArchive
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mDirectoryOffset As UInt32
+		Private mDirectoryHeaderOffset As UInt32
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -199,8 +212,7 @@ Protected Class ZipArchive
 	#tag EndStructure
 
 	#tag Structure, Name = FileFooter, Flags = &h1
-		Signature As Int32
-		  CRC32 As UInt32
+		CRC32 As UInt32
 		  ComressedSize As UInt32
 		UncompressedSize As UInt32
 	#tag EndStructure
