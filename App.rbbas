@@ -40,7 +40,7 @@ Inherits Application
 		  dlg.Title = CurrentMethodName + " - Select a file to deflate"
 		  Dim f As FolderItem = dlg.ShowModal
 		  If f = Nil Then Return False
-		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
+		  Dim g As FolderItem = f.Parent.Child(f.Name + ".deflate")
 		  
 		  If Not zlib.Deflate(f, g) Then
 		    If g.Exists Then g.Delete
