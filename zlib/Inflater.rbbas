@@ -64,14 +64,13 @@ Inherits FlateEngine
 		  Dim ret As New MemoryBlock(0)
 		  Dim retstream As New BinaryStream(ret)
 		  Dim instream As New BinaryStream(Data)
-		  If Not Me.Inflate(instream, retstream) Then Return Nil
+		  If Not Me.Inflate(instream, retstream, -1) Then Return Nil
 		  retstream.Close
 		  Return ret
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(ReadFrom As Readable, WriteTo As Writeable) As Boolean
 		  ' Reads compressed bytes from ReadFrom until ReadFrom.EOF, and writes all decompressed output to WriteTo
 		  ' If ReadFrom represents more than CHUNK_SIZE compressed bytes then they will be read in chunks of CHUNK_SIZE.
 		  ' The size of the output is variable, typically many times larger than the input, but will be written to WriteTo
@@ -82,7 +81,7 @@ Inherits FlateEngine
 		  If Not IsOpen Then Return False
 		  
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
-		  
+		  Dim count As Integer
 		  ' The outer loop reads compressed bytes from ReadFrom until EOF, using them as input
 		  ' The inner loop provides more output space, calls inflate, and writes any output to WriteTo
 		  Do
@@ -90,7 +89,7 @@ Inherits FlateEngine
 		    If ReadFrom <> Nil Then chunk = ReadFrom.Read(CHUNK_SIZE) Else chunk = ""
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
-		    
+		    count = count + chunk.Size
 		    Do
 		      ' provide more output space
 		      zstruct.next_out = outbuff
@@ -102,7 +101,6 @@ Inherits FlateEngine
 		      ' keep going until zlib doesn't use all the output space or an error
 		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
 		    
-		  Loop Until ReadFrom = Nil Or ReadFrom.EOF
 		  
 		  ' Z_BUF_ERROR is non-fatal to the decompression process; you can keep 
 		  ' providing input to the decompressor in search of a valid deflate block.

@@ -67,7 +67,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH) As Boolean
+		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH, ReadCount As Integer = -1) As Boolean
 		  ' Reads uncompressed bytes from ReadFrom until ReadFrom.EOF, and writes all compressed output to WriteTo
 		  ' If ReadFrom represents more than CHUNK_SIZE uncompressed bytes then they will be read in chunks of CHUNK_SIZE.
 		  ' The size of the output is variable, typically smaller than the input, and will be written to WriteTo
@@ -79,7 +79,7 @@ Inherits FlateEngine
 		  If Not IsOpen Then Return False
 		  
 		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
-		  
+		  Dim count As Integer
 		  ' The outer loop reads uncompressed bytes from ReadFrom until EOF, using them as input
 		  ' The inner loop provides more output space, calls deflate, and writes any output to WriteTo
 		  Do
@@ -87,6 +87,7 @@ Inherits FlateEngine
 		    If ReadFrom <> Nil Then chunk = ReadFrom.Read(CHUNK_SIZE) Else chunk = ""
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
+		    count = count + chunk.Size
 		    
 		    Do
 		      ' provide more output space
@@ -100,7 +101,7 @@ Inherits FlateEngine
 		      ' keep going until zlib doesn't use all the output space or an error
 		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
 		    
-		  Loop Until ReadFrom = Nil Or ReadFrom.EOF
+		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
 		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(Z_UNFINISHED_ERROR)
 		  Return zstruct.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
