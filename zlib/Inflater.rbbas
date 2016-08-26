@@ -71,6 +71,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Inflate(ReadFrom As Readable, WriteTo As Writeable, ReadCount As Integer = -1) As Boolean
 		  ' Reads compressed bytes from ReadFrom until ReadFrom.EOF, and writes all decompressed output to WriteTo
 		  ' If ReadFrom represents more than CHUNK_SIZE compressed bytes then they will be read in chunks of CHUNK_SIZE.
 		  ' The size of the output is variable, typically many times larger than the input, but will be written to WriteTo
@@ -101,6 +102,7 @@ Inherits FlateEngine
 		      ' keep going until zlib doesn't use all the output space or an error
 		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
 		    
+		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
 		  ' Z_BUF_ERROR is non-fatal to the decompression process; you can keep 
 		  ' providing input to the decompressor in search of a valid deflate block.
