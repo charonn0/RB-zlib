@@ -68,7 +68,7 @@ Inherits Application
 		  Dim f As FolderItem = dlg.ShowModal
 		  If f = Nil Then Return False
 		  Dim bs As BinaryStream = BinaryStream.Open(f)
-		  Dim g As FolderItem = f.Parent.Child(f.Name + ".gz")
+		  Dim g As FolderItem = f.Parent.Child(f.Name + ".deflate")
 		  Dim gz As zlib.GZStream = zlib.GZStream.Create(g, True)
 		  While Not bs.EOF
 		    gz.Write(bs.Read(1024))
