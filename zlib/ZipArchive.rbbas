@@ -3,7 +3,7 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Sub Constructor(ArchiveStream As BinaryStream)
 		  mArchiveStream = ArchiveStream
-		  'mArchiveStream.LittleEndian = True
+		  mArchiveStream.LittleEndian = True
 		  If mArchiveStream.Length < 22 Then Raise New zlibException(ERR_NOT_ZIPPED)
 		  
 		  mArchiveStream.Position = mArchiveStream.Length - 4
@@ -30,8 +30,8 @@ Protected Class ZipArchive
 		Function Count() As UInt32
 		  Dim header As FileHeader
 		  Dim name, extra As String
-		  Dim i As UInt32
-		  Do Until Not GetEntryHeader(i, header, name, extra)
+		  Dim i, offset As UInt32
+		  Do Until Not GetEntryHeader(i, header, name, extra, offset)
 		    i = i + 1
 		  Loop
 		  Return i
@@ -42,7 +42,8 @@ Protected Class ZipArchive
 		Function GetEntry(Index As Integer) As zlib.ZStream
 		  Dim header As FileHeader
 		  Dim name, extra As String
-		  If Not GetEntryHeader(Index, header, name, extra) Then Return Nil
+		  Dim offset As UInt32
+		  If Not GetEntryHeader(Index, header, name, extra, offset) Then Return Nil
 		  If header.Method <> &h08 Then
 		    mLastError = ERR_UNSUPPORTED_COMPRESSION
 		    Return Nil
@@ -53,7 +54,7 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function GetEntryHeader(Index As Integer, ByRef Header As FileHeader, ByRef FileName As String, ByRef Extra As String) As Boolean
+		Protected Function GetEntryHeader(Index As Integer, ByRef Header As FileHeader, ByRef FileName As String, ByRef Extra As String, ByRef DataOffset As UInt32) As Boolean
 		  If mDirectoryHeaderOffset = 0 Then Raise New IOException
 		  mArchiveStream.Position = mDirectoryHeader.Offset
 		  Dim i As Integer
@@ -65,20 +66,18 @@ Protected Class ZipArchive
 		    Else
 		      FileName = mArchiveStream.Read(header.FilenameLength)
 		      Extra = mArchiveStream.Read(header.ExtraLength)
-		      If header.CompressedSize = 0 Then
+		      DataOffset = mArchiveStream.Position
+		      Dim sig As UInt32 = mArchiveStream.ReadUInt32
+		      If sig = FILE_FOOTER_SIGNATURE Or (header.CompressedSize = 0 And header.Method <> 0) Then
+		        If sig <> FILE_FOOTER_SIGNATURE Then mArchiveStream.Position = mArchiveStream.Position - 4
 		        Dim footer As FileFooter
-		        Dim sig As UInt32 = &h08074b50
-		        Dim tmp As UInt32 = mArchiveStream.ReadUInt32
-		        If tmp <> sig Then 
-		          mArchiveStream.Position = mArchiveStream.Position - 1
-		        End If
-		        Dim sz, usz, crc As UInt32
-		        crc = mArchiveStream.ReadUInt32
-		        sz = mArchiveStream.ReadUInt32
-		        usz = mArchiveStream.ReadUInt32
-		        'footer.StringValue(True) = mArchiveStream.Read(FileFooter.Size)
-		        Break
+		        footer.StringValue(True) = mArchiveStream.Read(FileFooter.Size)
+		        header.CompressedSize = footer.ComressedSize
+		        header.UncompressedSize = footer.UncompressedSize
+		      Else
+		        mArchiveStream.Position = mArchiveStream.Position - 4
 		      End If
+		      mArchiveStream.Position = DataOffset + header.CompressedSize
 		      If i = Index Then Return True
 		    End If
 		    i = i + 1
@@ -92,7 +91,8 @@ Protected Class ZipArchive
 		Function GetEntryModificationDate(Index As Integer) As Date
 		  Dim header As FileHeader
 		  Dim name, extra As String
-		  If Not GetEntryHeader(Index, header, name, extra) Then Return Nil
+		  Dim offset As UInt32
+		  If Not GetEntryHeader(Index, header, name, extra, offset) Then Return Nil
 		  Dim h, m, s, dom, mon, year As Integer
 		  Dim dt, tm As UInt16
 		  tm = header.ModTime
@@ -112,7 +112,8 @@ Protected Class ZipArchive
 		Function GetEntryName(Index As Integer) As String
 		  Dim header As FileHeader
 		  Dim name, extra As String
-		  If Not GetEntryHeader(Index, header, name, extra) Then Return ""
+		  Dim offset As UInt32
+		  If Not GetEntryHeader(Index, header, name, extra, offset) Then Return ""
 		  Return name
 		End Function
 	#tag EndMethod
@@ -155,10 +156,10 @@ Protected Class ZipArchive
 	#tag EndProperty
 
 
-	#tag Constant, Name = DIRECTORY_FOOTER_HEADER, Type = Double, Dynamic = False, Default = \"&h504B0506", Scope = Protected
+	#tag Constant, Name = DIRECTORY_FOOTER_HEADER, Type = Double, Dynamic = False, Default = \"&h06054b50", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = DIRECTORY_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h504B0102", Scope = Protected
+	#tag Constant, Name = DIRECTORY_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h02014b50", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_END_ARCHIVE, Type = Double, Dynamic = False, Default = \"-202", Scope = Public
@@ -173,10 +174,10 @@ Protected Class ZipArchive
 	#tag Constant, Name = ERR_UNSUPPORTED_COMPRESSION, Type = Double, Dynamic = False, Default = \"-203", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = FILE_FOOTER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h504B0708", Scope = Protected
+	#tag Constant, Name = FILE_FOOTER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h08074b50", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = FILE_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h04034B50", Scope = Protected
+	#tag Constant, Name = FILE_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h04034b50", Scope = Protected
 	#tag EndConstant
 
 
