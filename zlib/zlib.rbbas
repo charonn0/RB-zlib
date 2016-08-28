@@ -84,6 +84,26 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
+		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
+		  
+		  If Root = Nil Or Not Root.Directory Then Return Nil
+		  Dim s() As String = Split(Path, "/")
+		  If UBound(s) = -1 Then Return Root
+		  
+		  root = root.Child(s(0))
+		  s.Remove(0)
+		  If UBound(s) = -1 Then Return root
+		  If Root.Exists Then
+		    If Not Root.Directory Then Raise New IOException
+		  Else
+		    Root.CreateAsFolder
+		  End If
+		  Return CreateTree(Root, Join(s, "/"))
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function deflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
@@ -779,6 +799,31 @@ Protected Module zlib
 		  bs.Close
 		  tar.Close
 		  Return fs
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
+		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		  Dim zip As New ZipArchive(bs)
+		  Dim ret() As FolderItem
+		  Dim c As Integer = zip.Count - 1
+		  For i As Integer = 0 To c
+		    Dim z As ZStream = zip.GetEntry(i)
+		    Dim f As FolderItem = CreateTree(ExtractTo, zip.GetEntryName(i))
+		    If z = Nil And f.Exists Then ' directory
+		      ret.Append(f)
+		    ElseIf z <> Nil Then
+		      Dim outstream As BinaryStream = BinaryStream.Create(f, Overwrite)
+		      outstream.Write(z.ReadAll)
+		      z.Close
+		      outstream.Close
+		      ret.Append(f)
+		    End If
+		  Next
+		  
+		  Return ret
+		  
 		End Function
 	#tag EndMethod
 

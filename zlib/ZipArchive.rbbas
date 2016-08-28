@@ -48,6 +48,7 @@ Protected Class ZipArchive
 		    mLastError = ERR_UNSUPPORTED_COMPRESSION
 		    Return Nil
 		  End If
+		  mArchiveStream.Position = offset
 		  Dim mb As MemoryBlock = mArchiveStream.Read(header.CompressedSize)
 		  Return New zlib.ZStream(mb)
 		End Function
