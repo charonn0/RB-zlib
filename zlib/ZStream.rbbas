@@ -200,27 +200,24 @@ Implements Readable,Writeable
 		  If mInflater = Nil Then Raise New IOException
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
-		  Dim tmp As MemoryBlock
+		  Dim readsz As Integer = Count
 		  If BufferedReading Then
 		    If Count <= mReadBuffer.LenB Then
 		      ret.Write(LeftB(mReadBuffer, Count))
 		      Dim sz As Integer = mReadBuffer.LenB - Count
 		      mReadBuffer = RightB(mReadBuffer, sz)
 		      ret.Close
+		      readsz = 0
 		    Else
-		      ret.Write(mReadBuffer)
-		      mReadBuffer = ""
-		      tmp = mSource.Read(Max(Count, CHUNK_SIZE))
+		      If mReadBuffer.LenB > 0 Then
+		        ret.Write(mReadBuffer)
+		        mReadBuffer = ""
+		      End If
+		      readsz = Max(Count, CHUNK_SIZE)
 		    End If
-		  Else
-		    tmp = mSource.Read(Count)
 		  End If
-		  If tmp <> Nil Then
-		    Dim src As New BinaryStream(tmp)
-		    If Not mInflater.Inflate(src, ret) And mInflater.LastError <> Z_STREAM_END Then
-		      Raise New zlibException(mInflater.LastError)
-		    End If
-		    src.Close
+		  If readsz > 0 Then
+		    If Not mInflater.Inflate(mSource, ret, readsz) Then Raise New zlibException(mInflater.LastError)
 		    ret.Close
 		    If BufferedReading Then
 		      If data.Size >= Count Then
