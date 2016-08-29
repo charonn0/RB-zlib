@@ -7,22 +7,22 @@ Protected Class ZipArchive
 		  If mArchiveStream.Length < 22 Then Raise New zlibException(ERR_NOT_ZIPPED)
 		  
 		  mArchiveStream.Position = mArchiveStream.Length - 4
-		  Do Until mZipDirectoryHeaderOffset > 0
+		  Do Until mDirectoryHeaderOffset > 0
 		    If mArchiveStream.ReadUInt32 = DIRECTORY_FOOTER_HEADER Then
 		      mArchiveStream.Position = mArchiveStream.Position - 4
-		      mZipDirectoryHeaderOffset = mArchiveStream.Position
+		      mDirectoryHeaderOffset = mArchiveStream.Position
 		      mDirectoryFooter.StringValue(True) = mArchiveStream.Read(mDirectoryFooter.Size)
 		      mArchiveStream.Position = mDirectoryFooter.Offset
-		      mZipDirectoryHeader.StringValue(True) = mArchiveStream.Read(mZipDirectoryHeader.Size)
-		      mArchiveName = mArchiveStream.Read(mZipDirectoryHeader.FilenameLength)
-		      mExtraData = mArchiveStream.Read(mZipDirectoryHeader.ExtraLength)
-		      mArchiveComment = mArchiveStream.Read(mZipDirectoryHeader.CommentLength)
+		      mDirectoryHeader.StringValue(True) = mArchiveStream.Read(mDirectoryHeader.Size)
+		      mArchiveName = mArchiveStream.Read(mDirectoryHeader.FilenameLength)
+		      mExtraData = mArchiveStream.Read(mDirectoryHeader.ExtraLength)
+		      mArchiveComment = mArchiveStream.Read(mDirectoryHeader.CommentLength)
 		    Else
 		      mArchiveStream.Position = mArchiveStream.Position - 5
 		    End If
 		  Loop Until mArchiveStream.Position < 22
 		  
-		  If mZipDirectoryHeaderOffset = 0 Then Raise New zlibException(ERR_NOT_ZIPPED)
+		  If mDirectoryHeaderOffset = 0 Then Raise New zlibException(ERR_NOT_ZIPPED)
 		End Sub
 	#tag EndMethod
 
@@ -40,7 +40,7 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h0
 		Function GetEntry(Index As Integer) As zlib.ZStream
-		  Dim header As FileHeader
+		  Dim header As ZipFileHeader
 		  Dim name, extra As String
 		  Dim offset As UInt32
 		  If Not GetEntryHeader(Index, header, name, extra, offset) Then Return Nil
@@ -55,11 +55,11 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function GetEntryHeader(Index As Integer, ByRef Header As FileHeader, ByRef FileName As String, ByRef Extra As String, ByRef DataOffset As UInt32) As Boolean
+		Protected Function GetEntryHeader(Index As Integer, ByRef Header As ZipFileHeader, ByRef FileName As String, ByRef Extra As String, ByRef DataOffset As UInt32) As Boolean
 		  If mDirectoryHeaderOffset = 0 Then Raise New IOException
 		  mArchiveStream.Position = mDirectoryHeader.Offset
 		  Dim i As Integer
-		  Do Until mArchiveStream.Position >= mZipDirectoryHeaderOffset
+		  Do Until mArchiveStream.Position >= mDirectoryHeaderOffset
 		    header.StringValue(True) = mArchiveStream.Read(header.Size)
 		    If header.Signature <> FILE_SIGNATURE Then
 		      mLastError = ERR_INVALID_ENTRY
@@ -71,8 +71,8 @@ Protected Class ZipArchive
 		      Dim sig As UInt32 = mArchiveStream.ReadUInt32
 		      If sig = FILE_FOOTER_SIGNATURE Or (header.CompressedSize = 0 And header.Method <> 0) Then
 		        If sig <> FILE_FOOTER_SIGNATURE Then mArchiveStream.Position = mArchiveStream.Position - 4
-		        Dim footer As FileFooter
-		        footer.StringValue(True) = mArchiveStream.Read(FileFooter.Size)
+		        Dim footer As ZipFileFooter
+		        footer.StringValue(True) = mArchiveStream.Read(footer.Size)
 		        header.CompressedSize = footer.ComressedSize
 		        header.UncompressedSize = footer.UncompressedSize
 		      Else
@@ -90,7 +90,7 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h0
 		Function GetEntryModificationDate(Index As Integer) As Date
-		  Dim header As FileHeader
+		  Dim header As ZipFileHeader
 		  Dim name, extra As String
 		  Dim offset As UInt32
 		  If Not GetEntryHeader(Index, header, name, extra, offset) Then Return Nil
@@ -111,7 +111,7 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h0
 		Function GetEntryName(Index As Integer) As String
-		  Dim header As FileHeader
+		  Dim header As ZipFileHeader
 		  Dim name, extra As String
 		  Dim offset As UInt32
 		  If Not GetEntryHeader(Index, header, name, extra, offset) Then Return ""
@@ -137,6 +137,14 @@ Protected Class ZipArchive
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private mDirectoryHeader As ZipDirectoryHeader
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mDirectoryHeaderOffset As UInt32
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private mExtraData As MemoryBlock
 	#tag EndProperty
 
@@ -146,14 +154,6 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h21
 		Private mSpanOffset As UInt32 = 0
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mZipDirectoryHeader As ZipDirectoryHeader
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mZipDirectoryHeaderOffset As UInt32
 	#tag EndProperty
 
 
