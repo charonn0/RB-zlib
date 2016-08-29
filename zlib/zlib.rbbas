@@ -92,7 +92,15 @@ Protected Module zlib
 		  Dim s() As String = Split(Path, "/")
 		  If UBound(s) = -1 Then Return Root
 		  
-		  root = root.Child(s(0))
+		  Dim name As String = s(0)
+		  name = ReplaceAll(name, "?", "_")
+		  name = ReplaceAll(name, "<", "_")
+		  name = ReplaceAll(name, ">", "_")
+		  name = ReplaceAll(name, "\", "_")
+		  name = ReplaceAll(name, ":", "_")
+		  name = ReplaceAll(name, "*", "_")
+		  name = ReplaceAll(name, "|", "_")
+		  root = root.Child(name)
 		  s.Remove(0)
 		  If UBound(s) = -1 Then Return root
 		  If Root.Exists Then
