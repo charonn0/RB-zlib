@@ -7,28 +7,28 @@ Protected Class ZipArchive
 		  If mArchiveStream.Length < 22 Then Raise New zlibException(ERR_NOT_ZIPPED)
 		  
 		  mArchiveStream.Position = mArchiveStream.Length - 4
-		  Do Until mDirectoryHeaderOffset > 0
+		  Do Until mZipDirectoryHeaderOffset > 0
 		    If mArchiveStream.ReadUInt32 = DIRECTORY_FOOTER_HEADER Then
 		      mArchiveStream.Position = mArchiveStream.Position - 4
-		      mDirectoryHeaderOffset = mArchiveStream.Position
+		      mZipDirectoryHeaderOffset = mArchiveStream.Position
 		      mDirectoryFooter.StringValue(True) = mArchiveStream.Read(mDirectoryFooter.Size)
 		      mArchiveStream.Position = mDirectoryFooter.Offset
-		      mDirectoryHeader.StringValue(True) = mArchiveStream.Read(mDirectoryHeader.Size)
-		      mArchiveName = mArchiveStream.Read(mDirectoryHeader.FilenameLength)
-		      mExtraData = mArchiveStream.Read(mDirectoryHeader.ExtraLength)
-		      mArchiveComment = mArchiveStream.Read(mDirectoryHeader.CommentLength)
+		      mZipDirectoryHeader.StringValue(True) = mArchiveStream.Read(mZipDirectoryHeader.Size)
+		      mArchiveName = mArchiveStream.Read(mZipDirectoryHeader.FilenameLength)
+		      mExtraData = mArchiveStream.Read(mZipDirectoryHeader.ExtraLength)
+		      mArchiveComment = mArchiveStream.Read(mZipDirectoryHeader.CommentLength)
 		    Else
 		      mArchiveStream.Position = mArchiveStream.Position - 5
 		    End If
 		  Loop Until mArchiveStream.Position < 22
 		  
-		  If mDirectoryHeaderOffset = 0 Then Raise New zlibException(ERR_NOT_ZIPPED)
+		  If mZipDirectoryHeaderOffset = 0 Then Raise New zlibException(ERR_NOT_ZIPPED)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Count() As UInt32
-		  Dim header As FileHeader
+		  Dim header As ZipFileHeader
 		  Dim name, extra As String
 		  Dim i, offset As UInt32
 		  Do Until Not GetEntryHeader(i, header, name, extra, offset)
@@ -59,7 +59,7 @@ Protected Class ZipArchive
 		  If mDirectoryHeaderOffset = 0 Then Raise New IOException
 		  mArchiveStream.Position = mDirectoryHeader.Offset
 		  Dim i As Integer
-		  Do Until mArchiveStream.Position >= mDirectoryHeaderOffset
+		  Do Until mArchiveStream.Position >= mZipDirectoryHeaderOffset
 		    header.StringValue(True) = mArchiveStream.Read(header.Size)
 		    If header.Signature <> FILE_SIGNATURE Then
 		      mLastError = ERR_INVALID_ENTRY
@@ -133,15 +133,7 @@ Protected Class ZipArchive
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mDirectoryFooter As DirectoryFooter
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mDirectoryHeader As DirectoryHeader
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mDirectoryHeaderOffset As UInt32
+		Private mDirectoryFooter As ZipDirectoryFooter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -154,6 +146,14 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h21
 		Private mSpanOffset As UInt32 = 0
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mZipDirectoryHeader As ZipDirectoryHeader
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mZipDirectoryHeaderOffset As UInt32
 	#tag EndProperty
 
 
@@ -180,58 +180,6 @@ Protected Class ZipArchive
 
 	#tag Constant, Name = FILE_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h04034b50", Scope = Protected
 	#tag EndConstant
-
-
-	#tag Structure, Name = DirectoryFooter, Flags = &h1
-		Signature As UInt32
-		  ThisDisk As UInt16
-		  FirstDisk As UInt16
-		  ThisRecordCount As UInt16
-		  TotalRecordCount As UInt16
-		  DirectorySize As UInt32
-		  Offset As UInt32
-		CommentLength As UInt16
-	#tag EndStructure
-
-	#tag Structure, Name = DirectoryHeader, Flags = &h1
-		Signature As UInt32
-		  Version As UInt16
-		  VersionNeeded As UInt16
-		  Flag As UInt16
-		  Method As UInt16
-		  ModTime As UInt16
-		  ModDate As UInt16
-		  CRC32 As UInt32
-		  CompressedSize As UInt32
-		  UncompressedSize As UInt32
-		  FilenameLength As UInt16
-		  ExtraLength As UInt16
-		  CommentLength As UInt16
-		  DiskNumber As UInt16
-		  InternalAttributes As UInt16
-		  ExternalAttributes As UInt32
-		Offset As UInt32
-	#tag EndStructure
-
-	#tag Structure, Name = FileFooter, Flags = &h1
-		CRC32 As UInt32
-		  ComressedSize As UInt32
-		UncompressedSize As UInt32
-	#tag EndStructure
-
-	#tag Structure, Name = FileHeader, Flags = &h1
-		Signature As UInt32
-		  Version As UInt16
-		  Flag As UInt16
-		  Method As UInt16
-		  ModTime As UInt16
-		  ModDate As UInt16
-		  CRC32 As UInt32
-		  CompressedSize As UInt32
-		  UncompressedSize As UInt32
-		  FilenameLength As UInt16
-		ExtraLength As UInt16
-	#tag EndStructure
 
 
 	#tag ViewBehavior

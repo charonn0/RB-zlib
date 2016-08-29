@@ -1058,6 +1058,57 @@ Protected Module zlib
 		Done As Integer
 	#tag EndStructure
 
+	#tag Structure, Name = ZipDirectoryFooter, Flags = &h21
+		Signature As UInt32
+		  ThisDisk As UInt16
+		  FirstDisk As UInt16
+		  ThisRecordCount As UInt16
+		  TotalRecordCount As UInt16
+		  DirectorySize As UInt32
+		  Offset As UInt32
+		CommentLength As UInt16
+	#tag EndStructure
+
+	#tag Structure, Name = ZipDirectoryHeader, Flags = &h21
+		Signature As UInt32
+		  Version As UInt16
+		  VersionNeeded As UInt16
+		  Flag As UInt16
+		  Method As UInt16
+		  ModTime As UInt16
+		  ModDate As UInt16
+		  CRC32 As UInt32
+		  CompressedSize As UInt32
+		  UncompressedSize As UInt32
+		  FilenameLength As UInt16
+		  ExtraLength As UInt16
+		  CommentLength As UInt16
+		  DiskNumber As UInt16
+		  InternalAttributes As UInt16
+		  ExternalAttributes As UInt32
+		Offset As UInt32
+	#tag EndStructure
+
+	#tag Structure, Name = ZipFileFooter, Flags = &h21
+		CRC32 As UInt32
+		  ComressedSize As UInt32
+		UncompressedSize As UInt32
+	#tag EndStructure
+
+	#tag Structure, Name = ZipFileHeader, Flags = &h21
+		Signature As UInt32
+		  Version As UInt16
+		  Flag As UInt16
+		  Method As UInt16
+		  ModTime As UInt16
+		  ModDate As UInt16
+		  CRC32 As UInt32
+		  CompressedSize As UInt32
+		  UncompressedSize As UInt32
+		  FilenameLength As UInt16
+		ExtraLength As UInt16
+	#tag EndStructure
+
 	#tag Structure, Name = z_stream, Flags = &h21
 		next_in as Ptr
 		  avail_in as UInt32
