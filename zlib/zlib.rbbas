@@ -813,26 +813,17 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
-		  Dim zip As New ZipArchive(bs)
 		  Dim ret() As FolderItem
-		  Dim c As Integer = zip.Count - 1
-		  For i As Integer = 0 To c
-		    Dim z As Readable = zip.GetEntry(i)
-		    Dim f As FolderItem = CreateTree(ExtractTo, zip.GetEntryName(i))
-		    If z = Nil And f.Exists Then ' directory
-		      ret.Append(f)
-		    ElseIf z <> Nil Then
-		      Dim outstream As BinaryStream = BinaryStream.Create(f, Overwrite)
-		      Do Until z.EOF
-		        outstream.Write(z.Read(CHUNK_SIZE))
-		      Loop
-		      outstream.Close
-		      ret.Append(f)
-		    Else
-		      Break
-		    End If
-		  Next
-		  
+		  Dim zip As New ZipArchive(bs)
+		  Do
+		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
+		    Dim outstream As BinaryStream
+		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
+		    If Not zip.MoveNext(outstream) Then Exit Do
+		    If outstream <> Nil Then outstream.Close
+		    ret.Append(f)
+		  Loop
+		  zip.Close
 		  Return ret
 		  
 		End Function
