@@ -135,6 +135,14 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		 Shared Function Open(ZipFile As FolderItem) As zlib.ZipArchive
+		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		  If bs <> Nil Then Return New zlib.ZipArchive(bs)
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reset(Index As Integer = 0) As Boolean
 		  mArchiveStream.Position = mArchiveStream.Length - 4
 		  mDirectoryHeaderOffset = 0
