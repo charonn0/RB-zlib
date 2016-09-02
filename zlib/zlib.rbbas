@@ -84,6 +84,34 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
+		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
+		  
+		  If Root = Nil Or Not Root.Directory Then Return Nil
+		  Dim s() As String = Split(Path, "/")
+		  If UBound(s) = -1 Then Return Root
+		  
+		  Dim name As String = s(0)
+		  name = ReplaceAll(name, "?", "_")
+		  name = ReplaceAll(name, "<", "_")
+		  name = ReplaceAll(name, ">", "_")
+		  name = ReplaceAll(name, "\", "_")
+		  name = ReplaceAll(name, ":", "_")
+		  name = ReplaceAll(name, "*", "_")
+		  name = ReplaceAll(name, "|", "_")
+		  root = root.Child(name)
+		  s.Remove(0)
+		  If UBound(s) = -1 Then Return root
+		  If Root.Exists Then
+		    If Not Root.Directory Then Raise New IOException
+		  Else
+		    Root.CreateAsFolder
+		  End If
+		  Return CreateTree(Root, Join(s, "/"))
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function deflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
@@ -783,6 +811,25 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
+		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		  Dim ret() As FolderItem
+		  Dim zip As New ZipArchive(bs)
+		  Do
+		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
+		    Dim outstream As BinaryStream
+		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
+		    If Not zip.MoveNext(outstream) Then Exit Do
+		    If outstream <> Nil Then outstream.Close
+		    ret.Append(f)
+		  Loop
+		  zip.Close
+		  Return ret
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1, DataSize As Integer = - 1) As MemoryBlock
 		  ' Decompress memory in one operation using deflate. If Data.Size is not known (-1) then specify the size as DataSize
 		  ' If the size of the decompressed data is known then pass it as ExpandedSize. Reverses the Compress method
@@ -1013,6 +1060,57 @@ Protected Module zlib
 		Done As Integer
 	#tag EndStructure
 
+	#tag Structure, Name = ZipDirectoryFooter, Flags = &h21
+		Signature As UInt32
+		  ThisDisk As UInt16
+		  FirstDisk As UInt16
+		  ThisRecordCount As UInt16
+		  TotalRecordCount As UInt16
+		  DirectorySize As UInt32
+		  Offset As UInt32
+		CommentLength As UInt16
+	#tag EndStructure
+
+	#tag Structure, Name = ZipDirectoryHeader, Flags = &h21
+		Signature As UInt32
+		  Version As UInt16
+		  VersionNeeded As UInt16
+		  Flag As UInt16
+		  Method As UInt16
+		  ModTime As UInt16
+		  ModDate As UInt16
+		  CRC32 As UInt32
+		  CompressedSize As UInt32
+		  UncompressedSize As UInt32
+		  FilenameLength As UInt16
+		  ExtraLength As UInt16
+		  CommentLength As UInt16
+		  DiskNumber As UInt16
+		  InternalAttributes As UInt16
+		  ExternalAttributes As UInt32
+		Offset As UInt32
+	#tag EndStructure
+
+	#tag Structure, Name = ZipFileFooter, Flags = &h21
+		CRC32 As UInt32
+		  ComressedSize As UInt32
+		UncompressedSize As UInt32
+	#tag EndStructure
+
+	#tag Structure, Name = ZipFileHeader, Flags = &h21
+		Signature As UInt32
+		  Version As UInt16
+		  Flag As UInt16
+		  Method As UInt16
+		  ModTime As UInt16
+		  ModDate As UInt16
+		  CRC32 As UInt32
+		  CompressedSize As UInt32
+		  UncompressedSize As UInt32
+		  FilenameLength As UInt16
+		ExtraLength As UInt16
+	#tag EndStructure
+
 	#tag Structure, Name = z_stream, Flags = &h21
 		next_in as Ptr
 		  avail_in as UInt32
@@ -1029,6 +1127,18 @@ Protected Module zlib
 		  adler as UInt32
 		reserved as UInt32
 	#tag EndStructure
+
+
+	#tag Enum, Name = ArchiveEntryType, Type = Integer, Flags = &h1
+		Normal=0
+		  HardLink
+		  SymLink
+		  CharacterSpecial
+		  BlockSpecial
+		  Directory
+		  FIFO
+		Contiguous
+	#tag EndEnum
 
 
 	#tag ViewBehavior

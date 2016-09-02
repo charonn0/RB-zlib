@@ -14,7 +14,8 @@ Inherits Application
 		  'If Not TestZWrite() Then MsgBox("Z write failed")
 		  'If Not TestZRead() Then MsgBox("Z read failed")
 		  'If Not TestGZStream() Then MsgBox("Z read failed")
-		  If Not TestDeflate() Then MsgBox("Deflate read failed")
+		  'If Not TestDeflate() Then MsgBox("Deflate read failed")
+		  'If Not TestUnzip() Then MsgBox("Zip read failed")
 		End Sub
 	#tag EndEvent
 
@@ -198,6 +199,24 @@ Inherits Application
 		  Loop Until Not tar.MoveNext(bs)
 		  tar.Close
 		  Return True
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TestUnzip() As Boolean
+		  Dim odlg As New OpenDialog
+		  odlg.Title = CurrentMethodName + " - Open ZIP file for extraction"
+		  odlg.Filter = FileTypes1.ApplicationZip
+		  
+		  Dim zipf As FolderItem = odlg.ShowModal
+		  If zipf = Nil Then Return False
+		  
+		  Dim sfdlg As New SelectFolderDialog
+		  sfdlg.Title = CurrentMethodName + " - Choose folder to extract into"
+		  Dim target As FolderItem = sfdlg.ShowModal
+		  If target = Nil Then Return False
+		  Dim out() As FolderItem = zlib.ReadZip(zipf, target, True)
+		  Return UBound(out) > -1
 		End Function
 	#tag EndMethod
 

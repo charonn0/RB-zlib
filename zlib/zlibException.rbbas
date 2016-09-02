@@ -6,7 +6,12 @@ Inherits RuntimeException
 		  Me.ErrorNumber = ErrorCode
 		  If zlib.IsAvailable Then
 		    Dim err As MemoryBlock = zlib.zError(ErrorCode)
-		    Me.Message = err.CString(0)
+		    Try
+		      #pragma BreakOnExceptions Off
+		      Me.Message = err.CString(0)
+		    Catch
+		      Me.Message = "Unknown error"
+		    End Try
 		  End If
 		End Sub
 	#tag EndMethod

@@ -241,7 +241,7 @@ Implements Readable,Writeable
 		  If mInflater = Nil Then Raise New IOException
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
-		  Do Until mSource.EOF
+		  Do Until Me.EOF
 		    ret.Write(Me.Read(CHUNK_SIZE, encoding))
 		  Loop
 		  ret.Close
@@ -401,8 +401,8 @@ Implements Readable,Writeable
 		Private mReadBuffer As String
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private mSource As Readable
+	#tag Property, Flags = &h1
+		Protected mSource As Readable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
