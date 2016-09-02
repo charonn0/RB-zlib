@@ -13,6 +13,7 @@ Class=zlibException;zlib/zlibException.rbbas;&h1116D7FF;&h5A1247FF;false
 Class=TapeArchive;zlib/TapeArchive.rbbas;&h9F69FFF;&h5A1247FF;false
 FileTypeSet=FileTypes1;FileTypes1.rbbas;&h649F97FF;&h0;false
 Class=ZStream;zlib/ZStream.rbbas;&h27D507FF;&h5A1247FF;false
+Class=ZipArchive1;zlib/ZipArchive1.rbbas;&h67437FFF;&h5A1247FF;false
 MajorVersion=1
 MinorVersion=0
 SubVersion=0

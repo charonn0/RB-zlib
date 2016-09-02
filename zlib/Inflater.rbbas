@@ -87,7 +87,9 @@ Inherits FlateEngine
 		  ' The inner loop provides more output space, calls inflate, and writes any output to WriteTo
 		  Do
 		    Dim chunk As MemoryBlock
-		    If ReadFrom <> Nil Then chunk = ReadFrom.Read(CHUNK_SIZE) Else chunk = ""
+		    Dim sz As Integer
+		    If ReadCount > -1 Then sz = Min(ReadCount, CHUNK_SIZE) Else sz = CHUNK_SIZE
+		    If ReadFrom <> Nil Then chunk = ReadFrom.Read(sz) Else chunk = ""
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
 		    count = count + chunk.Size
