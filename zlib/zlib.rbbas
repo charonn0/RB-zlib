@@ -817,16 +817,19 @@ Protected Module zlib
 		  Dim ret() As FolderItem
 		  Dim c As Integer = zip.Count - 1
 		  For i As Integer = 0 To c
-		    Dim z As ZStream = zip.GetEntry(i)
+		    Dim z As Readable = zip.GetEntry(i)
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.GetEntryName(i))
 		    If z = Nil And f.Exists Then ' directory
 		      ret.Append(f)
 		    ElseIf z <> Nil Then
 		      Dim outstream As BinaryStream = BinaryStream.Create(f, Overwrite)
-		      outstream.Write(z.ReadAll)
-		      z.Close
+		      Do Until z.EOF
+		        outstream.Write(z.Read(CHUNK_SIZE))
+		      Loop
 		      outstream.Close
 		      ret.Append(f)
+		    Else
+		      Break
 		    End If
 		  Next
 		  

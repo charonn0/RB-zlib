@@ -10,9 +10,9 @@ Protected Class ZipArchive
 		  Do Until mDirectoryHeaderOffset > 0
 		    If mArchiveStream.ReadUInt32 = DIRECTORY_FOOTER_HEADER Then
 		      mArchiveStream.Position = mArchiveStream.Position - 4
-		      mDirectoryHeaderOffset = mArchiveStream.Position
 		      mDirectoryFooter.StringValue(True) = mArchiveStream.Read(mDirectoryFooter.Size)
 		      mArchiveStream.Position = mDirectoryFooter.Offset
+		      mDirectoryHeaderOffset = mArchiveStream.Position
 		      mDirectoryHeader.StringValue(True) = mArchiveStream.Read(mDirectoryHeader.Size)
 		      mArchiveName = mArchiveStream.Read(mDirectoryHeader.FilenameLength)
 		      mExtraData = mArchiveStream.Read(mDirectoryHeader.ExtraLength)
@@ -39,18 +39,23 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function GetEntry(Index As Integer) As zlib.ZStream
+		Function GetEntry(Index As Integer) As Readable
 		  Dim header As ZipFileHeader
 		  Dim name, extra As String
 		  Dim offset As UInt32
+		  Dim z As Readable
 		  If Not GetEntryHeader(Index, header, name, extra, offset) Then Return Nil
-		  If header.Method <> &h08 Then
-		    mLastError = ERR_UNSUPPORTED_COMPRESSION
-		    Return Nil
-		  End If
 		  mArchiveStream.Position = offset
 		  Dim mb As MemoryBlock = mArchiveStream.Read(header.CompressedSize)
-		  Return New zlib.ZStream(mb)
+		  Select Case header.Method
+		  Case &h08 ' deflate
+		    z = New zlib.ZStream(mb)
+		  Case 0 ' not compressed
+		    If header.UncompressedSize > 0 Then z = New BinaryStream(mb)  ' not a directory
+		  Else
+		    mLastError = ERR_UNSUPPORTED_COMPRESSION
+		  End Select
+		  Return z
 		End Function
 	#tag EndMethod
 
