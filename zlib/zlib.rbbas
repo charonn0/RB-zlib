@@ -1138,6 +1138,18 @@ Protected Module zlib
 	#tag EndStructure
 
 
+	#tag Enum, Name = ArchiveEntryType, Type = Integer, Flags = &h1
+		Normal=0
+		  HardLink
+		  SymLink
+		  CharacterSpecial
+		  BlockSpecial
+		  Directory
+		  FIFO
+		Contiguous
+	#tag EndEnum
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
