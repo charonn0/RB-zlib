@@ -812,6 +812,8 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
+		  ' Extracts a ZIP file to the ExtractTo directory
+		  
 		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
 		  Dim ret() As FolderItem
 		  Dim zip As New ZipArchive(bs)
