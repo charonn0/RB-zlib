@@ -76,17 +76,9 @@ Protected Class ZipArchive1
 		    ElseIf mCurrentFile.Method = 0 Then ' not compressed
 		      ExtractTo.Write(mArchiveStream.Read(mCurrentFile.CompressedSize))
 		    ElseIf mCurrentFile.Method = &h08 Then ' deflated
-		      If mFlater = Nil Then mFlater = New Inflater
 		      Dim data As MemoryBlock = mArchiveStream.Read(mCurrentFile.CompressedSize)
 		      Dim z As New ZStream(data)
 		      ExtractTo.Write(z.ReadAll)
-		      Return True
-		      
-		      'If Not mFlater.Inflate(mArchiveStream, ExtractTo, mCurrentFile.CompressedSize) Then
-		      'mLastError = mFlater.LastError
-		      'mFlater = Nil
-		      'Return False
-		      'End If
 		    Else
 		      mLastError = ERR_NOT_ZIPPED
 		      Return False
@@ -197,10 +189,6 @@ Protected Class ZipArchive1
 
 	#tag Property, Flags = &h21
 		Private mExtraData As MemoryBlock
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mFlater As zlib.Inflater
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
