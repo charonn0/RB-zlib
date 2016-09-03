@@ -1,6 +1,6 @@
 #tag Class
 Protected Class GZStream
-Implements Readable,Writeable
+Implements  zlib.CompressedStream
 	#tag Method, Flags = &h0
 		Sub ClearError()
 		  ' Clears the last error and EOF
@@ -10,6 +10,7 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		Sub Close()
+		  // Part of the zlib.CompressedStream interface.
 		  If gzFile <> Nil Then
 		    mLastError = zlib.gzclose(gzFile)
 		    If mLastError = Z_ERRNO Then mLastError = get_errno()
@@ -76,6 +77,13 @@ Implements Readable,Writeable
 		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long.
 		  
 		  If Not Me.Flush(Z_PARTIAL_FLUSH) Then Raise New zlibException(mLastError)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Flush(Flushing As Integer) Implements zlib.CompressedStream.Flush
+		  // Part of the zlib.CompressedStream interface.
+		  If Not Me.Flush(Flushing) Then Break ' meh
 		End Sub
 	#tag EndMethod
 
@@ -148,9 +156,68 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function ReadAll(encoding As TextEncoding = Nil) As String
+		  // Part of the zlib.CompressedStream interface.
+		  ' Read compressed bytes until EOF, gunzip and return any output
+		  
+		  If mIsWriteable Then Raise New IOException ' opened for writing!
+		  If gzFile = Nil Then Raise New NilObjectException
+		  
+		  Dim data As New MemoryBlock(0)
+		  Dim ret As New BinaryStream(data)
+		  Do Until Me.EOF
+		    ret.Write(Me.Read(CHUNK_SIZE, encoding))
+		  Loop
+		  ret.Close
+		  Return data
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function ReadError() As Boolean
 		  // Part of the Readable interface.
 		  Return mLastError <> Z_OK
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function ReadLine(encoding As TextEncoding = Nil, EOL As String = "") As String
+		  // Part of the zlib.CompressedStream interface.
+		  ' Reads one line of decompressed text from the compressed stream.
+		  ' If EOL is not specified then the target platform EOL marker is used by default.
+		  
+		  If mIsWriteable Then Raise New IOException ' opened for writing!
+		  If gzFile = Nil Then Raise New NilObjectException
+		  
+		  If EOL = "" Then
+		    #If TargetWin32 Then
+		      EOL = EndOfLine.Windows
+		    #ElseIf TargetMacOS Then
+		      EOL = EndOfLine.Macintosh
+		    #ElseIf TargetLinux Then
+		      EOL = EndOfLine.UNIX
+		    #endif
+		  End If
+		  Dim data As New MemoryBlock(0)
+		  Dim ret As New BinaryStream(data)
+		  Dim lastchar As String
+		  Do Until Me.EOF
+		    Dim char As String = Me.Read(1, encoding)
+		    If char = "" Then Continue
+		    char = lastchar + char
+		    Dim lineend As Integer = InstrB(char, EOL)
+		    If lineend > 0 Then
+		      lastchar = RightB(char, char.LenB - lineend - (EOL.LenB - 1))
+		      char = LeftB(char, lineend + (EOL.LenB - 1))
+		      ret.Write(char)
+		      Exit Do
+		    Else
+		      lastchar = char
+		    End If
+		  Loop
+		  If lastchar <> "" Then ret.Write(lastchar)
+		  ret.Close
+		  Return data.Trim
 		End Function
 	#tag EndMethod
 
@@ -162,7 +229,7 @@ Implements Readable,Writeable
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
 		  Dim mb As MemoryBlock = text
-		  If zlib.gzwrite(gzFile, mb, mb.Size) <> text.LenB Then 
+		  If zlib.gzwrite(gzFile, mb, mb.Size) <> text.LenB Then
 		    gzError() ' set LastError
 		    Raise New zlibException(mLastError)
 		  Else
@@ -176,6 +243,29 @@ Implements Readable,Writeable
 		  // Part of the Writeable interface.
 		  Return mLastError <> Z_OK
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub WriteLine(Data As String, EOL As String = "")
+		  // Part of the zlib.CompressedStream interface.
+		  ' Write Data to the compressed stream followed by an EOL marker.
+		  ' If EOL is not specified then the target platform EOL marker is used by default.
+		  
+		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
+		  If gzFile = Nil Then Raise New NilObjectException
+		  
+		  If EOL = "" Then
+		    #If TargetWin32 Then
+		      EOL = EndOfLine.Windows
+		    #ElseIf TargetMacOS Then
+		      EOL = EndOfLine.Macintosh
+		    #ElseIf TargetLinux Then
+		      EOL = EndOfLine.UNIX
+		    #endif
+		  End If
+		  Me.Write(Data + EOL)
+		  
+		End Sub
 	#tag EndMethod
 
 
