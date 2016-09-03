@@ -1,6 +1,62 @@
 #tag Class
 Protected Class ZipArchive
 	#tag Method, Flags = &h0
+		Function AppendFile(ZipPath As String, FileData As Readable, Compress As Boolean, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		  If mDirectoryHeaderOffset = 0 Then
+		    mLastError = ERR_NOT_ZIPPED
+		    Return False
+		  End If
+		  
+		  Dim header As ZipFileHeader
+		  Dim nm As String = ZipPath
+		  header.FilenameLength = nm.Len
+		  header.ExtraLength = 0
+		  Dim pos As UInt64 = mDirectoryHeaderOffset
+		  If FileData <> Nil Then
+		    header.Method = &h8
+		    Dim def As New Deflater(CompressionLevel, Z_DEFAULT_STRATEGY, DEFLATE_ENCODING)
+		    mArchiveStream.Length = pos + header.Size + nm.Len
+		    mArchiveStream.Position = mArchiveStream.Length
+		    Do Until FileData.EOF
+		      If Not def.Deflate(FileData, mArchiveStream) Then Exit Do
+		    Loop
+		    If Not def.Deflate(Nil, mArchiveStream, Z_FINISH) Then GoTo Abort
+		    header.UncompressedSize = def.Total_In
+		    header.CompressedSize = def.Total_Out
+		  Else
+		    header.Method = 0
+		    header.CompressedSize = 0
+		    header.UncompressedSize = 0
+		  End If
+		  
+		  mDirectoryHeaderOffset = mArchiveStream.Position
+		  
+		  mArchiveStream.Write(header.StringValue(True))
+		  
+		  mDirectoryHeader.CompressedSize = mDirectoryHeader.CompressedSize + header.CompressedSize
+		  mDirectoryHeader.UncompressedSize = mDirectoryHeader.UncompressedSize + header.UncompressedSize
+		  mArchiveStream.Position = mDirectoryHeaderOffset
+		  mArchiveStream.Write(mDirectoryHeader.StringValue(True))
+		  
+		  mDirectoryFooter.DirectorySize = mArchiveStream.Position - mDirectoryHeaderOffset
+		  mDirectoryFooter.Offset = mDirectoryHeaderOffset
+		  mDirectoryFooter.ThisRecordCount = mDirectoryFooter.ThisRecordCount + 1
+		  mDirectoryFooter.TotalRecordCount = mDirectoryFooter.TotalRecordCount + 1
+		  mDirectoryFooter.Offset = mDirectoryHeaderOffset
+		  mArchiveStream.Write(mDirectoryFooter.StringValue(True))
+		  mArchiveStream.Flush
+		  Return Me.Reset(-1) And Me.Reset(0)
+		  
+		  Abort:
+		  mArchiveStream.Position = mDirectoryHeaderOffset
+		  mArchiveStream.Write(mDirectoryHeader.StringValue(True))
+		  mArchiveStream.Write(mDirectoryFooter.StringValue(True))
+		  mArchiveStream.Flush
+		  Return False
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Close()
 		  If mArchiveStream <> Nil Then
 		    mArchiveStream.Close
