@@ -1,11 +1,18 @@
 ##Introduction
-**RB-zlib** is a [zlib](http://www.zlib.net/) [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested on Windows 7. RB-zlib can compress and decompress file and memory streams using any combination of options and compression format.
+**RB-zlib** is a [zlib](http://www.zlib.net/) [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested using Realstudio 2011r4.3 on Windows 7. 
 
-###Compression formats
-zlib offers three compression formats: DEFLATE, which is a deflate-compressed stream with headers; RAW which is a deflate-compressed stream without headers; and GZIP, which is a deflate-compressed stream with gzip-stye headers.
+##Hilights
+* Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
+* Read and write [tape archive](https://github.com/charonn0/RB-zlib/wiki/zlib.TapeArchive) (.tar) files 
+* Read and write [gzip](https://github.com/charonn0/RB-zlib/wiki/zlib.GZStream) (.gz) files with seek/rewind
+* Read [zip archives](https://github.com/charonn0/RB-zlib/wiki/zlib.ZipArchive) (.zip)
+* Supports gzip, deflate, and raw deflate compressed streams
+
+##Getting started
+This project provides several different ways to use zlib. 
 
 ###Utility methods
-This project provides several different ways to use zlib. The easiest are the utility methods in the zlib module: 
+The easiest way to use this project are the utility methods in the zlib module: 
 
 * [**`Inflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate)
 * [**`Deflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate)
@@ -27,7 +34,7 @@ where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements t
 Additional optional arguments may be passed, to control the compression level, strategy, dictionary, and encoding. For example, `GZip` and `GUnZip` are just wrappers around `Deflate` and `Inflate` with options that specify the gzip format.
 
 ###ZStream class
-The other way to use zlib is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike, and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
+The second way to use zlib is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike, and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
 
 Instances of `ZStream` can be created from MemoryBlocks, FolderItems, and objects that implement the `Readable` and/or `Writeable` interfaces. For example, creating an in-memory compression stream from a zero-length MemoryBlock and writing a string to it:
 
@@ -43,6 +50,9 @@ The string will be processed through the compressor and written to the `output` 
   z = New zlib.ZStream(output) ' output contains the compressed string
   MsgBox(z.ReadAll) ' read the decompressed string
 ```
+
+###Inflater and Deflater classes
+The third and final way to use this project is through the [Inflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater) and [Deflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater) classes. These classes provide a low-level wrapper to the zlib API. All compression and decompression done using the `ZStream` class or the utility methods is ultimately carried out by an instance of `Deflater` and `Inflater`, respectively.
 
 ##More examples
 This example compresses and decompresses a MemoryBlock using deflate compression:
@@ -80,4 +90,12 @@ This example opens an existing gzip file and decompresses it into a `MemoryBlock
   Else
     MsgBox("Decompression failed!")
   End If
+```
+
+This example extracts a zip archive into a directory:
+```vbnet
+  Dim src As FolderItem = GetOpenFolderItem("") ' a zip file to extract
+  Dim dst As FolderItem = SelectFolder() ' the destination directory
+  Dim extracted() As FolderItem ' the list of extracted files/folders
+  extracted = zlib.ReadZip(src, dst)
 ```
