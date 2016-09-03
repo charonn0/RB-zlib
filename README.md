@@ -1,5 +1,5 @@
 ##Introduction
-**RB-zlib** is a [zlib](http://www.zlib.net/) [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested on Windows 7. RB-zlib can compress and decompress file and memory streams using any combination of options and compression format.
+**RB-zlib** is a [zlib](http://www.zlib.net/) [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested on Windows 7. RB-zlib can compress and decompress file and memory streams using any combination of options and compression format. In addition, support for [zip](https://github.com/charonn0/RB-zlib/wiki/zlib.ZipArchive) and [TAR](https://github.com/charonn0/RB-zlib/wiki/zlib.TapeArchive) archives is available.
 
 ###Compression formats
 zlib offers three compression formats: DEFLATE, which is a deflate-compressed stream with headers; RAW which is a deflate-compressed stream without headers; and GZIP, which is a deflate-compressed stream with gzip-stye headers.
@@ -80,4 +80,12 @@ This example opens an existing gzip file and decompresses it into a `MemoryBlock
   Else
     MsgBox("Decompression failed!")
   End If
+```
+
+This example extracts a zip archive into a directory:
+```vbnet
+  Dim src As FolderItem = GetOpenFolderItem("") ' a zip file to extract
+  Dim dst As FolderItem = SelectFolder() ' the destination directory
+  Dim extracted() As FolderItem ' the list of extracted files/folders
+  extracted = zlib.ReadZip(src, dst)
 ```
