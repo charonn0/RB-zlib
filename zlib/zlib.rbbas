@@ -350,6 +350,22 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function GUnZip(Source As FolderItem, Destination As Writeable) As Boolean
+		  ' Gunzip the Source file into the Destination stream. Reverses the GZip method
+		  
+		  Dim src As BinaryStream = BinaryStream.Open(Source)
+		  Dim ok As Boolean
+		  Try
+		    ' calls Inflate(Readable, Writeable, Integer, Integer) As Boolean
+		    ok = Inflate(src, Destination, Nil, GZIP_ENCODING)
+		  Finally
+		    src.Close
+		  End Try
+		  Return ok
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function GUnZip(Source As MemoryBlock) As MemoryBlock
 		  ' GUnZip the Source data and return it. Reverses the GZip method
 		  
@@ -364,6 +380,22 @@ Protected Module zlib
 		  
 		  ' calls Inflate(MemoryBlock, FolderItem, Boolean, MemoryBlock, Integer) As Boolean
 		  Return Inflate(Source, Destination, Overwrite, Dictionary, GZIP_ENCODING)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function GUnZip(Source As MemoryBlock, Destination As Writeable) As Boolean
+		  ' Decompress the Source data into the Destination stream. Reverses the Deflate method
+		  
+		  Dim src As New BinaryStream(Source)
+		  Dim ok As Boolean
+		  Try
+		    ' calls Inflate(Readable, Writeable, MemoryBlock, Integer) As Boolean
+		    ok = Inflate(src, Destination, Nil, GZIP_ENCODING)
+		  Finally
+		    src.Close
+		  End Try
+		  Return ok
 		End Function
 	#tag EndMethod
 
@@ -429,6 +461,22 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function GZip(Source As FolderItem, Destination As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		  ' Gzip the Source file into the Destination stream. Reverses the Deflate method
+		  
+		  Dim src As BinaryStream = BinaryStream.Open(Source)
+		  Dim ok As Boolean
+		  Try
+		    ' calls Deflate(Readable, Writeable, Integer, Integer) As Boolean
+		    ok = Deflate(src, Destination, CompressionLevel, GZIP_ENCODING)
+		  Finally
+		    src.Close
+		  End Try
+		  Return ok
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function GZip(Source As MemoryBlock, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False) As Boolean
 		  ' GZip the Source data into the Destination file. Use GUnZip to reverse.
 		  
@@ -443,6 +491,16 @@ Protected Module zlib
 		  
 		  ' calls Deflate(MemoryBlock, Integer, Integer) As MemoryBlock
 		  Return Deflate(Source, CompressionLevel, GZIP_ENCODING)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function GZip(Source As MemoryBlock, Destination As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		  ' Compress the Source data into the Destination stream. Use Inflate to reverse.
+		  
+		  Dim src As New BinaryStream(Source)
+		  ' calls Deflate(Readable, Writeable, Integer, Integer) As Boolean
+		  Return Deflate(src, Destination, CompressionLevel, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
 
@@ -535,6 +593,22 @@ Protected Module zlib
 		    dst.Close
 		  End Try
 		  If ok Then Return buffer
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Inflate(Source As FolderItem, Destination As Writeable, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
+		  ' Gunzip the Source file into the Destination stream. Reverses the GZip method
+		  
+		  Dim src As BinaryStream = BinaryStream.Open(Source)
+		  Dim ok As Boolean
+		  Try
+		    ' calls Inflate(Readable, Writeable, Integer, Integer) As Boolean
+		    ok = Inflate(src, Destination, Dictionary, Encoding)
+		  Finally
+		    src.Close
+		  End Try
+		  Return ok
 		End Function
 	#tag EndMethod
 
