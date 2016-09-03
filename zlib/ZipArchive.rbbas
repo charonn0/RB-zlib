@@ -15,7 +15,7 @@ Protected Class ZipArchive
 		Sub Constructor(ArchiveStream As BinaryStream)
 		  mArchiveStream = ArchiveStream
 		  mArchiveStream.LittleEndian = True
-		  If mArchiveStream.Length < 22 Or Not Me.Reset(0) Then Raise New zlibException(ERR_NOT_ZIPPED)
+		  If Not Me.Reset(0) Then Raise New zlibException(ERR_NOT_ZIPPED)
 		End Sub
 	#tag EndMethod
 
@@ -94,10 +94,8 @@ Protected Class ZipArchive
 		  If mDirectoryHeaderOffset = 0 Then Raise New IOException
 		  ' extract the current item
 		  If ExtractTo <> Nil Then
-		    If mCurrentFile.UncompressedSize = 0 Then ' Directory
-		      Return True
-		    ElseIf mCurrentFile.Method = 0 Then ' not compressed
-		      ExtractTo.Write(mArchiveStream.Read(mCurrentFile.CompressedSize))
+		    If mCurrentFile.Method = 0 Then ' not compressed
+		      If mCurrentFile.UncompressedSize > 0 Then ExtractTo.Write(mArchiveStream.Read(mCurrentFile.CompressedSize))
 		    ElseIf mCurrentFile.Method = &h08 Then ' deflated
 		      Dim data As MemoryBlock = mArchiveStream.Read(mCurrentFile.CompressedSize)
 		      Dim z As New ZStream(data)
@@ -141,8 +139,8 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Open(ZipFile As FolderItem) As zlib.ZipArchive
-		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		 Shared Function Open(ZipFile As FolderItem, Readwrite As Boolean = False) As zlib.ZipArchive
+		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile, Readwrite)
 		  If bs <> Nil Then Return New zlib.ZipArchive(bs)
 		  
 		End Function
@@ -152,6 +150,7 @@ Protected Class ZipArchive
 		Function Reset(Index As Integer = 0) As Boolean
 		  mArchiveStream.Position = mArchiveStream.Length - 4
 		  mDirectoryHeaderOffset = 0
+		  mDirectoryHeader.StringValue(True) = ""
 		  Do Until mDirectoryHeaderOffset > 0
 		    If mArchiveStream.ReadUInt32 = DIRECTORY_FOOTER_HEADER Then
 		      mArchiveStream.Position = mArchiveStream.Position - 4
@@ -168,15 +167,18 @@ Protected Class ZipArchive
 		  Loop Until mArchiveStream.Position < 22
 		  
 		  mIndex = -1
+		  mCurrentExtra = Nil
+		  mCurrentFile.StringValue(True) = ""
+		  mCurrentName = ""
 		  If mDirectoryHeaderOffset = 0 Then
 		    mLastError = ERR_NOT_ZIPPED
 		    Return False
 		  End If
+		  
 		  mArchiveStream.Position = mDirectoryHeader.Offset
-		  Do
-		    If Not Me.MoveNext(Nil) Then Return False
-		    mIndex = mIndex + 1
-		  Loop Until mIndex >= Index
+		  Do Until mIndex = Index
+		    If Not Me.MoveNext(Nil) Then Return (Index = -1 And mLastError = ERR_END_ARCHIVE)
+		  Loop
 		  Return True
 		End Function
 	#tag EndMethod
