@@ -937,6 +937,18 @@ Protected Module zlib
 	#tag Constant, Name = DEFLATE_ENCODING, Type = Double, Dynamic = False, Default = \"15", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = ERR_END_ARCHIVE, Type = Double, Dynamic = False, Default = \"-202", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = ERR_INVALID_ENTRY, Type = Double, Dynamic = False, Default = \"-201", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = ERR_NOT_ZIPPED, Type = Double, Dynamic = False, Default = \"-200", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = ERR_UNSUPPORTED_COMPRESSION, Type = Double, Dynamic = False, Default = \"-203", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = GZIP_ENCODING, Type = Double, Dynamic = False, Default = \"31", Scope = Protected
 	#tag EndConstant
 

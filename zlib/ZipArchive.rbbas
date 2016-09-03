@@ -75,6 +75,12 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function LastError() As Integer
+		  Return mLastError
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As FolderItem, Overwrite As Boolean) As Boolean
 		  ExtractTo = CreateTree(ExtractTo, mCurrentName)
 		  Dim bs As BinaryStream
@@ -233,18 +239,6 @@ Protected Class ZipArchive
 	#tag EndConstant
 
 	#tag Constant, Name = DIRECTORY_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h02014b50", Scope = Protected
-	#tag EndConstant
-
-	#tag Constant, Name = ERR_END_ARCHIVE, Type = Double, Dynamic = False, Default = \"-202", Scope = Public
-	#tag EndConstant
-
-	#tag Constant, Name = ERR_INVALID_ENTRY, Type = Double, Dynamic = False, Default = \"-201", Scope = Public
-	#tag EndConstant
-
-	#tag Constant, Name = ERR_NOT_ZIPPED, Type = Double, Dynamic = False, Default = \"-200", Scope = Public
-	#tag EndConstant
-
-	#tag Constant, Name = ERR_UNSUPPORTED_COMPRESSION, Type = Double, Dynamic = False, Default = \"-203", Scope = Public
 	#tag EndConstant
 
 	#tag Constant, Name = FILE_FOOTER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h08074b50", Scope = Protected
