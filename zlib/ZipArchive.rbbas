@@ -94,16 +94,23 @@ Protected Class ZipArchive
 		  If mDirectoryHeaderOffset = 0 Then Raise New IOException
 		  ' extract the current item
 		  If ExtractTo <> Nil Then
-		    If mCurrentFile.Method = 0 Then ' not compressed
+		    Select Case mCurrentFile.Method
+		    Case 0 ' not compressed
 		      If mCurrentFile.UncompressedSize > 0 Then ExtractTo.Write(mArchiveStream.Read(mCurrentFile.CompressedSize))
-		    ElseIf mCurrentFile.Method = &h08 Then ' deflated
+		    Case 8 ' deflated
+		      ' using Inflater doesn't work for some reason
+		      'Dim inf As New Inflater(RAW_ENCODING)
+		      'If Not inf.Inflate(mArchiveStream, ExtractTo, mCurrentFile.CompressedSize) Then
+		      'mLastError = inf.LastError
+		      'Return False
+		      'End If
 		      Dim data As MemoryBlock = mArchiveStream.Read(mCurrentFile.CompressedSize)
 		      Dim z As New ZStream(data)
 		      ExtractTo.Write(z.ReadAll)
 		    Else
 		      mLastError = ERR_NOT_ZIPPED
 		      Return False
-		    End If
+		    End Select
 		  Else
 		    mArchiveStream.Position = mArchiveStream.Position + mCurrentFile.CompressedSize
 		  End If
