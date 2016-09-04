@@ -1,43 +1,60 @@
 #tag Class
 Protected Class ZipArchive
 	#tag Method, Flags = &h0
-		Function AppendFile(ZipPath As String, FileData As Readable, Compress As Boolean, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Function AppendFile(ZipPath As String, FileData As Readable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, ResetIndex As Integer = -1) As Boolean
 		  If mDirectoryHeaderOffset = 0 Then
 		    mLastError = ERR_NOT_ZIPPED
 		    Return False
 		  End If
 		  
+		  mArchiveStream.Position = mDirectoryHeaderOffset
+		  'If mArchiveStream.ReadUInt32 <> DIRECTORY_SIGNATURE Then Break
+		  'mArchiveStream.Position = mArchiveStream.Position - 4
+		  
 		  Dim header As ZipFileHeader
-		  Dim nm As String = ZipPath
-		  header.FilenameLength = nm.Len
+		  header.FilenameLength = ZipPath.LenB
 		  header.ExtraLength = 0
-		  Dim pos As UInt64 = mDirectoryHeaderOffset
-		  If FileData <> Nil Then
+		  Dim newfileheaderoffset As UInt64 = mArchiveStream.Position
+		  mArchiveStream.Position = mArchiveStream.Position + header.Size + ZipPath.LenB
+		  
+		  If FileData <> Nil And (CompressionLevel > 0 Or CompressionLevel = Z_DEFAULT_COMPRESSION) Then
 		    header.Method = &h8
-		    Dim def As New Deflater(CompressionLevel, Z_DEFAULT_STRATEGY, DEFLATE_ENCODING)
-		    mArchiveStream.Length = pos + header.Size + nm.Len
-		    mArchiveStream.Position = mArchiveStream.Length
+		    Dim z As ZStream = ZStream.Create(mArchiveStream, CompressionLevel, Z_DEFAULT_STRATEGY, RAW_ENCODING)
 		    Do Until FileData.EOF
-		      If Not def.Deflate(FileData, mArchiveStream) Then Exit Do
+		      z.Write(FileData.Read(CHUNK_SIZE))
 		    Loop
-		    If Not def.Deflate(Nil, mArchiveStream, Z_FINISH) Then GoTo Abort
-		    header.UncompressedSize = def.Total_In
-		    header.CompressedSize = def.Total_Out
+		    z.Flush(Z_FINISH)
+		    header.UncompressedSize = z.Deflater.Total_In
+		    header.CompressedSize = z.Deflater.Total_Out
 		  Else
 		    header.Method = 0
-		    header.CompressedSize = 0
-		    header.UncompressedSize = 0
+		    Dim start As UInt64 = mArchiveStream.Position
+		    Do Until FileData.EOF
+		      mArchiveStream.Write(FileData.Read(CHUNK_SIZE))
+		    Loop
+		    header.CompressedSize = mArchiveStream.Position - start
+		    header.UncompressedSize = header.CompressedSize
 		  End If
 		  
-		  mDirectoryHeaderOffset = mArchiveStream.Position
+		  mDirectoryHeaderOffset = mArchiveStream.Position ' record the endoffile/startofdirectory
 		  
+		  ' write the file header
+		  mArchiveStream.Position = newfileheaderoffset
 		  mArchiveStream.Write(header.StringValue(True))
+		  mArchiveStream.Write(ZipPath)
+		  'mArchiveStream.Write(ZipExtra)
 		  
+		  
+		  ' write the updated directory header
+		  mArchiveStream.Position = mDirectoryHeaderOffset
 		  mDirectoryHeader.CompressedSize = mDirectoryHeader.CompressedSize + header.CompressedSize
 		  mDirectoryHeader.UncompressedSize = mDirectoryHeader.UncompressedSize + header.UncompressedSize
-		  mArchiveStream.Position = mDirectoryHeaderOffset
 		  mArchiveStream.Write(mDirectoryHeader.StringValue(True))
+		  mArchiveStream.Write(mArchiveName)
+		  mArchiveStream.Write(mExtraData)
+		  mArchiveStream.Write(mArchiveComment)
 		  
+		  ' write the updated directory footer
 		  mDirectoryFooter.DirectorySize = mArchiveStream.Position - mDirectoryHeaderOffset
 		  mDirectoryFooter.Offset = mDirectoryHeaderOffset
 		  mDirectoryFooter.ThisRecordCount = mDirectoryFooter.ThisRecordCount + 1
@@ -45,14 +62,9 @@ Protected Class ZipArchive
 		  mDirectoryFooter.Offset = mDirectoryHeaderOffset
 		  mArchiveStream.Write(mDirectoryFooter.StringValue(True))
 		  mArchiveStream.Flush
-		  Return Me.Reset(-1) And Me.Reset(0)
 		  
-		  Abort:
-		  mArchiveStream.Position = mDirectoryHeaderOffset
-		  mArchiveStream.Write(mDirectoryHeader.StringValue(True))
-		  mArchiveStream.Write(mDirectoryFooter.StringValue(True))
-		  mArchiveStream.Flush
-		  Return False
+		  Return Me.Reset(ResetIndex)
+		  
 		End Function
 	#tag EndMethod
 
