@@ -16,6 +16,8 @@ Protected Class ZipArchive
 		  mArchiveStream = ArchiveStream
 		  mArchiveStream.LittleEndian = True
 		  If Not Me.Reset(0) Then Raise New zlibException(ERR_NOT_ZIPPED)
+		  mZipStream = ZStream.Open(mArchiveStream, RAW_ENCODING)
+		  mZipStream.BufferedReading = False
 		End Sub
 	#tag EndMethod
 
@@ -98,15 +100,13 @@ Protected Class ZipArchive
 		    Case 0 ' not compressed
 		      If mCurrentFile.UncompressedSize > 0 Then ExtractTo.Write(mArchiveStream.Read(mCurrentFile.CompressedSize))
 		    Case 8 ' deflated
-		      ' using Inflater doesn't work for some reason
-		      'Dim inf As New Inflater(RAW_ENCODING)
-		      'If Not inf.Inflate(mArchiveStream, ExtractTo, mCurrentFile.CompressedSize) Then
-		      'mLastError = inf.LastError
-		      'Return False
-		      'End If
-		      Dim data As MemoryBlock = mArchiveStream.Read(mCurrentFile.CompressedSize)
-		      Dim z As New ZStream(data)
-		      ExtractTo.Write(z.ReadAll)
+		      mZipStream.Inflater.Reset
+		      Dim p As UInt64 = mArchiveStream.Position
+		      Do Until mArchiveStream.Position - p >= mCurrentFile.CompressedSize
+		        Dim offset As UInt64 = mArchiveStream.Position - p
+		        Dim sz As Integer = Min(mCurrentFile.CompressedSize - offset, CHUNK_SIZE)
+		        ExtractTo.Write(mZipStream.Read(sz))
+		      Loop
 		    Else
 		      mLastError = ERR_NOT_ZIPPED
 		      Return False
