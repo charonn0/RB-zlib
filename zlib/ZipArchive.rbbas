@@ -243,6 +243,10 @@ Protected Class ZipArchive
 		Private mSpanOffset As UInt32 = 0
 	#tag EndProperty
 
+	#tag Property, Flags = &h21
+		Private mZipStream As zlib.ZStream
+	#tag EndProperty
+
 
 	#tag Constant, Name = DIRECTORY_FOOTER_HEADER, Type = Double, Dynamic = False, Default = \"&h06054b50", Scope = Protected
 	#tag EndConstant
