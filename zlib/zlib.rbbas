@@ -965,6 +965,28 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
+		  ' Creates/appends a Zip file with the ToArchive FolderItems
+		  Dim zip As zlib.ZipArchive
+		  If OutputFile.Exists Then
+		    zip = zlib.ZipArchive.Open(OutputFile, True)
+		  Else
+		    zip = zlib.ZipArchive.Create(OutputFile)
+		  End If
+		  For i As Integer = 0 To UBound(ToArchive)
+		    Dim item As FolderItem = ToArchive(i)
+		    Dim bs As BinaryStream
+		    If Not item.Directory Then bs = BinaryStream.Open(item)
+		    If Not zip.AppendFile(item.Name, bs) Then Return False
+		  Next
+		  zip.Close
+		  Return True
+		  
+		  
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function zError Lib zlib1 (ErrorCode As Integer) As Ptr
 	#tag EndExternalMethod
@@ -1009,6 +1031,9 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = DEFLATE_ENCODING, Type = Double, Dynamic = False, Default = \"15", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = ERR_CHECKSUM_MISMATCH, Type = Double, Dynamic = False, Default = \"-204", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_END_ARCHIVE, Type = Double, Dynamic = False, Default = \"-202", Scope = Protected
