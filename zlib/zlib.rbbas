@@ -85,6 +85,20 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function CreateTree(Root As FolderItem, Child As FolderItem) As String
+		  Dim s() As String
+		  If Root = Nil Or Not Root.Directory Or Child = Nil Or Root.AbsolutePath = Child.AbsolutePath Then Return ""
+		  If Child.Directory Then s.Append("")
+		  Do Until Root.AbsolutePath = Child.AbsolutePath
+		    s.Insert(0, Child.Name)
+		    Child = Child.Parent
+		  Loop Until Child = Nil
+		  
+		  Return Join(s, "/")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
 		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
 		  
@@ -966,7 +980,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
+		Protected Function WriteZip(RelativeRoot As FolderItem = Nil, ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
 		  ' Creates/appends a Zip file with the ToArchive FolderItems
 		  Dim zip As zlib.ZipArchive
 		  If OutputFile.Exists Then
@@ -976,9 +990,11 @@ Protected Module zlib
 		  End If
 		  For i As Integer = 0 To UBound(ToArchive)
 		    Dim item As FolderItem = ToArchive(i)
+		    Dim zippath As String
+		    If RelativeRoot <> Nil Then zippath = CreateTree(RelativeRoot, item) Else zippath = item.Name
 		    Dim bs As BinaryStream
 		    If Not item.Directory Then bs = BinaryStream.Open(item)
-		    If Not zip.AppendFile(item.Name, bs) Then Return False
+		    If Not zip.AppendFile(zippath, bs) Then Return False
 		  Next
 		  zip.Close
 		  Return True
