@@ -1,16 +1,6 @@
 #tag Class
 Protected Class ZipArchive
 	#tag Method, Flags = &h0
-		Function AppendFile(ZipPath As String = "", FileData As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, ResetIndex As Integer = - 1) As Boolean
-		  If ZipPath = "" Then ZipPath = FileData.Name
-		  Dim bs As BinaryStream = BinaryStream.Open(FileData)
-		  Dim ok As Boolean = Me.AppendFile(ZipPath, bs, CompressionLevel, ResetIndex)
-		  bs.Close
-		  Return ok
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function AppendFile(ZipPath As String, FileData As Readable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, ResetIndex As Integer = - 1) As Boolean
 		  If mDirectoryHeader.Signature <> DIRECTORY_SIGNATURE Then
 		    mLastError = ERR_NOT_ZIPPED
