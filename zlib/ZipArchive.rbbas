@@ -84,6 +84,8 @@ Protected Class ZipArchive
 		  mArchiveStream = ArchiveStream
 		  mArchiveStream.LittleEndian = True
 		  If Not Me.Reset(0) Then Raise New zlibException(ERR_NOT_ZIPPED)
+		  mZipStream = ZStream.Open(mArchiveStream, RAW_ENCODING)
+		  mZipStream.BufferedReading = False
 		End Sub
 	#tag EndMethod
 
@@ -162,16 +164,21 @@ Protected Class ZipArchive
 		  If mDirectoryHeaderOffset = 0 Then Raise New IOException
 		  ' extract the current item
 		  If ExtractTo <> Nil Then
-		    If mCurrentFile.Method = 0 Then ' not compressed
+		    Select Case mCurrentFile.Method
+		    Case 0 ' not compressed
 		      If mCurrentFile.UncompressedSize > 0 Then ExtractTo.Write(mArchiveStream.Read(mCurrentFile.CompressedSize))
-		    ElseIf mCurrentFile.Method = &h08 Then ' deflated
-		      Dim data As MemoryBlock = mArchiveStream.Read(mCurrentFile.CompressedSize)
-		      Dim z As New ZStream(data)
-		      ExtractTo.Write(z.ReadAll)
+		    Case 8 ' deflated
+		      mZipStream.Inflater.Reset
+		      Dim p As UInt64 = mArchiveStream.Position
+		      Do Until mArchiveStream.Position - p >= mCurrentFile.CompressedSize
+		        Dim offset As UInt64 = mArchiveStream.Position - p
+		        Dim sz As Integer = Min(mCurrentFile.CompressedSize - offset, CHUNK_SIZE)
+		        ExtractTo.Write(mZipStream.Read(sz))
+		      Loop
 		    Else
 		      mLastError = ERR_NOT_ZIPPED
 		      Return False
-		    End If
+		    End Select
 		  Else
 		    mArchiveStream.Position = mArchiveStream.Position + mCurrentFile.CompressedSize
 		  End If
@@ -302,6 +309,10 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h21
 		Private mSpanOffset As UInt32 = 0
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mZipStream As zlib.ZStream
 	#tag EndProperty
 
 
