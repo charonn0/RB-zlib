@@ -327,6 +327,22 @@ Protected Class ZipArchive
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function Test() As Boolean
+		  If Not Me.Reset(0) Then Return False
+		  Dim vc As Boolean = ValidateChecksums
+		  ValidateChecksums = True
+		  Dim bs As BinaryStream
+		  Do
+		    Dim data As New MemoryBlock(0)
+		    bs = New BinaryStream(data)
+		    bs.Close
+		  Loop Until Not Me.MoveNext(bs)
+		  ValidateChecksums = vc
+		  Return mLastError = ERR_END_ARCHIVE
+		End Function
+	#tag EndMethod
+
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
