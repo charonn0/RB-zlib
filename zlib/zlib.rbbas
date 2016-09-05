@@ -1180,7 +1180,8 @@ Protected Module zlib
 	#tag EndStructure
 
 	#tag Structure, Name = ZipFileFooter, Flags = &h21
-		CRC32 As UInt32
+		Signature As UInt32
+		  CRC32 As UInt32
 		  ComressedSize As UInt32
 		UncompressedSize As UInt32
 	#tag EndStructure

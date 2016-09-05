@@ -128,18 +128,18 @@ Protected Class ZipArchive
 		  Else
 		    mCurrentName = mArchiveStream.Read(mCurrentFile.FilenameLength)
 		    mCurrentExtra = mArchiveStream.Read(mCurrentFile.ExtraLength)
-		    Dim sig As UInt32 = mArchiveStream.ReadUInt32
-		    If sig = FILE_FOOTER_SIGNATURE Or (mCurrentFile.CompressedSize = 0 And mCurrentFile.Method <> 0) Then
-		      If sig <> FILE_FOOTER_SIGNATURE Then mArchiveStream.Position = mArchiveStream.Position - 4
+		    
+		    If BitAnd(mCurrentFile.Flag, 4) = 4 Then ' footer follows
 		      Dim footer As ZipFileFooter
 		      footer.StringValue(True) = mArchiveStream.Read(footer.Size)
+		      If footer.Signature <> FILE_FOOTER_SIGNATURE Then
+		        mLastError = ERR_INVALID_ENTRY
+		        Return False
+		      End If
 		      mCurrentFile.CompressedSize = footer.ComressedSize
 		      mCurrentFile.UncompressedSize = footer.UncompressedSize
-		      Return True
-		    Else
-		      mArchiveStream.Position = mArchiveStream.Position - 4
-		      Return True
 		    End If
+		    Return True
 		  End If
 		  Break
 		End Function
