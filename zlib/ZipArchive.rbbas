@@ -120,6 +120,8 @@ Protected Class ZipArchive
 		  Dim footer As ZipDirectoryFooter
 		  Dim header As ZipDirectoryHeader
 		  header.Signature = DIRECTORY_SIGNATURE
+		  header.Version = 2
+		  header.VersionNeeded = 2
 		  Dim nm As String = "Untitled.zip"
 		  Dim cmnt As String = ""
 		  Dim extra As String = ""
@@ -325,6 +327,37 @@ Protected Class ZipArchive
 		End Function
 	#tag EndMethod
 
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Select Case True
+			  Case BitAnd(mDirectoryHeader.Flag, 1) = 1 And BitAnd(mDirectoryHeader.Flag, 2) = 2
+			    Return 1 ' fastest
+			  Case BitAnd(mDirectoryHeader.Flag, 1) = 1 And BitAnd(mDirectoryHeader.Flag, 2) <> 2
+			    Return 9 ' best
+			  Case BitAnd(mDirectoryHeader.Flag, 1) <> 1 And BitAnd(mDirectoryHeader.Flag, 2) <> 2
+			    Return 6 ' normal
+			  Case BitAnd(mDirectoryHeader.Flag, 1) <> 1 And BitAnd(mDirectoryHeader.Flag, 2) = 2
+			    Return 3 ' fast
+			  Case mDirectoryHeader.Method = 0
+			    Return 0 ' none
+			  End Select
+			  
+			  
+			End Get
+		#tag EndGetter
+		CompressionLevel As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return BitAnd(mDirectoryHeader.Flag, 1) = 1
+			End Get
+		#tag EndGetter
+		IsEncrypted As Boolean
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
 		Private mArchiveComment As MemoryBlock
