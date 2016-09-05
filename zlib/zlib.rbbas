@@ -59,6 +59,29 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function CompressAsZip(Extends Root As FolderItem) As FolderItem
+		  Dim dirs() As FolderItem = Array(Root)
+		  Dim files() As FolderItem
+		  Do Until UBound(dirs) = -1
+		    Dim item As FolderItem = dirs.Pop
+		    files.Append(item)
+		    If item.Directory Then
+		      Dim c As Integer = item.Count
+		      For i As Integer = 1 To c
+		        dirs.Append(item.Item(i))
+		      Next
+		    End If
+		  Loop
+		  Dim out As FolderItem = Root.Parent.Child(Root.Name + ".zip")
+		  If Not WriteZip(Root, files, out) Then 
+		    If out <> Nil Then out.Delete
+		    out = Nil
+		  End If
+		  Return out
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function compressBound Lib zlib1 (sourceLen As UInt64) As UInt32
 	#tag EndExternalMethod
@@ -81,6 +104,20 @@ Protected Module zlib
 		  If LastCRC = 0 Then LastCRC = CRC_POLYNOMIAL
 		  If NewData <> Nil Then Return _crc32(LastCRC, NewData, NewDataSize)
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function CreateTree(Root As FolderItem, Child As FolderItem) As String
+		  Dim s() As String
+		  If Root = Nil Or Not Root.Directory Or Child = Nil Or Root.AbsolutePath = Child.AbsolutePath Then Return ""
+		  If Child.Directory Then s.Append("")
+		  Do Until Root.AbsolutePath = Child.AbsolutePath
+		    s.Insert(0, Child.Name)
+		    Child = Child.Parent
+		  Loop Until Child = Nil
+		  
+		  Return Join(s, "/")
 		End Function
 	#tag EndMethod
 
@@ -965,6 +1002,30 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function WriteZip(RelativeRoot As FolderItem = Nil, ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
+		  ' Creates/appends a Zip file with the ToArchive FolderItems
+		  Dim zip As zlib.ZipArchive
+		  If OutputFile.Exists Then
+		    zip = zlib.ZipArchive.Open(OutputFile, True)
+		  Else
+		    zip = zlib.ZipArchive.Create(OutputFile)
+		  End If
+		  For i As Integer = 0 To UBound(ToArchive)
+		    Dim item As FolderItem = ToArchive(i)
+		    Dim zippath As String
+		    If RelativeRoot <> Nil Then zippath = CreateTree(RelativeRoot, item) Else zippath = item.Name
+		    Dim bs As BinaryStream
+		    If Not item.Directory Then bs = BinaryStream.Open(item)
+		    If Not zip.AppendFile(zippath, bs) Then Return False
+		  Next
+		  zip.Close
+		  Return True
+		  
+		  
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function zError Lib zlib1 (ErrorCode As Integer) As Ptr
 	#tag EndExternalMethod
@@ -1009,6 +1070,9 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = DEFLATE_ENCODING, Type = Double, Dynamic = False, Default = \"15", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = ERR_CHECKSUM_MISMATCH, Type = Double, Dynamic = False, Default = \"-204", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_END_ARCHIVE, Type = Double, Dynamic = False, Default = \"-202", Scope = Protected
