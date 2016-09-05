@@ -59,6 +59,29 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function CompressAsZip(Extends Root As FolderItem) As FolderItem
+		  Dim dirs() As FolderItem = Array(Root)
+		  Dim files() As FolderItem
+		  Do Until UBound(dirs) = -1
+		    Dim item As FolderItem = dirs.Pop
+		    files.Append(item)
+		    If item.Directory Then
+		      Dim c As Integer = item.Count
+		      For i As Integer = 1 To c
+		        dirs.Append(item.Item(i))
+		      Next
+		    End If
+		  Loop
+		  Dim out As FolderItem = Root.Parent.Child(Root.Name + ".zip")
+		  If Not WriteZip(Root, files, out) Then 
+		    If out <> Nil Then out.Delete
+		    out = Nil
+		  End If
+		  Return out
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function compressBound Lib zlib1 (sourceLen As UInt64) As UInt32
 	#tag EndExternalMethod
