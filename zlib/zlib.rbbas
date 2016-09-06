@@ -937,14 +937,14 @@ Protected Module zlib
 		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
 		  Dim ret() As FolderItem
 		  Dim zip As New ZipArchive(bs)
-		  Do
+		  Do Until zip.LastError <> 0
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
 		    Dim outstream As BinaryStream
 		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
-		    If Not zip.MoveNext(outstream) Then Exit Do
+		    Call zip.MoveNext(outstream)
 		    If outstream <> Nil Then outstream.Close
 		    ret.Append(f)
-		  Loop
+		  Loop Until zip.LastError = ERR_END_ARCHIVE
 		  zip.Close
 		  Return ret
 		  
