@@ -193,6 +193,18 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function CurrentCRC32() As UInt32
+		  If mIndex > -1 Then Return mCurrentFile.CRC32 Else Return 0
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CurrentDataOffset() As UInt64
+		  Return mCurrentDataOffset
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function CurrentExtra() As MemoryBlock
 		  If mIndex > -1 Then Return mCurrentExtra
 		End Function
@@ -320,6 +332,7 @@ Protected Class ZipArchive
 		        mCurrentFile.UncompressedSize = footer.UncompressedSize
 		      End If
 		    End If
+		    mCurrentDataOffset = mArchiveStream.Position
 		    Return True
 		  End If
 		  Break
@@ -471,6 +484,10 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h21
 		Private mCurrentCRC As UInt32
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mCurrentDataOffset As UInt64
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
