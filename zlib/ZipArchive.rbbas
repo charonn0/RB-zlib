@@ -14,6 +14,9 @@ Protected Class ZipArchive
 		  header.ExtraLength = 0
 		  header.Version = mDirectoryHeader.Version
 		  header.Signature = FILE_SIGNATURE
+		  Dim modtime As Pair = ConvertDate(New Date)
+		  header.ModDate = modtime.Left
+		  header.ModTime = modtime.Right
 		  Dim newfileheaderoffset As UInt64 = mArchiveStream.Position
 		  mArchiveStream.Length = mArchiveStream.Position + header.Size + ZipPath.LenB
 		  mArchiveStream.Position = mArchiveStream.Length
@@ -58,6 +61,13 @@ Protected Class ZipArchive
 		  mArchiveStream.Position = mDirectoryHeaderOffset
 		  mDirectoryHeader.CompressedSize = mDirectoryHeader.CompressedSize + header.CompressedSize
 		  mDirectoryHeader.UncompressedSize = mDirectoryHeader.UncompressedSize + header.UncompressedSize
+		  mDirectoryHeader.CRC32 = zlib.CRC32Combine(mDirectoryHeader.CRC32, header.CRC32, header.CompressedSize)
+		  mDirectoryHeader.ModDate = modtime.Left
+		  mDirectoryHeader.ModTime = modtime.Right
+		  mDirectoryHeader.CommentLength = mArchiveComment.Size
+		  If mArchiveName = "" Then mArchiveName = ZipPath
+		  mDirectoryHeader.FilenameLength = mArchiveName.Size
+		  mDirectoryHeader.ExtraLength = mExtraData.Size
 		  mArchiveStream.Write(mDirectoryHeader.StringValue(True).Left(mDirectoryHeader.Size))
 		  mArchiveStream.Write(mArchiveName)
 		  mArchiveStream.Write(mExtraData)
@@ -81,6 +91,7 @@ Protected Class ZipArchive
 		Sub Close()
 		  If mArchiveStream <> Nil Then
 		    mArchiveStream.Close
+		    mZipStream.Close
 		    mArchiveStream = Nil
 		    mIndex = -1
 		    mDirectoryHeaderOffset = 0
@@ -106,6 +117,45 @@ Protected Class ZipArchive
 		  mZipStream = ZStream.CreatePipe(mArchiveStream, mArchiveStream, CompressionLevel, Z_DEFAULT_STRATEGY, RAW_ENCODING, DEFAULT_MEM_LVL)
 		  mZipStream.BufferedReading = False
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Function ConvertDate(NewDate As Date) As Pair
+		  Dim h, m, s, dom, mon, year As UInt32
+		  Dim dt, tm As UInt16
+		  h = NewDate.Hour
+		  m = NewDate.Minute
+		  s = NewDate.Second
+		  dom = NewDate.Day
+		  mon = NewDate.Month
+		  year = NewDate.Year - 1980
+		  
+		  If year > 127 Then Raise New OutOfBoundsException
+		  
+		  dt = dom
+		  dt = dt Or ShiftLeft(mon, 5)
+		  dt = dt Or ShiftLeft(year, 9)
+		  
+		  tm = s \ 2
+		  tm = tm Or ShiftLeft(m, 5)
+		  tm = tm Or ShiftLeft(h, 11)
+		  
+		  Return dt:tm
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Function ConvertDate(Dt As UInt16, tm As UInt16) As Date
+		  Dim h, m, s, dom, mon, year As Integer
+		  h = ShiftRight(tm, 11)
+		  m = ShiftRight(tm, 5) And &h3F
+		  s = (tm And &h1F) * 2
+		  dom = dt And &h1F
+		  mon = ShiftRight(dt, 5) And &h0F
+		  year = (ShiftRight(dt, 9) And &h7F) + 1980
+		  
+		  Return New Date(year, mon, dom, h, m, s)
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -158,19 +208,21 @@ Protected Class ZipArchive
 		Function CurrentModificationDate() As Date
 		  If mIndex = -1 Then Return Nil
 		  
-		  Dim h, m, s, dom, mon, year As Integer
-		  Dim dt, tm As UInt16
-		  tm = mCurrentFile.ModTime
-		  dt = mCurrentFile.ModDate
-		  h = ShiftRight(tm, 11)
-		  m = ShiftRight(tm, 5) And &h3F
-		  s = (tm And &h1F) * 2
-		  dom = dt And &h1F
-		  mon = ShiftRight(dt, 5) And &h0F
-		  year = (ShiftRight(dt, 9) And &h7F) + 1980
-		  
-		  Return New Date(year, mon, dom, h, m, s)
+		  Return ConvertDate(mCurrentFile.ModDate, mCurrentFile.ModTime)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub CurrentModificationDate(Assigns NewModDate As Date)
+		  If mIndex = -1 Then Raise New OutOfBoundsException
+		  
+		  Dim p As Pair = ConvertDate(NewModDate)
+		  mCurrentFile.ModDate = p.Left
+		  mCurrentFile.ModTime = p.Right
+		  mArchiveStream.Position = mArchiveStream.Position - mCurrentFile.Size
+		  mArchiveStream.Write(mCurrentFile.StringValue(True).Left(mCurrentFile.Size))
+		  mArchiveStream.Flush
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -242,6 +294,7 @@ Protected Class ZipArchive
 		  Else
 		    mArchiveStream.Position = mArchiveStream.Position + mCurrentFile.CompressedSize
 		  End If
+		  If ValidateChecksums Then mRunningCRC = zlib.CRC32Combine(mRunningCRC, mCurrentCRC, mCurrentFile.UncompressedSize)
 		  
 		  ' read the next entry header
 		  If mArchiveStream.Position >= mDirectoryHeaderOffset Then
@@ -291,6 +344,7 @@ Protected Class ZipArchive
 		  mArchiveStream.Position = mArchiveStream.Length - 4
 		  mDirectoryHeaderOffset = 0
 		  mDirectoryHeader.StringValue(True) = ""
+		  mRunningCRC = 0
 		  Do Until mDirectoryHeaderOffset > 0
 		    If mArchiveStream.ReadUInt32 = DIRECTORY_FOOTER_HEADER Then
 		      mArchiveStream.Position = mArchiveStream.Position - 4
@@ -320,9 +374,9 @@ Protected Class ZipArchive
 		  End If
 		  
 		  mArchiveStream.Position = mDirectoryHeader.Offset
-		  Do Until mIndex = Index
+		  Do
 		    If Not Me.MoveNext(Nil) Then Return (Index = -1 And mLastError = ERR_END_ARCHIVE)
-		  Loop
+		  Loop Until mIndex >= Index And Index > -1
 		  Return True
 		End Function
 	#tag EndMethod
@@ -339,10 +393,38 @@ Protected Class ZipArchive
 		    bs.Close
 		  Loop Until Not Me.MoveNext(bs)
 		  ValidateChecksums = vc
-		  Return mLastError = ERR_END_ARCHIVE
+		  If mLastError = ERR_END_ARCHIVE Then Return mRunningCRC = mDirectoryHeader.CRC32
 		End Function
 	#tag EndMethod
 
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mArchiveComment <> Nil Then Return mArchiveComment
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  mArchiveComment = value
+			End Set
+		#tag EndSetter
+		ArchiveComment As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mArchiveName <> Nil Then Return mArchiveName
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  mArchiveName = value
+			End Set
+		#tag EndSetter
+		ArchiveName As String
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -425,6 +507,10 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mRunningCRC As UInt32
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
