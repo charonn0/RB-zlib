@@ -107,6 +107,15 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function CRC32Combine(CRC1 As UInt32, CRC2 As UInt32, Length2 As UInt32) As UInt32
+		  ' Combine CRC1 and CRC2, needing only then length of the data for crc2
+		  
+		  If Not zlib.IsAvailable Then Return 0
+		  Return _crc32_combine(CRC1, CRC2, Length2)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function CreateTree(Root As FolderItem, Child As FolderItem) As String
 		  Dim s() As String
@@ -1052,6 +1061,10 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function _crc32 Lib zlib1 Alias "crc32" (crc As UInt32, Buffer As Ptr, BufferLen As UInt32) As UInt32
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function _crc32_combine Lib zlib1 Alias "crc32_combine" (crc1 As UInt32, crc2 As UInt32, Length2 As Int32) As UInt32
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
