@@ -350,9 +350,20 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h0
-		BufferedReading As Boolean = True
-	#tag EndProperty
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mBufferedReading
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If Not value Then mReadBuffer = ""
+			  mBufferedReading = value
+			End Set
+		#tag EndSetter
+		BufferedReading As Boolean
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -389,6 +400,10 @@ Implements zlib.CompressedStream
 		#tag EndSetter
 		Level As Integer
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private mBufferedReading As Boolean = True
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mDeflater As zlib.Deflater
@@ -466,6 +481,12 @@ Implements zlib.CompressedStream
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="BufferedReading"
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true
