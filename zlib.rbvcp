@@ -14,6 +14,7 @@ Class=zlibException;zlib/zlibException.rbbas;&h1116D7FF;&h5A1247FF;false
 Class=TapeArchive;zlib/TapeArchive.rbbas;&h9F69FFF;&h5A1247FF;false
 FileTypeSet=FileTypes1;FileTypes1.rbbas;&h649F97FF;&h0;false
 Class=ZipArchive;zlib/ZipArchive.rbbas;&h67437FFF;&h5A1247FF;false
+Module=Testing;Testing.rbbas;&h7D27AFFF;&h0;false
 MajorVersion=1
 MinorVersion=0
 SubVersion=0
