@@ -30,7 +30,7 @@ Implements zlib.CompressedStream
 		  Else ' decompress from Source
 		    If WindowBits = Z_DETECT Then
 		      Select Case True
-		      Case Source.Length = 0, Source.IsDeflated
+		      Case Source.IsDeflated
 		        WindowBits = DEFLATE_ENCODING
 		      Case Source.IsGZipped
 		        WindowBits = GZIP_ENCODING
