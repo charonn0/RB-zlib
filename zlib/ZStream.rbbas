@@ -116,7 +116,7 @@ Implements zlib.CompressedStream
 	#tag Method, Flags = &h0
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
-		  ' Returns True if there is more output to read (decompression only)
+		  ' Returns True if there is no more output to read (decompression only)
 		  Return mSource <> Nil And mSource.EOF And mInflater <> Nil And mInflater.Avail_In = 0 And mReadBuffer = ""
 		End Function
 	#tag EndMethod
