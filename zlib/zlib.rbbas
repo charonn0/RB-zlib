@@ -150,7 +150,11 @@ Protected Module zlib
 		  s.Remove(0)
 		  If UBound(s) = -1 Then Return root
 		  If Root.Exists Then
-		    If Not Root.Directory Then Raise New IOException
+		    If Not Root.Directory Then 
+		      Dim err As New IOException
+		      err.Message = "'" + name + "' is not a directory!"
+		      Raise err
+		    End If
 		  Else
 		    Root.CreateAsFolder
 		  End If
@@ -365,10 +369,10 @@ Protected Module zlib
 		    mb = New MemoryBlock(4)
 		    If Not _get_errno(mb) Then Return 0
 		  #elseif TargetLinux
-		    Declare Function __errno_location Lib "libc.so" () as Ptr
+		    Declare Function __errno_location Lib "libc.so" () As Ptr
 		    mb = __errno_location()
 		  #elseif TargetMacOS
-		    Declare Function __error Lib "System" () as Ptr
+		    Declare Function __error Lib "System" () As Ptr
 		    mb = __error()
 		  #endif
 		  If mb <> Nil Then err = mb.Int32Value(0)
