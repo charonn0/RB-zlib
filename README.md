@@ -99,3 +99,16 @@ This example extracts a zip archive into a directory:
   Dim extracted() As FolderItem ' the list of extracted files/folders
   extracted = zlib.ReadZip(src, dst)
 ```
+
+##How to incorporate zlib into your Realbasic/Xojo project
+###Import the `zlib` module
+1. Download the RB-zlib project either in [ZIP archive format](https://github.com/charonn0/RB-zlib/archive/master.zip) or by cloning the repository with your Git client.
+2. Open the RB-zlib project in REALstudio or Xojo. Open your project in a separate window.
+3. Copy the `zlib` module into your project and save.
+
+###Ensure the zlib shared library is installed
+zlib is installed by default on most Unix-like operating systems, including OS X and most Linux distributions. 
+
+Windows does not have it installed by default, you will need to ship the DLL with your application. You can use pre-built DLL available [here](http://zlib.net/zlib128-dll.zip) (Win32x86), or you can [build them yourself from source](http://zlib.net/zlib-1.2.8.tar.gz). 
+
+RB-zlib will raise a PlatformNotSupportedException when used if all required DLLs/SOs/DyLibs are not available at runtime. 
