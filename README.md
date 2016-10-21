@@ -14,8 +14,8 @@ This project provides several different ways to use zlib.
 ###Utility methods
 The easiest way to use this project are the utility methods in the zlib module: 
 
-* [**`Inflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate)
 * [**`Deflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate)
+* [**`Inflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate)
 * [**`GZip`**](https://github.com/charonn0/RB-zlib/wiki/zlib.GZip)
 * [**`GUnZip`**](https://github.com/charonn0/RB-zlib/wiki/zlib.GUnZip)
 
