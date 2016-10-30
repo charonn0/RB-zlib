@@ -1,5 +1,7 @@
 ##Introduction
-**RB-zlib** is a [zlib](http://www.zlib.net/) [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested using Realstudio 2011r4.3 on Windows 7. 
+**RB-zlib** is a zlib [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested using Realstudio 2011r4.3 on Windows 7. 
+
+[zlib](http://www.zlib.net/) is the reference implementation for the [deflate](https://en.wikipedia.org/wiki/DEFLATE) compression algorithm. Deflate is the algorithm used by the gzip container format, the the zip archive format, and HTTP compression.
 
 ##Hilights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
@@ -29,7 +31,7 @@ or this signature:
  function(source, options[...]) As MemoryBlock
 ```
 
-where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements the `Readable` interface; and `destination` (when provided) is a `FolderItem` or an object which implements the `Writeable` interface. Methods which do not have a `Destination` parameter return output as a `MemoryBlock` instead.
+where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements the `Readable` interface; and `destination` (when provided) is a `FolderItem` or an object which implements the `Writeable` interface. Methods which do not have a `Destination` parameter return output as a `MemoryBlock` instead. Refer to the [examples](https://github.com/charonn0/RB-zlib/wiki#more-examples) below for demonstrations of some of these functions.
 
 Additional optional arguments may be passed, to control the compression level, strategy, dictionary, and encoding. For example, `GZip` and `GUnZip` are just wrappers around `Deflate` and `Inflate` with options that specify the gzip format.
 
