@@ -403,15 +403,8 @@ Protected Module zlib
 		Protected Function GUnZip(Source As FolderItem, Destination As Writeable) As Boolean
 		  ' Gunzip the Source file into the Destination stream. Reverses the GZip method
 		  
-		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  Dim ok As Boolean
-		  Try
-		    ' calls Inflate(Readable, Writeable, Integer, Integer) As Boolean
-		    ok = Inflate(src, Destination, Nil, GZIP_ENCODING)
-		  Finally
-		    src.Close
-		  End Try
-		  Return ok
+		  ' calls Inflate(Readable, Writeable, Integer, Integer) As Boolean
+		  Return Inflate(Source, Destination, Nil, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
 
@@ -437,15 +430,8 @@ Protected Module zlib
 		Protected Function GUnZip(Source As MemoryBlock, Destination As Writeable) As Boolean
 		  ' Decompress the Source data into the Destination stream. Reverses the Deflate method
 		  
-		  Dim src As New BinaryStream(Source)
-		  Dim ok As Boolean
-		  Try
-		    ' calls Inflate(Readable, Writeable, MemoryBlock, Integer) As Boolean
-		    ok = Inflate(src, Destination, Nil, GZIP_ENCODING)
-		  Finally
-		    src.Close
-		  End Try
-		  Return ok
+		  ' calls Inflate(MemoryBlock, Writeable, MemoryBlock, Integer) As Boolean
+		  Return Inflate(Source, Destination, Nil, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
 
@@ -514,15 +500,9 @@ Protected Module zlib
 		Protected Function GZip(Source As FolderItem, Destination As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  ' Gzip the Source file into the Destination stream. Reverses the Deflate method
 		  
-		  Dim src As BinaryStream = BinaryStream.Open(Source)
-		  Dim ok As Boolean
-		  Try
-		    ' calls Deflate(Readable, Writeable, Integer, Integer) As Boolean
-		    ok = Deflate(src, Destination, CompressionLevel, GZIP_ENCODING)
-		  Finally
-		    src.Close
-		  End Try
-		  Return ok
+		  ' calls Deflate(FolderItem, Writeable, Integer, Integer) As Boolean
+		  Return Deflate(Source, Destination, CompressionLevel, GZIP_ENCODING)
+		  
 		End Function
 	#tag EndMethod
 
