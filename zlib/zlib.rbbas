@@ -82,8 +82,19 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function CompressBound(DataLength As UInt64) As UInt32
+		  ' Computes the upper bound of the compressed size after deflation of DataLength bytes.
+		  
+		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  
+		  Return compressBound_(DataLength)
+		  
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function compressBound Lib zlib1 (sourceLen As UInt64) As UInt32
+		Private Soft Declare Function compressBound_ Lib zlib1 (sourceLen As UInt64) As UInt32
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
