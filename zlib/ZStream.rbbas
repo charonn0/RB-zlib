@@ -312,7 +312,7 @@ Implements zlib.CompressedStream
 		  Loop
 		  If lastchar <> "" Then ret.Write(lastchar)
 		  ret.Close
-		  Return data.Trim
+		  Return data
 		End Function
 	#tag EndMethod
 
