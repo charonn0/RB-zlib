@@ -801,7 +801,7 @@ Protected Module zlib
 		  
 		  Dim IsDeflate As Boolean
 		  Dim pos As UInt64 = Target.Position
-		  If Target.ReadByte = &h78 Then IsDeflate = True 'maybe
+		  If Target.ReadUInt8 = &h78 Then IsDeflate = True 'maybe
 		  Target.Position = pos
 		  Return IsDeflate
 		End Function
@@ -852,7 +852,7 @@ Protected Module zlib
 		  
 		  Dim IsGZ As Boolean
 		  Dim pos As UInt64 = Target.Position
-		  If Target.ReadByte = &h1F And Target.ReadByte = &h8B Then IsGZ = True
+		  If Target.ReadUInt8 = &h1F And Target.ReadUInt8 = &h8B Then IsGZ = True
 		  Target.Position = pos
 		  Return IsGZ
 		End Function
