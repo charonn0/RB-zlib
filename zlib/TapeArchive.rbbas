@@ -223,7 +223,7 @@ Protected Class TapeArchive
 		    mArchive.Position = lastpos
 		    Return False
 		  End Try
-		  If ValidateChecksums And Not CurrentType = zlib.ArchiveEntryType.Directory Then
+		  If ValidateChecksums And CurrentType <> zlib.ArchiveEntryType.Directory Then
 		    Dim chksm As Integer = Val("&o" + header.Checksum.Trim)
 		    Dim hsum As Integer = GetCheckSum(header)
 		    If chksm <> hsum Then
