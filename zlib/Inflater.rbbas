@@ -71,13 +71,16 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(ReadFrom As Readable, WriteTo As Writeable, ReadCount As Integer = -1) As Boolean
-		  ' Reads compressed bytes from ReadFrom until ReadFrom.EOF, and writes all decompressed output to WriteTo
-		  ' If ReadFrom represents more than CHUNK_SIZE compressed bytes then they will be read in chunks of CHUNK_SIZE.
-		  ' The size of the output is variable, typically many times larger than the input, but will be written to WriteTo
-		  ' in chunks no greater than CHUNK_SIZE. Consult the zlib documentation before changing CHUNK_SIZE
-		  ' If this method returns True then all valid output was written and the decompressor is ready for more input.
-		  ' Check LastError to determine whether there was an error while decompressing.
+		Function Inflate(ReadFrom As Readable, WriteTo As Writeable, ReadCount As Integer = - 1) As Boolean
+		  ' Reads compressed bytes from ReadFrom and writes all decompressed output to WriteTo. If
+		  ' ReadCount is specified then exactly ReadCount compressed bytes are read; otherwise
+		  ' compressed bytes will continue to be read until ReadFrom.EOF. If ReadFrom represents more 
+		  ' than CHUNK_SIZE compressed bytes then they will be read in chunks of CHUNK_SIZE. The size 
+		  ' of the output is variable, typically many times larger than the input, but will be written 
+		  ' to WriteTo in chunks no greater than CHUNK_SIZE. Consult the zlib documentation before 
+		  ' changing CHUNK_SIZE. If this method returns True then all valid output was written and the 
+		  ' decompressor is ready for more input. Check LastError to determine whether there was an 
+		  ' error while decompressing.
 		  
 		  If Not IsOpen Then Return False
 		  

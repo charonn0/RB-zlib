@@ -67,13 +67,16 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH, ReadCount As Integer = -1) As Boolean
-		  ' Reads uncompressed bytes from ReadFrom until ReadFrom.EOF, and writes all compressed output to WriteTo
-		  ' If ReadFrom represents more than CHUNK_SIZE uncompressed bytes then they will be read in chunks of CHUNK_SIZE.
-		  ' The size of the output is variable, typically smaller than the input, and will be written to WriteTo
-		  ' in chunks no greater than CHUNK_SIZE. Consult the zlib documentation before changing CHUNK_SIZE
-		  ' If this method returns True then all uncompressed bytes were processed and the compressor is ready for more input.
-		  ' Depending on the state of the compressor and the Flushing parameter, compressed output might not be written until a 
+		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH, ReadCount As Integer = - 1) As Boolean
+		  ' Reads uncompressed bytes from ReadFrom and writes all compressed output to WriteTo. If
+		  ' ReadCount is specified then exactly ReadCount uncompressed bytes are read; otherwise
+		  ' uncompressed bytes will continue to be read until ReadFrom.EOF. If ReadFrom represents 
+		  ' more than CHUNK_SIZE uncompressed bytes then they will be read in chunks of CHUNK_SIZE.
+		  ' The size of the output is variable, typically smaller than the input, and will be written 
+		  ' to WriteTo in chunks no greater than CHUNK_SIZE. Consult the zlib documentation before 
+		  ' changing CHUNK_SIZE. If this method returns True then all uncompressed bytes were 
+		  ' processed and the compressor is ready for more input. Depending on the state of the 
+		  ' compressor and the Flushing parameter, compressed output might not be written until a 
 		  ' subsequent call to this method.
 		  
 		  If Not IsOpen Then Return False
