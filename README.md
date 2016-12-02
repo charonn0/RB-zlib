@@ -1,5 +1,7 @@
 ##Introduction
-**RB-zlib** is a [zlib](http://www.zlib.net/) [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested using Realstudio 2011r4.3 on Windows 7. 
+**RB-zlib** is a zlib [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested using Realstudio 2011r4.3 on Windows 7. 
+
+[zlib](http://www.zlib.net/) is the reference implementation for the [deflate](https://en.wikipedia.org/wiki/DEFLATE) compression algorithm. Deflate is the algorithm used by the gzip container format, the the zip archive format, and HTTP compression.
 
 ##Hilights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
@@ -14,8 +16,8 @@ This project provides several different ways to use zlib.
 ###Utility methods
 The easiest way to use this project are the utility methods in the zlib module: 
 
-* [**`Inflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate)
 * [**`Deflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate)
+* [**`Inflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate)
 * [**`GZip`**](https://github.com/charonn0/RB-zlib/wiki/zlib.GZip)
 * [**`GUnZip`**](https://github.com/charonn0/RB-zlib/wiki/zlib.GUnZip)
 
@@ -29,7 +31,7 @@ or this signature:
  function(source, options[...]) As MemoryBlock
 ```
 
-where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements the `Readable` interface; and `destination` (when provided) is a `FolderItem` or an object which implements the `Writeable` interface. Methods which do not have a `Destination` parameter return output as a `MemoryBlock` instead.
+where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements the `Readable` interface; and `destination` (when provided) is a `FolderItem` or an object which implements the `Writeable` interface. Methods which do not have a `Destination` parameter return output as a `MemoryBlock` instead. Refer to the [examples](https://github.com/charonn0/RB-zlib/wiki#more-examples) below for demonstrations of some of these functions.
 
 Additional optional arguments may be passed, to control the compression level, strategy, dictionary, and encoding. For example, `GZip` and `GUnZip` are just wrappers around `Deflate` and `Inflate` with options that specify the gzip format.
 
@@ -99,3 +101,16 @@ This example extracts a zip archive into a directory:
   Dim extracted() As FolderItem ' the list of extracted files/folders
   extracted = zlib.ReadZip(src, dst)
 ```
+
+##How to incorporate zlib into your Realbasic/Xojo project
+###Import the `zlib` module
+1. Download the RB-zlib project either in [ZIP archive format](https://github.com/charonn0/RB-zlib/archive/master.zip) or by cloning the repository with your Git client.
+2. Open the RB-zlib project in REALstudio or Xojo. Open your project in a separate window.
+3. Copy the `zlib` module into your project and save.
+
+###Ensure the zlib shared library is installed
+zlib is installed by default on most Unix-like operating systems, including OS X and most Linux distributions. 
+
+Windows does not have it installed by default, you will need to ship the DLL with your application. You can use pre-built DLL available [here](http://zlib.net/zlib128-dll.zip) (Win32x86), or you can [build them yourself from source](http://zlib.net/zlib-1.2.8.tar.gz). 
+
+RB-zlib will raise a PlatformNotSupportedException when used if all required DLLs/SOs/DyLibs are not available at runtime. 

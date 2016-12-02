@@ -30,7 +30,7 @@ Implements zlib.CompressedStream
 		  Else ' decompress from Source
 		    If WindowBits = Z_DETECT Then
 		      Select Case True
-		      Case Source.Length = 0, Source.IsDeflated
+		      Case Source.IsDeflated
 		        WindowBits = DEFLATE_ENCODING
 		      Case Source.IsGZipped
 		        WindowBits = GZIP_ENCODING
@@ -79,12 +79,16 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(OutputStream As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, Overwrite As Boolean = False, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
+		  ' Create a compression stream where compressed output is written to the OutputStream file.
+		  
 		  Return Create(BinaryStream.Create(OutputStream, Overwrite), CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(OutputStream As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
+		  ' Create a compression stream where compressed output is written to the OutputStream object.
+		  
 		  Return New zlib.ZStream(New Deflater(CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel), OutputStream)
 		  
 		End Function
@@ -92,6 +96,9 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h0
 		 Shared Function CreatePipe(InputStream As Readable, OutputStream As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL) As zlib.ZStream
+		  ' Create a compressed stream from two endpoints. Writing to the stream writes compressed bytes to
+		  ' the OutputStream object; reading from the stream decompresses bytes from the InputStream object.
+		  
 		  Dim ret As zlib.ZStream = Create(OutputStream, CompressionLevel, CompressionStrategy, WindowBits, MemoryLevel)
 		  If ret = Nil Then Return Nil
 		  ret.mSource = InputStream
@@ -116,7 +123,7 @@ Implements zlib.CompressedStream
 	#tag Method, Flags = &h0
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
-		  ' Returns True if there is more output to read (decompression only)
+		  ' Returns True if there is no more output to read (decompression only)
 		  Return mSource <> Nil And mSource.EOF And mInflater <> Nil And mInflater.Avail_In = 0 And mReadBuffer = ""
 		End Function
 	#tag EndMethod
@@ -181,15 +188,17 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h0
 		 Shared Function Open(Source As FolderItem, WindowBits As Integer = zlib.Z_DETECT) As zlib.ZStream
+		  ' Create a decompression stream where the compressed input is read from the Source file.
+		  
 		  Return Open(BinaryStream.Open(Source), WindowBits)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		 Shared Function Open(InputStream As Readable, WindowBits As Integer = zlib.Z_DETECT) As zlib.ZStream
-		  ' read data from a deflate or gzip stream 
-		  Dim zstruct As New Inflater(WindowBits)
-		  Return New zlib.ZStream(zstruct, InputStream)
+		  ' Create a decompression stream where the compressed input is read from the InputStream object.
+		  
+		  Return New zlib.ZStream(New Inflater(WindowBits), InputStream)
 		  
 		End Function
 	#tag EndMethod
@@ -303,7 +312,7 @@ Implements zlib.CompressedStream
 		  Loop
 		  If lastchar <> "" Then ret.Write(lastchar)
 		  ret.Close
-		  Return data.Trim
+		  Return data
 		End Function
 	#tag EndMethod
 
@@ -344,8 +353,7 @@ Implements zlib.CompressedStream
 		      EOL = EndOfLine.UNIX
 		    #endif
 		  End If
-		  Dim tmp As New BinaryStream(Data + EOL)
-		  If Not mDeflater.Deflate(tmp, mDestination) Then Raise New zlibException(mDeflater.LastError)
+		  Me.Write(Data + EOL)
 		End Sub
 	#tag EndMethod
 
