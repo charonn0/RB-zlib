@@ -396,7 +396,7 @@ Protected Module zlib
 		Protected Function GUnZip(Source As FolderItem) As MemoryBlock
 		  ' GUnZip the Source file and return it. Reverses the GZip method
 		  
-		  ' calls Inflate(Readable, MemoryBlock, Integer) As MemoryBlock
+		  ' calls Inflate(FolderItem, MemoryBlock, Integer) As MemoryBlock
 		  Return Inflate(Source, Nil, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
@@ -414,7 +414,7 @@ Protected Module zlib
 		Protected Function GUnZip(Source As FolderItem, Destination As Writeable) As Boolean
 		  ' Gunzip the Source file into the Destination stream. Reverses the GZip method
 		  
-		  ' calls Inflate(Readable, Writeable, Integer, Integer) As Boolean
+		  ' calls Inflate(FolderItem, Writeable, Integer, Integer) As Boolean
 		  Return Inflate(Source, Destination, Nil, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
@@ -439,7 +439,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(Source As MemoryBlock, Destination As Writeable) As Boolean
-		  ' Decompress the Source data into the Destination stream. Reverses the Deflate method
+		  ' Decompress the Source data into the Destination stream. Reverses the GZip method
 		  
 		  ' calls Inflate(MemoryBlock, Writeable, MemoryBlock, Integer) As Boolean
 		  Return Inflate(Source, Destination, Nil, GZIP_ENCODING)
@@ -493,7 +493,7 @@ Protected Module zlib
 		Protected Function GZip(Source As FolderItem, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False) As Boolean
 		  ' GZip the Source file into the Destination file. Use GUnZip to reverse.
 		  
-		  ' calls Deflate(Readable, Writeable, Integer, Integer) As Boolean
+		  ' calls Deflate(FolderItem, FolderItem, Integer, Boolean, Integer) As Boolean
 		  Return Deflate(Source, Destination, CompressionLevel, Overwrite, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
@@ -502,7 +502,7 @@ Protected Module zlib
 		Protected Function GZip(Source As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As MemoryBlock
 		  ' GZip the Source file and return it. Use GUnZip to reverse.
 		  
-		  ' calls Deflate(FolderItem, Integer, Integer) As Boolean
+		  ' calls Deflate(FolderItem, Integer, Integer) As MemoryBlock
 		  Return Deflate(Source, CompressionLevel, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
