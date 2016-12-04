@@ -376,9 +376,9 @@ Protected Module zlib
 		  Dim err As Integer
 		  Dim mb As MemoryBlock
 		  #If TargetWin32 Then
-		    Declare Function _get_errno Lib "msvcrt" (Error As Ptr) As Boolean
-		    mb = New MemoryBlock(4)
-		    If Not _get_errno(mb) Then Return 0
+		    Declare Function _get_errno Lib "msvcrt" (ByRef Error As Integer) As Integer
+		    Dim e As Integer = _get_errno(err)
+		    If e <> 0 Then err = e
 		  #elseif TargetLinux
 		    Declare Function __errno_location Lib "libc.so" () As Ptr
 		    mb = __errno_location()
