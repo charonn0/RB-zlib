@@ -939,7 +939,7 @@ Protected Module zlib
 		    Call zip.MoveNext(outstream)
 		    If outstream <> Nil Then outstream.Close
 		    ret.Append(f)
-		  Loop Until zip.LastError = ERR_END_ARCHIVE
+		  Loop
 		  zip.Close
 		  Return ret
 		  
