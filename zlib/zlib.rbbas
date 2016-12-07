@@ -271,7 +271,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Deflate(Source As Readable, Destination As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
+		Protected Function Deflate(Source As Readable, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Compress the Source stream into the Destination file. Reverses the Deflate method
 		  
 		  Dim dst As BinaryStream = BinaryStream.Create(Destination, Overwrite)
@@ -429,11 +429,11 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function GUnZip(Source As MemoryBlock, Destination As FolderItem, Overwrite As Boolean = False, Dictionary As MemoryBlock = Nil) As Boolean
+		Protected Function GUnZip(Source As MemoryBlock, Destination As FolderItem, Overwrite As Boolean = False) As Boolean
 		  ' GUnzips the Source data into the Destination file. Reverses the GZip method
 		  
 		  ' calls Inflate(MemoryBlock, FolderItem, Boolean, MemoryBlock, Integer) As Boolean
-		  Return Inflate(Source, Destination, Overwrite, Dictionary, GZIP_ENCODING)
+		  Return Inflate(Source, Destination, Overwrite, Nil, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
 
@@ -546,11 +546,11 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function GZip(Source As Readable, Destination As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Protected Function GZip(Source As Readable, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False) As Boolean
 		  ' Gunzip the Source stream into the Destination file. Reverses the Deflate method
 		  
-		  ' calls Deflate(Readable, FolderItem, Boolean, Integer, Integer) As Boolean
-		  Return Deflate(Source, Destination, Overwrite, CompressionLevel, GZIP_ENCODING)
+		  ' calls Deflate(Readable, FolderItem, Integer, Boolean, Integer) As Boolean
+		  Return Deflate(Source, Destination, CompressionLevel, Overwrite, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
 
