@@ -102,6 +102,19 @@ This example extracts a zip archive into a directory:
   extracted = zlib.ReadZip(src, dst)
 ```
 
+This example performs an HTTP request that asks for compression, and decompresses the response:
+
+```vbnet
+  Dim h As New HTTPSocket
+  h.SetRequestHeader("Accept-Encoding", "gzip, deflate")
+  Dim page As String = h.Get("http://www.example.com", 10)
+  If h.PageHeaders.CommaSeparatedValues("Content-Encoding") = "gzip" Then
+    page = zlib.GUnZip(page)
+  ElseIf h.PageHeaders.CommaSeparatedValues("Content-Encoding") = "deflate" Then
+    page = zlib.Inflate(page) ' assume DEFLATE_ENCODING; some servers send RAW_ENCODING
+  End If
+```
+
 ##How to incorporate zlib into your Realbasic/Xojo project
 ###Import the `zlib` module
 1. Download the RB-zlib project either in [ZIP archive format](https://github.com/charonn0/RB-zlib/archive/master.zip) or by cloning the repository with your Git client.
