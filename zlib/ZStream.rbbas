@@ -19,7 +19,7 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(Source As BinaryStream, CompressionLevel As Integer, CompressionStrategy As Integer, WindowBits As Integer, MemoryLevel As Integer)
+		Sub Constructor(Source As BinaryStream, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.Z_DETECT, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
 		  ' Constructs a ZStream from the Source BinaryStream. If the Source's current position is equal
 		  ' to its length then compressed output will be appended, otherwise the Source will be used as 
 		  ' input to be decompressed.
@@ -187,10 +187,10 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Open(Source As FolderItem, WindowBits As Integer = zlib.Z_DETECT) As zlib.ZStream
+		 Shared Function Open(InputStream As FolderItem, WindowBits As Integer = zlib.Z_DETECT) As zlib.ZStream
 		  ' Create a decompression stream where the compressed input is read from the Source file.
 		  
-		  Return Open(BinaryStream.Open(Source), WindowBits)
+		  Return Open(BinaryStream.Open(InputStream), WindowBits)
 		End Function
 	#tag EndMethod
 
