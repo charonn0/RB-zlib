@@ -6,6 +6,8 @@ Inherits RuntimeException
 		  Me.ErrorNumber = ErrorCode
 		  
 		  Select Case ErrorCode
+		    
+		    ' archive-related errors (non-zlib)
 		  Case zlib.ERR_END_ARCHIVE
 		    Me.Message = "The archive contains no additional entries."
 		  Case zlib.ERR_INVALID_ENTRY
@@ -14,6 +16,24 @@ Inherits RuntimeException
 		    Me.Message = "The archive is not zipped."
 		  Case zlib.ERR_UNSUPPORTED_COMPRESSION
 		    Me.Message = "The archive entry uses a non-standard compression algorithm."
+		    
+		    'zlib's built-in error messages suck; these are much better
+		  Case Z_BUF_ERROR
+		    Me.Message = "The requested operation requires a larger output buffer."
+		  Case Z_DATA_ERROR
+		    Me.Message = "The input buffer contains invalid or incomplete deflate data."
+		  Case Z_MEM_ERROR
+		    Me.Message = "There is insufficient available memory to perform the requested operation."
+		  Case Z_STREAM_ERROR
+		    Me.Message = "The stream state is inconsistent or invalid."
+		  Case Z_VERSION_ERROR
+		    Me.Message = "The zlib library is a different version than what was expected."
+		  Case Z_NEED_DICT
+		    Me.Message = "The stream is compressed with a custom dictionary." ' not an error per se, but a special condition
+		  Case Z_STREAM_END
+		    Me.Message = "The stream has ended." ' not an error per se, but a special condition
+		  Case Z_ERRNO
+		    Me.Message = "A system error occurred during the operation. Consult the system last error value for details."
 		  Else
 		    If zlib.IsAvailable Then
 		      Dim err As MemoryBlock = zlib.zError(ErrorCode)
