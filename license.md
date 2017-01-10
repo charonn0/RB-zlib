@@ -1,6 +1,6 @@
 ###RB-zlib
 
-Copyright (c)2015-16 Andrew Lambert, all rights reserved.
+Copyright (c)2015-17 Andrew Lambert, all rights reserved.
 
  Permission to use, copy, modify, and distribute this software for any purpose
  with or without fee is hereby granted, provided that the above copyright
