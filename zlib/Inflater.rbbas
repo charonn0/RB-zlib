@@ -7,13 +7,10 @@ Inherits FlateEngine
 		  ' among other things, the type of compression being used. (For GZip pass GZIP_ENCODING)
 		  ' If the inflate engine could not be initialized an exception will be raised.
 		  
-		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  // Calling the overridden superclass constructor.
+		  // Constructor() -- From zlib.FlateEngine
+		  Super.Constructor()
 		  
-		  zstruct.zalloc = Nil
-		  zstruct.zfree = Nil
-		  zstruct.opaque = Nil
-		  zstruct.avail_in = 0
-		  zstruct.next_in = Nil
 		  If WindowBits = zlib.DEFLATE_ENCODING Then
 		    mLastError = inflateInit_(zstruct, zlib.Version, zstruct.Size)
 		  Else
@@ -28,7 +25,10 @@ Inherits FlateEngine
 		  ' Construct a new Inflater instance using the specified compression options.
 		  ' If the inflate engine could not be initialized an exception will be raised.
 		  
-		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  // Calling the overridden superclass constructor.
+		  // Constructor() -- From zlib.FlateEngine
+		  Super.Constructor()
+		  
 		  mLastError = inflateCopy(zstruct, CopyStream.zstruct)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mDictionary = CopyStream.mDictionary

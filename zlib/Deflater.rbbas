@@ -14,11 +14,9 @@ Inherits FlateEngine
 		  ' Construct a new Deflater instance using the specified compression options. 
 		  ' If the deflate engine could not be initialized an exception will be raised.
 		  
-		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
-		  
-		  zstruct.zalloc = Nil
-		  zstruct.zfree = Nil
-		  zstruct.opaque = Nil
+		  // Calling the overridden superclass constructor.
+		  // Constructor() -- From zlib.FlateEngine
+		  Super.Constructor()
 		  
 		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
 		    ' Open the compressed stream using custom options
@@ -40,7 +38,9 @@ Inherits FlateEngine
 		Sub Constructor(CopyStream As zlib.Deflater)
 		  ' Constructs a Deflater instance by duplicating the internal compression state of the CopyStream
 		  
-		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  // Calling the overridden superclass constructor.
+		  // Constructor() -- From zlib.FlateEngine
+		  Super.Constructor()
 		  
 		  mLastError = deflateCopy(zstruct, CopyStream.zstruct)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)

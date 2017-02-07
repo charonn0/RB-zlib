@@ -18,6 +18,20 @@ Private Class FlateEngine
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Sub Constructor()
+		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  
+		  zstruct.zalloc = Nil
+		  zstruct.zfree = Nil
+		  zstruct.opaque = Nil
+		  zstruct.avail_in = 0
+		  zstruct.next_in = Nil
+		  zstruct.avail_out = 0
+		  zstruct.next_out = Nil
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function IsOpen() As Boolean
 		  Return zstruct.zfree <> Nil
