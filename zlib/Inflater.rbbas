@@ -92,7 +92,7 @@ Inherits FlateEngine
 		    Dim chunk As MemoryBlock
 		    Dim sz As Integer
 		    If ReadCount > -1 Then sz = Min(ReadCount, CHUNK_SIZE) Else sz = CHUNK_SIZE
-		    If ReadFrom <> Nil Then chunk = ReadFrom.Read(sz) Else chunk = ""
+		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
 		    count = count + chunk.Size
