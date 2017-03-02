@@ -99,7 +99,7 @@ Inherits FlateEngine
 		      ' provide more output space
 		      zstruct.next_out = outbuff
 		      zstruct.avail_out = outbuff.Size
-		      mLastError = zlib.deflate(zstruct, Flushing)
+		      mLastError = deflate(zstruct, Flushing)
 		      If mLastError = Z_STREAM_ERROR Then Return False ' the stream state is inconsistent!!!
 		      ' consume any output
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
@@ -118,7 +118,7 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If IsOpen Then mLastError = zlib.deflateEnd(zstruct)
+		  If IsOpen Then mLastError = deflateEnd(zstruct)
 		  zstruct.zfree = Nil
 		  
 		End Sub
@@ -221,7 +221,7 @@ Inherits FlateEngine
 		#tag Setter
 			Set
 			  ' Dynamically update the compression level. If the compression level is changed, the input available so
-			  ' far is compressed with the old level (and may be flushed); the new level will take effect only at the 
+			  ' far is compressed with the old level (and may be flushed); the new level will take effect only at the
 			  ' next call to deflate().
 			  
 			  If Not IsOpen Then Raise New NilObjectException

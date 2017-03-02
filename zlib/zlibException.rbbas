@@ -8,13 +8,13 @@ Inherits RuntimeException
 		  Select Case ErrorCode
 		    
 		    ' archive-related errors (non-zlib)
-		  Case zlib.ERR_END_ARCHIVE
+		  Case ERR_END_ARCHIVE
 		    Me.Message = "The archive contains no additional entries."
-		  Case zlib.ERR_INVALID_ENTRY
+		  Case ERR_INVALID_ENTRY
 		    Me.Message = "The archive entry is corrupt."
-		  Case zlib.ERR_NOT_ZIPPED
+		  Case ERR_NOT_ZIPPED
 		    Me.Message = "The archive is not zipped."
-		  Case zlib.ERR_UNSUPPORTED_COMPRESSION
+		  Case ERR_UNSUPPORTED_COMPRESSION
 		    Me.Message = "The archive entry uses a non-standard compression algorithm."
 		    
 		    'zlib's built-in error messages suck; these are much better
@@ -36,7 +36,7 @@ Inherits RuntimeException
 		    Me.Message = "A system error occurred during the operation. Consult the system last error value for details."
 		  Else
 		    If zlib.IsAvailable Then
-		      Dim err As MemoryBlock = zlib.zError(ErrorCode)
+		      Dim err As MemoryBlock = zError(ErrorCode)
 		      Try
 		        #pragma BreakOnExceptions Off
 		        Me.Message = err.CString(0)

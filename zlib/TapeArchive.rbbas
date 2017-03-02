@@ -96,7 +96,7 @@ Protected Class TapeArchive
 		 Shared Function Create(TARFile As FolderItem, OverWrite As Boolean = False) As zlib.TapeArchive
 		  Dim bs As BinaryStream
 		  bs = BinaryStream.Create(TARFile, OverWrite)
-		  Return New zlib.TapeArchive(bs)
+		  Return New TapeArchive(bs)
 		  
 		End Function
 	#tag EndMethod
@@ -125,22 +125,22 @@ Protected Class TapeArchive
 		    Dim c As String = Encodings.ASCII.Chr(mHeader.TypeFlag)
 		    Select Case c
 		    Case "1"
-		      Return zlib.ArchiveEntryType(1)
+		      Return ArchiveEntryType(1)
 		    Case "2"
-		      Return zlib.ArchiveEntryType(2)
+		      Return ArchiveEntryType(2)
 		    Case "3"
-		      Return zlib.ArchiveEntryType(3)
+		      Return ArchiveEntryType(3)
 		    Case "4"
-		      Return zlib.ArchiveEntryType(4)
+		      Return ArchiveEntryType(4)
 		    Case "5"
-		      Return zlib.ArchiveEntryType(5)
+		      Return ArchiveEntryType(5)
 		    Case "6"
-		      Return zlib.ArchiveEntryType(6)
+		      Return ArchiveEntryType(6)
 		    Case "7"
-		      Return zlib.ArchiveEntryType(7)
+		      Return ArchiveEntryType(7)
 		    End Select
 		  End If
-		  Return zlib.ArchiveEntryType(0)
+		  Return ArchiveEntryType(0)
 		End Function
 	#tag EndMethod
 
@@ -223,7 +223,7 @@ Protected Class TapeArchive
 		    mArchive.Position = lastpos
 		    Return False
 		  End Try
-		  If ValidateChecksums And CurrentType <> zlib.ArchiveEntryType.Directory Then
+		  If ValidateChecksums And CurrentType <> ArchiveEntryType.Directory Then
 		    Dim chksm As Integer = Val("&o" + header.Checksum.Trim)
 		    Dim hsum As Integer = GetCheckSum(header)
 		    If chksm <> hsum Then
@@ -242,7 +242,7 @@ Protected Class TapeArchive
 	#tag Method, Flags = &h0
 		 Shared Function Open(TARFile As FolderItem, ReadWrite As Boolean = True) As zlib.TapeArchive
 		  Dim bs As BinaryStream = BinaryStream.Open(TARFile, ReadWrite)
-		  If bs <> Nil Then Return New zlib.TapeArchive(bs)
+		  If bs <> Nil Then Return New TapeArchive(bs)
 		  
 		End Function
 	#tag EndMethod

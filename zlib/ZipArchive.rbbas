@@ -26,7 +26,7 @@ Protected Class ZipArchive
 		    mZipStream.Deflater.Reset
 		    Do Until FileData.EOF
 		      Dim data As MemoryBlock = FileData.Read(CHUNK_SIZE)
-		      crc = zlib.CRC32(data, crc, data.Size)
+		      crc = CRC32(data, crc, data.Size)
 		      mZipStream.Write(data)
 		    Loop
 		    mZipStream.Flush(Z_FINISH)
@@ -38,7 +38,7 @@ Protected Class ZipArchive
 		    If FileData <> Nil Then
 		      Do Until FileData.EOF
 		        Dim data As MemoryBlock = FileData.Read(CHUNK_SIZE)
-		        crc = zlib.CRC32(data, crc, data.Size) 
+		        crc = CRC32(data, crc, data.Size)
 		        mArchiveStream.Write(data)
 		      Loop
 		    End If
@@ -61,7 +61,7 @@ Protected Class ZipArchive
 		  mArchiveStream.Position = mDirectoryHeaderOffset
 		  mDirectoryHeader.CompressedSize = mDirectoryHeader.CompressedSize + header.CompressedSize
 		  mDirectoryHeader.UncompressedSize = mDirectoryHeader.UncompressedSize + header.UncompressedSize
-		  mDirectoryHeader.CRC32 = zlib.CRC32Combine(mDirectoryHeader.CRC32, header.CRC32, header.CompressedSize)
+		  mDirectoryHeader.CRC32 = CRC32Combine(mDirectoryHeader.CRC32, header.CRC32, header.CompressedSize)
 		  mDirectoryHeader.ModDate = modtime.Left
 		  mDirectoryHeader.ModTime = modtime.Right
 		  mDirectoryHeader.CommentLength = mArchiveComment.Size
@@ -187,7 +187,7 @@ Protected Class ZipArchive
 		  bs.Write(footer.StringValue(True))
 		  bs.Flush
 		  bs.Position = 0
-		  Return New zlib.ZipArchive(bs, CompressionLevel)
+		  Return New ZipArchive(bs, CompressionLevel)
 		  
 		End Function
 	#tag EndMethod
@@ -292,7 +292,7 @@ Protected Class ZipArchive
 		        Dim offset As UInt64 = mArchiveStream.Position - p
 		        Dim sz As Integer = Min(mCurrentFile.CompressedSize - offset, CHUNK_SIZE)
 		        Dim data As MemoryBlock = mZipStream.Read(sz)
-		        If ValidateChecksums Then mCurrentCRC = zlib.CRC32(data, mCurrentCRC, data.Size)
+		        If ValidateChecksums Then mCurrentCRC = CRC32(data, mCurrentCRC, data.Size)
 		        ExtractTo.Write(data)
 		      Loop
 		      If ValidateChecksums And Not (mCurrentCRC = mCurrentFile.CRC32) Then
@@ -306,7 +306,7 @@ Protected Class ZipArchive
 		  Else
 		    mArchiveStream.Position = mArchiveStream.Position + mCurrentFile.CompressedSize
 		  End If
-		  If ValidateChecksums Then mRunningCRC = zlib.CRC32Combine(mRunningCRC, mCurrentCRC, mCurrentFile.UncompressedSize)
+		  If ValidateChecksums Then mRunningCRC = CRC32Combine(mRunningCRC, mCurrentCRC, mCurrentFile.UncompressedSize)
 		  
 		  ' read the next entry header
 		  If mArchiveStream.Position >= mDirectoryHeaderOffset Then
@@ -342,11 +342,11 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		 Shared Function Open(ZipFile As FolderItem, Readwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As zlib.ZipArchive
 		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile, Readwrite)
-		  If bs <> Nil Then 
-		    If Readwrite Then 
-		      Return New zlib.ZipArchive(bs, CompressionLevel)
+		  If bs <> Nil Then
+		    If Readwrite Then
+		      Return New ZipArchive(bs, CompressionLevel)
 		    Else
-		      Return New zlib.ZipArchive(bs)
+		      Return New ZipArchive(bs)
 		    End If
 		  End If
 		End Function

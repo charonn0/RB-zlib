@@ -37,7 +37,7 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If IsOpen Then mLastError = zlib.inflateEnd(zstruct)
+		  If IsOpen Then mLastError = inflateEnd(zstruct)
 		  zstruct.zfree = Nil
 		End Sub
 	#tag EndMethod
@@ -100,7 +100,7 @@ Inherits FlateEngine
 		      ' provide more output space
 		      zstruct.next_out = outbuff
 		      zstruct.avail_out = outbuff.Size
-		      mLastError = zlib.inflate(zstruct, Z_NO_FLUSH)
+		      mLastError = inflate(zstruct, Z_NO_FLUSH)
 		      ' consume any output
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
 		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))

@@ -31,15 +31,15 @@ Protected Module zlib
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  
 		  If DataSize = -1 Then DataSize = Data.Size
-		  Dim OutSize As UInt32 = zlib.compressBound(DataSize)
+		  Dim OutSize As UInt32 = compressBound(DataSize)
 		  Dim OutBuffer As New MemoryBlock(OutSize)
 		  Dim err As Integer
 		  
 		  Do
 		    If CompressionLevel = Z_DEFAULT_COMPRESSION Then
-		      err = zlib._compress(OutBuffer, OutSize, Data, DataSize)
+		      err = _compress(OutBuffer, OutSize, Data, DataSize)
 		    Else
-		      err = zlib._compress2(OutBuffer, OutSize, Data, DataSize, CompressionLevel)
+		      err = _compress2(OutBuffer, OutSize, Data, DataSize, CompressionLevel)
 		    End If
 		    Select Case err
 		    Case Z_STREAM_ERROR
@@ -953,7 +953,7 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a TAR file to the ExtractTo directory
-		  Dim tar As TapeArchive = zlib.TapeArchive.Open(TarFile)
+		  Dim tar As TapeArchive = TapeArchive.Open(TarFile)
 		  Dim bs As BinaryStream
 		  Dim fs() As FolderItem
 		  Do
@@ -1005,7 +1005,7 @@ Protected Module zlib
 		  Do
 		    OutputBuffer = New MemoryBlock(ExpandedSize)
 		    OutSize = OutputBuffer.Size
-		    err = zlib._uncompress(OutputBuffer, OutSize, Data, DataSize)
+		    err = _uncompress(OutputBuffer, OutSize, Data, DataSize)
 		    ExpandedSize = ExpandedSize * 2
 		    Select Case err
 		    Case Z_MEM_ERROR
@@ -1025,7 +1025,7 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function Version() As String
 		  If Not zlib.IsAvailable Then Return ""
-		  Dim mb As MemoryBlock = zlib.zlibVersion
+		  Dim mb As MemoryBlock = zlibVersion
 		  Return mb.CString(0)
 		End Function
 	#tag EndMethod
@@ -1033,11 +1033,11 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
 		  ' Creates/appends a TAR file with the ToArchive FolderItems
-		  Dim tar As zlib.TapeArchive
+		  Dim tar As TapeArchive
 		  If OutputFile.Exists Then
-		    tar = zlib.TapeArchive.Open(OutputFile)
+		    tar = TapeArchive.Open(OutputFile)
 		  Else
-		    tar = zlib.TapeArchive.Create(OutputFile)
+		    tar = TapeArchive.Create(OutputFile)
 		  End If
 		  For i As Integer = 0 To UBound(ToArchive)
 		    If Not tar.AppendFile(ToArchive(i)) Then Return False
@@ -1052,11 +1052,11 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function WriteZip(RelativeRoot As FolderItem = Nil, ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
 		  ' Creates/appends a Zip file with the ToArchive FolderItems
-		  Dim zip As zlib.ZipArchive
+		  Dim zip As ZipArchive
 		  If OutputFile.Exists Then
-		    zip = zlib.ZipArchive.Open(OutputFile, True)
+		    zip = ZipArchive.Open(OutputFile, True)
 		  Else
-		    zip = zlib.ZipArchive.Create(OutputFile)
+		    zip = ZipArchive.Create(OutputFile)
 		  End If
 		  For i As Integer = 0 To UBound(ToArchive)
 		    Dim item As FolderItem = ToArchive(i)
