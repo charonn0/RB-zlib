@@ -10,17 +10,17 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
-		  ' Construct a new Deflater instance using the specified compression options. 
+		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, Encoding As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		  ' Construct a new Deflater instance using the specified compression options.
 		  ' If the deflate engine could not be initialized an exception will be raised.
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
 		  Super.Constructor()
 		  
-		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
+		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or Encoding <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
 		    ' Open the compressed stream using custom options
-		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, WindowBits, MemoryLevel, CompressionStrategy, zlib.Version, zstruct.Size)
+		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, zlib.Version, zstruct.Size)
 		    
 		  Else
 		    ' process zlib-wrapped deflate data

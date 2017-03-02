@@ -349,7 +349,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateInit2_ Lib zlib1 (ByRef Stream As z_stream, CompressionLevel As Integer, CompressionMethod As Integer, WindowBits As Integer, MemLevel As Integer, Strategy As Integer, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function deflateInit2_ Lib zlib1 (ByRef Stream As z_stream, CompressionLevel As Integer, CompressionMethod As Integer, Encoding As Integer, MemLevel As Integer, Strategy As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -810,7 +810,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateInit2_ Lib zlib1 (ByRef Stream As z_stream, WindowBits As Integer, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function inflateInit2_ Lib zlib1 (ByRef Stream As z_stream, Encoding As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -826,7 +826,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateReset2 Lib zlib1 (ByRef Stream As z_stream, WindowBits As Integer) As Integer
+		Private Soft Declare Function inflateReset2 Lib zlib1 (ByRef Stream As z_stream, Encoding As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
