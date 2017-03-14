@@ -66,14 +66,6 @@ Private Class FlateEngine
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mLevel As Integer = Z_DEFAULT_COMPRESSION
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mStrategy As Integer = Z_DEFAULT_STRATEGY
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
 		Protected zstruct As z_stream
 	#tag EndProperty
 
