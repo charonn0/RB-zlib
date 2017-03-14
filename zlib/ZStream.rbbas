@@ -99,11 +99,11 @@ Implements zlib.CompressedStream
 		  ' Create a compressed stream from two endpoints. Writing to the stream writes compressed bytes to
 		  ' the OutputStream object; reading from the stream decompresses bytes from the InputStream object.
 		  
-		  Dim ret As zlib.ZStream = Create(OutputStream, CompressionLevel, CompressionStrategy, Encoding, MemoryLevel)
-		  If ret = Nil Then Return Nil
-		  ret.mSource = InputStream
-		  ret.mInflater = New Inflater(Encoding)
-		  Return ret
+		  Dim z As zlib.ZStream = Create(OutputStream, CompressionLevel, CompressionStrategy, Encoding, MemoryLevel)
+		  If z = Nil Then Return Nil
+		  z.mSource = InputStream
+		  z.mInflater = New Inflater(Encoding)
+		  Return z
 		  
 		End Function
 	#tag EndMethod
@@ -314,6 +314,13 @@ Implements zlib.CompressedStream
 		  ret.Close
 		  Return data
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Reset()
+		  If mDeflater <> Nil Then mDeflater.Reset
+		  If mInflater <> Nil Then mInflater.Reset
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
