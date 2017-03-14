@@ -392,11 +392,8 @@ Implements zlib.CompressedStream
 		#tag EndGetter
 		#tag Setter
 			Set
-			  If mDeflater <> Nil Then
-			    mDeflater.Dictionary = value
-			  ElseIf mInflater <> Nil Then
-			    mInflater.Dictionary = value
-			  End If
+			  If mDeflater <> Nil Then mDeflater.Dictionary = value
+			  If mInflater <> Nil Then mInflater.Dictionary = value
 			End Set
 		#tag EndSetter
 		Dictionary As MemoryBlock
@@ -447,8 +444,12 @@ Implements zlib.CompressedStream
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  If mDeflater = Nil Then Return 0.0
-			  return (mDeflater.Total_Out * 100 / mDeflater.Total_In)
+			  If mDeflater <> Nil Then
+			    Return (mDeflater.Total_Out * 100 / mDeflater.Total_In)
+			  ElseIf mInflater <> Nil Then
+			    Return (mInflater.Total_In * 100 / mInflater.Total_Out)
+			  End If
+			  Return 0.0
 			End Get
 		#tag EndGetter
 		Ratio As Single
