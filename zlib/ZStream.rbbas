@@ -253,10 +253,14 @@ Implements zlib.CompressedStream
 		  If mInflater = Nil Then Raise New IOException
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
+		  Dim prevmode As Boolean = mBufferedReading
+		  If prevmode Then ret.Write(mReadBuffer)
+		  Me.BufferedReading = False
 		  Do Until Me.EOF
 		    ret.Write(Me.Read(CHUNK_SIZE, encoding))
 		  Loop
 		  ret.Close
+		  Me.BufferedReading = prevmode
 		  Return data
 		End Function
 	#tag EndMethod
