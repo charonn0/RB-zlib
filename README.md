@@ -13,7 +13,7 @@
 ## Getting started
 This project provides several different ways to use zlib. 
 
-## #Utility methods
+### Utility methods
 The easiest way to use this project are the utility methods in the zlib module: 
 
 * [**`Deflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate)
@@ -35,7 +35,7 @@ where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements t
 
 Additional optional arguments may be passed, to control the compression level, strategy, dictionary, and encoding. For example, `GZip` and `GUnZip` are just wrappers around `Deflate` and `Inflate` with options that specify the gzip format.
 
-## #ZStream class
+### ZStream class
 The second way to use zlib is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike, and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
 
 Instances of `ZStream` can be created from MemoryBlocks, FolderItems, and objects that implement the `Readable` and/or `Writeable` interfaces. For example, creating an in-memory compression stream from a zero-length MemoryBlock and writing a string to it:
@@ -53,7 +53,7 @@ The string will be processed through the compressor and written to the `output` 
   MsgBox(z.ReadAll) ' read the decompressed string
 ```
 
-## #Inflater and Deflater classes
+### Inflater and Deflater classes
 The third and final way to use this project is through the [Inflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater) and [Deflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater) classes. These classes provide a low-level wrapper to the zlib API. All compression and decompression done using the `ZStream` class or the utility methods is ultimately carried out by an instance of `Deflater` and `Inflater`, respectively.
 
 ## More examples
@@ -115,13 +115,35 @@ This example performs an HTTP request that asks for compression, and decompresse
   End If
 ```
 
+This example performs a hand-rolled HTTP request using a TCPSocket, and demonstrates how the ZStream can be used with a socket:
+
+```vbnet
+  Static CRLF As String = EndOfLine.Windows
+  Dim sock As New TCPSocket
+  sock.Address = "www.example.com"
+  sock.Port = 80
+  sock.Connect()
+  Do Until sock.IsConnected
+    sock.Poll
+  Loop Until sock.LastErrorCode <> 0
+  sock.Write("GET / HTTP/1.0" + CRLF + "Accept-Encoding: gzip" + CRLF + "Connection: close" + CRLF + "Host: www.example.com" + CRLF + CRLF)
+  Do
+    sock.Poll
+  Loop Until Not sock.IsConnected
+  
+  Dim headers As String = sock.Read(InStrB(sock.Lookahead, CRLF + CRLF) + 3)
+  Dim z As zlib.ZStream = zlib.ZStream.Open(sock)
+  Dim webpage As MemoryBlock = z.ReadAll ' read/decompress from the socket
+  z.Close
+```
+
 ## How to incorporate zlib into your Realbasic/Xojo project
-## #Import the `zlib` module
+### Import the `zlib` module
 1. Download the RB-zlib project either in [ZIP archive format](https://github.com/charonn0/RB-zlib/archive/master.zip) or by cloning the repository with your Git client.
 2. Open the RB-zlib project in REALstudio or Xojo. Open your project in a separate window.
 3. Copy the `zlib` module into your project and save.
 
-## #Ensure the zlib shared library is installed
+### Ensure the zlib shared library is installed
 zlib is installed by default on most Unix-like operating systems, including OS X and most Linux distributions. 
 
 Windows does not have it installed by default, you will need to ship the DLL with your application. You can use pre-built DLL available [here](http://zlib.net/zlib128-dll.zip) (Win32x86), or you can [build them yourself from source](http://zlib.net/zlib-1.2.8.tar.gz). 
