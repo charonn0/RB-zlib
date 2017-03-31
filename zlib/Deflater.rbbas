@@ -119,8 +119,6 @@ Inherits FlateEngine
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  If IsOpen Then mLastError = deflateEnd(zstruct)
-		  zstruct.zfree = Nil
-		  
 		End Sub
 	#tag EndMethod
 

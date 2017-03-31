@@ -32,6 +32,13 @@ Private Class FlateEngine
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub Destructor()
+		  zstruct.zfree = Nil
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function IsOpen() As Boolean
 		  Return zstruct.zfree <> Nil
