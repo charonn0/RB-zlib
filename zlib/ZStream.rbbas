@@ -61,7 +61,7 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h1
 		Protected Sub Constructor(Engine As zlib.Deflater, Destination As Writeable)
-		  ' Construct a compression stream using the Engine and Destination paramters
+		  ' Construct a compression stream using the Engine and Destination parameters
 		  mDeflater = Engine
 		  mDestination = Destination
 		  
@@ -70,7 +70,7 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h1
 		Protected Sub Constructor(Engine As zlib.Inflater, Source As Readable)
-		  ' Construct a decompression stream using the Engine and Source paramters
+		  ' Construct a decompression stream using the Engine and Source parameters
 		  mInflater = Engine
 		  mSource = Source
 		  
