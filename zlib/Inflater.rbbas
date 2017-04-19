@@ -133,7 +133,7 @@ Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Sub Reset(Encoding As Integer = 0)
 		  ' Reinitializes the decompressor but does not free and reallocate all the internal decompression state.
-		  ' The stream will keep the any attributes that may have been set by the constructor.
+		  ' The stream will keep the attributes that may have been set by the constructor.
 		  
 		  If Not IsOpen Then Return
 		  If Encoding = 0 Then
