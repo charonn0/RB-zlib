@@ -1,10 +1,10 @@
 #tag Class
 Protected Class GZStream
-Implements  zlib.CompressedStream
+Implements zlib.CompressedStream
 	#tag Method, Flags = &h0
 		Sub ClearError()
 		  ' Clears the last error and EOF
-		  zlib.gzclearerr(gzFile)
+		  gzclearerr(gzFile)
 		End Sub
 	#tag EndMethod
 
@@ -12,7 +12,7 @@ Implements  zlib.CompressedStream
 		Sub Close()
 		  // Part of the zlib.CompressedStream interface.
 		  If gzFile <> Nil Then
-		    mLastError = zlib.gzclose(gzFile)
+		    mLastError = gzclose(gzFile)
 		    If mLastError = Z_ERRNO Then mLastError = get_errno()
 		  End If
 		  gzFile = Nil
@@ -56,7 +56,7 @@ Implements  zlib.CompressedStream
 	#tag Method, Flags = &h0
 		Function EOF() As Boolean
 		  // Part of the Readable interface.
-		  If gzFile <> Nil Then Return zlib.gzeof(gzFile)
+		  If gzFile <> Nil Then Return gzeof(gzFile)
 		End Function
 	#tag EndMethod
 
@@ -91,21 +91,21 @@ Implements  zlib.CompressedStream
 		Function Flush(Flushing As Integer) As Boolean
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
-		  mLastError = zlib.gzflush(gzFile, Flushing)
+		  mLastError = gzflush(gzFile, Flushing)
 		  Return mLastError = Z_OK
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Sub gzError()
-		  If gzFile <> Nil Then mLastMsg = zlib._gzerror(gzFile, mLastError)
+		  If gzFile <> Nil Then mLastMsg = _gzerror(gzFile, mLastError)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Shared Function gzOpen(GzipFile As FolderItem, Mode As String) As zlib.GZStream
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
-		  Dim strm As Ptr = zlib.gzOpen(GzipFile.AbsolutePath, mode)
+		  Dim strm As Ptr = gzOpen(GzipFile.AbsolutePath, mode)
 		  If strm <> Nil Then
 		    Dim s As New zlib.GZStream(strm)
 		    s.mIsWriteable = (mode <> "rb")
@@ -147,7 +147,7 @@ Implements  zlib.CompressedStream
 		  If mIsWriteable Then Raise New IOException ' opened for writing!
 		  If gzFile = Nil Then Raise New NilObjectException
 		  Dim mb As New MemoryBlock(Count)
-		  Dim red As Integer = zlib.gzread(gzFile, mb, mb.Size)
+		  Dim red As Integer = gzread(gzFile, mb, mb.Size)
 		  gzError() ' set LastError
 		  If red > 0 Then
 		    Return DefineEncoding(mb.StringValue(0, red), encoding)
@@ -229,7 +229,7 @@ Implements  zlib.CompressedStream
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
 		  Dim mb As MemoryBlock = text
-		  If zlib.gzwrite(gzFile, mb, mb.Size) <> text.LenB Then
+		  If gzwrite(gzFile, mb, mb.Size) <> text.LenB Then
 		    gzError() ' set LastError
 		    Raise New zlibException(mLastError)
 		  Else
@@ -283,7 +283,7 @@ Implements  zlib.CompressedStream
 			Set
 			  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 			  If gzFile = Nil Then Raise New NilObjectException
-			  mLastError = zlib.gzsetparams(gzFile, value, mStrategy)
+			  mLastError = gzsetparams(gzFile, value, mStrategy)
 			  If mLastError = Z_OK Then
 			    mLevel = value
 			  Else
@@ -343,7 +343,7 @@ Implements  zlib.CompressedStream
 		#tag Setter
 			Set
 			  If Not mIsWriteable Or gzFile = Nil Then Raise New IOException
-			  mLastError = zlib.gzsetparams(gzFile, mLevel, value)
+			  mLastError = gzsetparams(gzFile, mLevel, value)
 			  If mLastError = Z_OK Then
 			    mStrategy = value
 			  Else

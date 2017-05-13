@@ -18,6 +18,27 @@ Private Class FlateEngine
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Sub Constructor()
+		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  
+		  zstruct.zalloc = Nil
+		  zstruct.zfree = Nil
+		  zstruct.opaque = Nil
+		  zstruct.avail_in = 0
+		  zstruct.next_in = Nil
+		  zstruct.avail_out = 0
+		  zstruct.next_out = Nil
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Destructor()
+		  zstruct.zfree = Nil
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function IsOpen() As Boolean
 		  Return zstruct.zfree <> Nil
@@ -49,14 +70,6 @@ Private Class FlateEngine
 
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mLevel As Integer = Z_DEFAULT_COMPRESSION
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mStrategy As Integer = Z_DEFAULT_STRATEGY
 	#tag EndProperty
 
 	#tag Property, Flags = &h1

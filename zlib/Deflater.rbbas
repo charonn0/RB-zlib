@@ -10,19 +10,17 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, WindowBits As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
-		  ' Construct a new Deflater instance using the specified compression options. 
+		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, Encoding As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		  ' Construct a new Deflater instance using the specified compression options.
 		  ' If the deflate engine could not be initialized an exception will be raised.
 		  
-		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  // Calling the overridden superclass constructor.
+		  // Constructor() -- From zlib.FlateEngine
+		  Super.Constructor()
 		  
-		  zstruct.zalloc = Nil
-		  zstruct.zfree = Nil
-		  zstruct.opaque = Nil
-		  
-		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or WindowBits <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
+		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or Encoding <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
 		    ' Open the compressed stream using custom options
-		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, WindowBits, MemoryLevel, CompressionStrategy, zlib.Version, zstruct.Size)
+		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, zlib.Version, zstruct.Size)
 		    
 		  Else
 		    ' process zlib-wrapped deflate data
@@ -40,7 +38,9 @@ Inherits FlateEngine
 		Sub Constructor(CopyStream As zlib.Deflater)
 		  ' Constructs a Deflater instance by duplicating the internal compression state of the CopyStream
 		  
-		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  // Calling the overridden superclass constructor.
+		  // Constructor() -- From zlib.FlateEngine
+		  Super.Constructor()
 		  
 		  mLastError = deflateCopy(zstruct, CopyStream.zstruct)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
@@ -87,7 +87,10 @@ Inherits FlateEngine
 		  ' The inner loop provides more output space, calls deflate, and writes any output to WriteTo
 		  Do
 		    Dim chunk As MemoryBlock
-		    If ReadFrom <> Nil Then chunk = ReadFrom.Read(CHUNK_SIZE) Else chunk = ""
+		    Dim sz As Integer
+		    If ReadCount > -1 Then sz = Min(ReadCount, CHUNK_SIZE) Else sz = CHUNK_SIZE
+		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
+		    
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
 		    count = count + chunk.Size
@@ -96,7 +99,7 @@ Inherits FlateEngine
 		      ' provide more output space
 		      zstruct.next_out = outbuff
 		      zstruct.avail_out = outbuff.Size
-		      mLastError = zlib.deflate(zstruct, Flushing)
+		      mLastError = deflate(zstruct, Flushing)
 		      If mLastError = Z_STREAM_ERROR Then Return False ' the stream state is inconsistent!!!
 		      ' consume any output
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
@@ -115,9 +118,7 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If IsOpen Then mLastError = zlib.deflateEnd(zstruct)
-		  zstruct.zfree = Nil
-		  
+		  If IsOpen Then mLastError = deflateEnd(zstruct)
 		End Sub
 	#tag EndMethod
 
@@ -218,7 +219,7 @@ Inherits FlateEngine
 		#tag Setter
 			Set
 			  ' Dynamically update the compression level. If the compression level is changed, the input available so
-			  ' far is compressed with the old level (and may be flushed); the new level will take effect only at the 
+			  ' far is compressed with the old level (and may be flushed); the new level will take effect only at the
 			  ' next call to deflate().
 			  
 			  If Not IsOpen Then Raise New NilObjectException
@@ -233,6 +234,14 @@ Inherits FlateEngine
 		#tag EndSetter
 		Level As Integer
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h1
+		Protected mLevel As Integer = Z_DEFAULT_COMPRESSION
+	#tag EndProperty
+
+	#tag Property, Flags = &h1
+		Protected mStrategy As Integer = Z_DEFAULT_STRATEGY
+	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter

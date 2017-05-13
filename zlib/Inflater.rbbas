@@ -2,22 +2,19 @@
 Protected Class Inflater
 Inherits FlateEngine
 	#tag Method, Flags = &h0
-		Sub Constructor(WindowBits As Integer = zlib.DEFLATE_ENCODING)
-		  ' Construct a new Inflater instance using the specified WindowBits. WindowBits control, 
+		Sub Constructor(Encoding As Integer = zlib.DEFLATE_ENCODING)
+		  ' Construct a new Inflater instance using the specified Encoding. Encoding control,
 		  ' among other things, the type of compression being used. (For GZip pass GZIP_ENCODING)
 		  ' If the inflate engine could not be initialized an exception will be raised.
 		  
-		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  // Calling the overridden superclass constructor.
+		  // Constructor() -- From zlib.FlateEngine
+		  Super.Constructor()
 		  
-		  zstruct.zalloc = Nil
-		  zstruct.zfree = Nil
-		  zstruct.opaque = Nil
-		  zstruct.avail_in = 0
-		  zstruct.next_in = Nil
-		  If WindowBits = zlib.DEFLATE_ENCODING Then
+		  If Encoding = DEFLATE_ENCODING Then
 		    mLastError = inflateInit_(zstruct, zlib.Version, zstruct.Size)
 		  Else
-		    mLastError = inflateInit2_(zstruct, WindowBits, zlib.Version, zstruct.Size)
+		    mLastError = inflateInit2_(zstruct, Encoding, zlib.Version, zstruct.Size)
 		  End If
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		End Sub
@@ -28,7 +25,10 @@ Inherits FlateEngine
 		  ' Construct a new Inflater instance using the specified compression options.
 		  ' If the inflate engine could not be initialized an exception will be raised.
 		  
-		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
+		  // Calling the overridden superclass constructor.
+		  // Constructor() -- From zlib.FlateEngine
+		  Super.Constructor()
+		  
 		  mLastError = inflateCopy(zstruct, CopyStream.zstruct)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mDictionary = CopyStream.mDictionary
@@ -37,8 +37,7 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If IsOpen Then mLastError = zlib.inflateEnd(zstruct)
-		  zstruct.zfree = Nil
+		  If IsOpen Then mLastError = inflateEnd(zstruct)
 		End Sub
 	#tag EndMethod
 
@@ -92,7 +91,7 @@ Inherits FlateEngine
 		    Dim chunk As MemoryBlock
 		    Dim sz As Integer
 		    If ReadCount > -1 Then sz = Min(ReadCount, CHUNK_SIZE) Else sz = CHUNK_SIZE
-		    If ReadFrom <> Nil Then chunk = ReadFrom.Read(sz) Else chunk = ""
+		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
 		    count = count + chunk.Size
@@ -100,7 +99,7 @@ Inherits FlateEngine
 		      ' provide more output space
 		      zstruct.next_out = outbuff
 		      zstruct.avail_out = outbuff.Size
-		      mLastError = zlib.inflate(zstruct, Z_NO_FLUSH)
+		      mLastError = inflate(zstruct, Z_NO_FLUSH)
 		      ' consume any output
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
 		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
@@ -132,15 +131,15 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Reset(WindowBits As Integer = 0)
+		Sub Reset(Encoding As Integer = 0)
 		  ' Reinitializes the decompressor but does not free and reallocate all the internal decompression state.
-		  ' The stream will keep the any attributes that may have been set by the constructor.
+		  ' The stream will keep the attributes that may have been set by the constructor.
 		  
 		  If Not IsOpen Then Return
-		  If WindowBits = 0 Then
+		  If Encoding = 0 Then
 		    mLastError = inflateReset(zstruct)
 		  Else
-		    mLastError = inflateReset2(zstruct, WindowBits)
+		    mLastError = inflateReset2(zstruct, Encoding)
 		  End If
 		End Sub
 	#tag EndMethod
