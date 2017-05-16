@@ -1064,6 +1064,7 @@ Protected Module zlib
 		    If RelativeRoot <> Nil Then zippath = CreateTree(RelativeRoot, item) Else zippath = item.Name
 		    Dim bs As BinaryStream
 		    If Not item.Directory Then bs = BinaryStream.Open(item)
+		    If zippath = "" Then Continue
 		    If Not zip.AppendFile(zippath, bs) Then Return False
 		  Next
 		  zip.Close
