@@ -62,7 +62,9 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CompressAsZip(Extends Root As FolderItem) As FolderItem
+		Function CompressAsZip(Extends Root As FolderItem, Optional OutputFile As FolderItem) As FolderItem
+		  ' Zip the Root directory
+		  
 		  Dim dirs() As FolderItem = Array(Root)
 		  Dim files() As FolderItem
 		  Do Until UBound(dirs) = -1
@@ -75,12 +77,12 @@ Protected Module zlib
 		      Next
 		    End If
 		  Loop
-		  Dim out As FolderItem = Root.Parent.Child(Root.Name + ".zip")
-		  If Not WriteZip(Root, files, out) Then 
-		    If out <> Nil Then out.Delete
-		    out = Nil
+		  If OutputFile = Nil Then OutputFile = Root.Parent.Child(Root.Name + ".zip")
+		  If Not WriteZip(Root, files, OutputFile) Then
+		    If OutputFile <> Nil Then OutputFile.Delete
+		    OutputFile = Nil
 		  End If
-		  Return out
+		  Return OutputFile
 		End Function
 	#tag EndMethod
 
