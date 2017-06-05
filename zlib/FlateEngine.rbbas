@@ -40,12 +40,6 @@ Private Class FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function IsOpen() As Boolean
-		  Return zstruct.zfree <> Nil
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function LastError() As Integer
 		  Return mLastError
 		End Function
@@ -63,6 +57,15 @@ Private Class FlateEngine
 		End Function
 	#tag EndMethod
 
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return zstruct.zfree <> Nil
+			End Get
+		#tag EndGetter
+		IsOpen As Boolean
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
 		Protected mDictionary As MemoryBlock
