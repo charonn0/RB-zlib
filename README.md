@@ -115,7 +115,7 @@ This example performs an HTTP request that asks for compression, and decompresse
   End If
 ```
 
-This example performs a hand-rolled HTTP request using a TCPSocket, and demonstrates how the ZStream can be used with a socket:
+This example performs a hand-rolled HTTP request using a TCPSocket, and demonstrates how the ZStream can be used with any object that implements the `Readable` and/or `Writeable` interfaces:
 
 ```vbnet
   Static CRLF As String = EndOfLine.Windows
