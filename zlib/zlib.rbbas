@@ -23,6 +23,16 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function Adler32Combine(Adler1 As UInt32, Adler2 As UInt32, Length2 As UInt32) As UInt32
+		  ' Combine Adler1 and Adler2, needing only then length of the data for Adler2
+		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Adler32Combine
+		  
+		  If Not zlib.IsAvailable Then Return 0
+		  Return _adler32_combine(Adler1, Adler2, Length2)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = - 1) As MemoryBlock
 		  ' Compress memory in one operation using deflate. If Data.Size is not known (-1) then specify the size as DataSize
 		  ' Use Uncompress to reverse.
@@ -1090,6 +1100,10 @@ Protected Module zlib
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function _adler32 Lib zlib1 Alias "adler32" (adler As UInt32, Buffer As Ptr, BufferLen As UInt32) As UInt32
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function _adler32_combine Lib zlib1 Alias "adler32_combine" (adler1 As UInt32, adler2 As UInt32, Length2 As Int32) As UInt32
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
