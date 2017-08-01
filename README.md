@@ -56,6 +56,20 @@ The string will be processed through the compressor and written to the `output` 
 ### Inflater and Deflater classes
 The third and final way to use this project is through the [Inflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater) and [Deflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater) classes. These classes provide a low-level wrapper to the zlib API. All compression and decompression done using the `ZStream` class or the utility methods is ultimately carried out by an instance of `Deflater` and `Inflater`, respectively.
 
+```vbnet
+  Dim d As New zlib.Deflater()
+  Dim data As MemoryBlock = d.Deflate("H")
+  data = data + d.Deflate("e")
+  data = data + d.Deflate("l")
+  data = data + d.Deflate("l")
+  data = data + d.Deflate("o")
+  data = data + d.Deflate("", zlib.Z_FINISH)
+  
+  Dim i As New zlib.Inflater()
+  data = i.Inflate(data)
+  MsgBox(data)
+```
+
 ## More examples
 This example compresses and decompresses a MemoryBlock using deflate compression:
 ```vbnet
