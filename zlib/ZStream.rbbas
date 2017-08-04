@@ -9,7 +9,12 @@ Implements zlib.CompressedStream
 		  ' determine whether there is pending output. After this method returns all calls to Read/Write 
 		  ' will raise an exception.
 		  
-		  If mDeflater <> Nil Then Me.Flush(Z_FINISH)
+		  If mDeflater <> Nil Then
+		    Try
+		      Me.Flush(Z_FINISH)
+		    Catch
+		    End Try
+		  End If
 		  mSource = Nil
 		  mDestination = Nil
 		  mDeflater = Nil
