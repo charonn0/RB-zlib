@@ -331,18 +331,14 @@ Protected Module zlib
 		  ' memory overhead.
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate
 		  
-		  Dim z As ZStream
-		  If Encoding = DEFLATE_ENCODING Then
-		    z = ZStream.Create(Destination, CompressionLevel)
-		  Else
-		    z = ZStream.Create(Destination, CompressionLevel, Z_DEFAULT_STRATEGY, Encoding)
-		  End If
+		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Z_DEFAULT_STRATEGY, Encoding)
 		  Try
 		    Do Until Source.EOF
 		      z.Write(Source.Read(CHUNK_SIZE))
 		    Loop
-		  Finally
 		    z.Close
+		  Catch
+		    Return False
 		  End Try
 		  Return True
 		End Function
@@ -782,14 +778,6 @@ Protected Module zlib
 		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate
 		  
-		  If Source IsA BinaryStream Then
-		    If Encoding = GZIP_ENCODING And Not BinaryStream(Source).IsGZipped Then 
-		      Encoding = Z_DETECT
-		    ElseIf Encoding <> DEFLATE_ENCODING And BinaryStream(Source).IsDeflated Then 
-		      Encoding = DEFLATE_ENCODING
-		    End If
-		  End If
-		  
 		  Dim z As ZStream = ZStream.Open(Source, Encoding)
 		  Try
 		    z.BufferedReading = False
@@ -798,8 +786,9 @@ Protected Module zlib
 		      Dim data As MemoryBlock = z.Read(CHUNK_SIZE)
 		      If data <> Nil And data.Size > 0 Then Destination.Write(Data)
 		    Loop
-		  Finally
 		    z.Close
+		  Catch
+		    Return False
 		  End Try
 		  Return True
 		End Function
