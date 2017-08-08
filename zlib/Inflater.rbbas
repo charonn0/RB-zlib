@@ -12,9 +12,9 @@ Inherits FlateEngine
 		  Super.Constructor()
 		  
 		  If Encoding = DEFLATE_ENCODING Then
-		    mLastError = inflateInit_(zstruct, zlib.Version, zstruct.Size)
+		    mLastError = inflateInit_(zstruct, "1.2.8" + Chr(0), zstruct.Size)
 		  Else
-		    mLastError = inflateInit2_(zstruct, Encoding, zlib.Version, zstruct.Size)
+		    mLastError = inflateInit2_(zstruct, Encoding, "1.2.8" + Chr(0), zstruct.Size)
 		  End If
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		End Sub
