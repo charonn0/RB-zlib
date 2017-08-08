@@ -145,11 +145,27 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function SyncToNextFlush() As Boolean
-		  ' Skips invalid compressed data until a possible full flush point can be found, or until all available input is skipped.
+		Function SyncToNextFlush(ReadFrom As Readable, MaxCount As Integer = -1) As Boolean
+		  ' Reads compressed bytes from ReadFrom until a possible deflate stream is detected. If a possible stream
+		  ' is detected then this method returns True and the Total_In property will reflect the point in the input
+		  ' where it was detected.
 		  
 		  If Not IsOpen Then Return False
-		  mLastError = inflateSync(zstruct)
+		  
+		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
+		  Dim count As Integer
+		  Do
+		    Dim chunk As MemoryBlock = ReadFrom.Read(CHUNK_SIZE)
+		    If chunk.Size = 0 Then Return False
+		    zstruct.avail_in = chunk.Size
+		    zstruct.next_in = chunk
+		    count = count + chunk.Size
+		    
+		    zstruct.next_out = outbuff
+		    zstruct.avail_out = outbuff.Size
+		    mLastError = inflateSync(zstruct)
+		  Loop Until mLastError <> Z_DATA_ERROR Or ReadFrom.EOF Or (MaxCount > -1 And count >= MaxCount)
+		  
 		  Return mLastError = Z_OK
 		End Function
 	#tag EndMethod

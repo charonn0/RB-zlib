@@ -345,6 +345,25 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function SyncToNextFlush(MaxCount As Integer = -1) As Boolean
+		  ' Reads compressed bytes from the input stream until a possible deflate stream is detected.
+		  
+		  If mInflater = Nil Or Not mSource IsA BinaryStream Or mBufferedReading Then Raise New IOException
+		  Dim seeker As New Inflater
+		  Dim bs As BinaryStream = BinaryStream(mSource)
+		  Dim currentpos As UInt64 = bs.Position
+		  If seeker.SyncToNextFlush(mSource, MaxCount) Then
+		    bs.Position = currentpos + seeker.Total_In
+		    Return True
+		  Else
+		    bs.Position = currentpos
+		    Return False
+		  End If
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Write(Data As String)
 		  // Part of the Writeable interface.
 		  ' Write Data to the compressed stream. 
