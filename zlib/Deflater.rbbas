@@ -20,11 +20,11 @@ Inherits FlateEngine
 		  
 		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or Encoding <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
 		    ' Open the compressed stream using custom options
-		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, zlib.Version, zstruct.Size)
+		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, "1.2.8" + Chr(0), zstruct.Size)
 		    
 		  Else
 		    ' process zlib-wrapped deflate data
-		    mLastError = deflateInit_(zstruct, CompressionLevel, zlib.Version, zstruct.Size)
+		    mLastError = deflateInit_(zstruct, CompressionLevel, "1.2.8" + Chr(0), zstruct.Size)
 		    
 		  End If
 		  
@@ -88,7 +88,7 @@ Inherits FlateEngine
 		  Do
 		    Dim chunk As MemoryBlock
 		    Dim sz As Integer
-		    If ReadCount > -1 Then sz = Min(ReadCount, CHUNK_SIZE) Else sz = CHUNK_SIZE
+		    If ReadCount > -1 Then sz = Min(ReadCount - count, CHUNK_SIZE) Else sz = CHUNK_SIZE
 		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
 		    
 		    zstruct.avail_in = chunk.Size
@@ -186,6 +186,15 @@ Inherits FlateEngine
 		End Function
 	#tag EndMethod
 
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return zstruct.data_type
+			End Get
+		#tag EndGetter
+		DataType As UInt32
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter

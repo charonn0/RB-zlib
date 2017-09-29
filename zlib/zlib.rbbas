@@ -23,6 +23,16 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function Adler32Combine(Adler1 As UInt32, Adler2 As UInt32, Length2 As UInt32) As UInt32
+		  ' Combine Adler1 and Adler2, needing only then length of the data for Adler2
+		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Adler32Combine
+		  
+		  If Not zlib.IsAvailable Then Return 0
+		  Return _adler32_combine(Adler1, Adler2, Length2)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = - 1) As MemoryBlock
 		  ' Compress memory in one operation using deflate. If Data.Size is not known (-1) then specify the size as DataSize
 		  ' Use Uncompress to reverse.
@@ -62,7 +72,9 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CompressAsZip(Extends Root As FolderItem) As FolderItem
+		Function CompressAsZip(Extends Root As FolderItem, Optional OutputFile As FolderItem) As FolderItem
+		  ' Zip the Root directory
+		  
 		  Dim dirs() As FolderItem = Array(Root)
 		  Dim files() As FolderItem
 		  Do Until UBound(dirs) = -1
@@ -75,12 +87,12 @@ Protected Module zlib
 		      Next
 		    End If
 		  Loop
-		  Dim out As FolderItem = Root.Parent.Child(Root.Name + ".zip")
-		  If Not WriteZip(Root, files, out) Then 
-		    If out <> Nil Then out.Delete
-		    out = Nil
+		  If OutputFile = Nil Then OutputFile = Root.Parent.Child(Root.Name + ".zip")
+		  If Not WriteZip(Root, files, OutputFile) Then
+		    If OutputFile <> Nil Then OutputFile.Delete
+		    OutputFile = Nil
 		  End If
-		  Return out
+		  Return OutputFile
 		End Function
 	#tag EndMethod
 
@@ -319,18 +331,14 @@ Protected Module zlib
 		  ' memory overhead.
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate
 		  
-		  Dim z As ZStream
-		  If Encoding = DEFLATE_ENCODING Then
-		    z = ZStream.Create(Destination, CompressionLevel)
-		  Else
-		    z = ZStream.Create(Destination, CompressionLevel, Z_DEFAULT_STRATEGY, Encoding)
-		  End If
+		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Z_DEFAULT_STRATEGY, Encoding)
 		  Try
 		    Do Until Source.EOF
 		      z.Write(Source.Read(CHUNK_SIZE))
 		    Loop
-		  Finally
 		    z.Close
+		  Catch
+		    Return False
 		  End Try
 		  Return True
 		End Function
@@ -770,14 +778,6 @@ Protected Module zlib
 		  ' Decompress the Source stream and write the output to the Destination stream. Reverses the Deflate method
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate
 		  
-		  If Source IsA BinaryStream Then
-		    If Encoding = GZIP_ENCODING And Not BinaryStream(Source).IsGZipped Then 
-		      Encoding = Z_DETECT
-		    ElseIf Encoding <> DEFLATE_ENCODING And BinaryStream(Source).IsDeflated Then 
-		      Encoding = DEFLATE_ENCODING
-		    End If
-		  End If
-		  
 		  Dim z As ZStream = ZStream.Open(Source, Encoding)
 		  Try
 		    z.BufferedReading = False
@@ -786,8 +786,9 @@ Protected Module zlib
 		      Dim data As MemoryBlock = z.Read(CHUNK_SIZE)
 		      If data <> Nil And data.Size > 0 Then Destination.Write(Data)
 		    Loop
-		  Finally
 		    z.Close
+		  Catch
+		    Return False
 		  End Try
 		  Return True
 		End Function
@@ -1064,6 +1065,7 @@ Protected Module zlib
 		    If RelativeRoot <> Nil Then zippath = CreateTree(RelativeRoot, item) Else zippath = item.Name
 		    Dim bs As BinaryStream
 		    If Not item.Directory Then bs = BinaryStream.Open(item)
+		    If zippath = "" Then Continue
 		    If Not zip.AppendFile(zippath, bs) Then Return False
 		  Next
 		  zip.Close
@@ -1090,6 +1092,10 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function _adler32_combine Lib zlib1 Alias "adler32_combine" (adler1 As UInt32, adler2 As UInt32, Length2 As Int32) As UInt32
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function _compress Lib zlib1 Alias "compress" (Output As Ptr, ByRef OutLen As UInt32, Source As Ptr, SourceLen As UInt32) As Integer
 	#tag EndExternalMethod
 
@@ -1112,6 +1118,31 @@ Protected Module zlib
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function _uncompress Lib zlib1 Alias "uncompress" (Output As Ptr, ByRef OutLen As UInt32, Source As Ptr, SourceLen As UInt32) As Integer
 	#tag EndExternalMethod
+
+
+	#tag Note, Name = Copying
+		RB-zlib (https://github.com/charonn0/RB-zlib)
+		
+		Copyright (c)2015-17 Andrew Lambert, all rights reserved.
+		
+		 Permission to use, copy, modify, and distribute this software for any purpose
+		 with or without fee is hereby granted, provided that the above copyright
+		 notice and this permission notice appear in all copies.
+		 
+		    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN
+		    NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+		    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+		    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+		    OR OTHER DEALINGS IN THE SOFTWARE.
+		 
+		 Except as contained in this notice, the name of a copyright holder shall not
+		 be used in advertising or otherwise to promote the sale, use or other dealings
+		 in this Software without prior written authorization of the copyright holder.
+		
+		
+	#tag EndNote
 
 
 	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"16384", Scope = Private
