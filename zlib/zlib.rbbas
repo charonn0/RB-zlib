@@ -991,6 +991,12 @@ Protected Module zlib
 		  
 		  Do Until zip.LastError <> 0
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
+		    Dim name As String = f.Name
+		    For Each char As String In Name.Split("")
+		      If reservedchars.IndexOf(char) > -1 Then name = ReplaceAll(name, char, "_")
+		    Next
+		    If reservednames.IndexOf(name) > -1 Then name = name + "_"
+		    f.Name = name
 		    Dim outstream As BinaryStream
 		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
 		    Call zip.MoveNext(outstream)
