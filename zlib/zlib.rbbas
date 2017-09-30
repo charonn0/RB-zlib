@@ -42,32 +42,34 @@ Protected Module zlib
 		  
 		  If DataSize = -1 Then DataSize = Data.Size
 		  Dim OutSize As UInt32 = compressBound(DataSize)
-		  Dim OutBuffer As New MemoryBlock(OutSize)
+		  Dim OutBuffer As MemoryBlock
 		  Dim err As Integer
 		  
 		  Do
+		    If OutBuffer <> Nil Then OutSize = OutSize * 2
+		    OutBuffer = New MemoryBlock(OutSize)
 		    If CompressionLevel = Z_DEFAULT_COMPRESSION Then
 		      err = _compress(OutBuffer, OutSize, Data, DataSize)
 		    Else
 		      err = _compress2(OutBuffer, OutSize, Data, DataSize, CompressionLevel)
 		    End If
-		    Select Case err
-		    Case Z_STREAM_ERROR
-		      Break ' CompressionLevel is invalid; using default
-		      Return Compress(Data, Z_DEFAULT_COMPRESSION, DataSize)
-		      
-		    Case Z_BUF_ERROR
-		      OutSize = OutSize * 2
-		      OutBuffer = New MemoryBlock(OutSize)
-		      
-		    Case Z_MEM_ERROR
-		      Raise New OutOfMemoryException
-		      
-		    End Select
 		  Loop Until err <> Z_BUF_ERROR
 		  
-		  If err <> Z_OK Then Raise New zlibException(err)
-		  Return OutBuffer.StringValue(0, OutSize)
+		  Select Case err
+		  Case Z_OK
+		    Return OutBuffer.StringValue(0, OutSize)
+		    
+		  Case Z_STREAM_ERROR
+		    Break ' CompressionLevel is invalid; using default
+		    Return Compress(Data, Z_DEFAULT_COMPRESSION, DataSize)
+		    
+		  Case Z_MEM_ERROR
+		    Raise New OutOfMemoryException
+		    
+		  Else
+		    Raise New zlibException(err)
+		    
+		  End Select
 		End Function
 	#tag EndMethod
 
@@ -1027,18 +1029,23 @@ Protected Module zlib
 		    OutSize = OutputBuffer.Size
 		    err = _uncompress(OutputBuffer, OutSize, Data, DataSize)
 		    ExpandedSize = ExpandedSize * 2
-		    Select Case err
-		    Case Z_MEM_ERROR
-		      Raise New OutOfMemoryException
-		      
-		    Case Z_DATA_ERROR
-		      Raise New UnsupportedFormatException
-		      
-		    End Select
 		  Loop Until err <> Z_BUF_ERROR
 		  
-		  If err <> Z_OK Then Raise New zlibException(err)
-		  Return OutputBuffer.StringValue(0, OutSize)
+		  Select Case err
+		  Case Z_OK
+		    Return OutputBuffer.StringValue(0, OutSize)
+		    
+		  Case Z_MEM_ERROR
+		    Raise New OutOfMemoryException
+		    
+		  Case Z_DATA_ERROR
+		    Raise New UnsupportedFormatException
+		    
+		  Else
+		    Raise New zlibException(err)
+		    
+		  End Select
+		  
 		End Function
 	#tag EndMethod
 
