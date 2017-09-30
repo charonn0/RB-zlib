@@ -976,6 +976,19 @@ Protected Module zlib
 		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
 		  Dim ret() As FolderItem
 		  Dim zip As New ZipArchive(bs)
+		  
+		  #If TargetWin32 Then
+		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
+		    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9")
+		    Static reservedchars() As String = Array("<", ">", ":", """", "/", "\", "|", "?", "*")
+		  #ElseIf TargetLinux Then
+		    Static reservednames() As String = Array(".", "..")
+		    Static reservedchars() As String = Array("/", Chr(0))
+		  #ElseIf TargetLinux Then
+		    Static reservednames() As String ' none
+		    Static reservedchars() As String = Array(":", Chr(0))
+		  #endif
+		  
 		  Do Until zip.LastError <> 0
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
 		    Dim outstream As BinaryStream
