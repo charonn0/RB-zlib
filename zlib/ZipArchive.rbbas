@@ -269,7 +269,6 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As FolderItem, Overwrite As Boolean) As Boolean
-		  ExtractTo = CreateTree(ExtractTo, mCurrentName)
 		  Dim bs As BinaryStream
 		  If Not ExtractTo.Directory Then bs = BinaryStream.Create(ExtractTo, Overwrite)
 		  Return Me.MoveNext(bs)
