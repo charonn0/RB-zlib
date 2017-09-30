@@ -168,14 +168,7 @@ Protected Module zlib
 		  Dim s() As String = Split(Path, "/")
 		  If UBound(s) = -1 Then Return Root
 		  
-		  Dim name As String = s(0)
-		  name = ReplaceAll(name, "?", "_")
-		  name = ReplaceAll(name, "<", "_")
-		  name = ReplaceAll(name, ">", "_")
-		  name = ReplaceAll(name, "\", "_")
-		  name = ReplaceAll(name, ":", "_")
-		  name = ReplaceAll(name, "*", "_")
-		  name = ReplaceAll(name, "|", "_")
+		  Dim name As String = NormalizeFilename(s(0))
 		  root = root.Child(name)
 		  s.Remove(0)
 		  If UBound(s) = -1 Then Return root
@@ -953,6 +946,36 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function NormalizeFilename(Name As String) As String
+		  'If InStr(Name, "aux") > 0 Then Break
+		  
+		  #If TargetWin32 Then
+		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
+		    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9")
+		    Static reservedchars() As String = Array("<", ">", ":", """", "/", "\", "|", "?", "*")
+		  #ElseIf TargetLinux Then
+		    Static reservednames() As String = Array(".", "..")
+		    Static reservedchars() As String = Array("/", Chr(0))
+		  #ElseIf TargetLinux Then
+		    Static reservednames() As String ' none
+		    Static reservedchars() As String = Array(":", Chr(0))
+		  #endif
+		  
+		  For Each char As String In Name.Split("")
+		    If reservedchars.IndexOf(char) > -1 Then name = ReplaceAll(name, char, "_")
+		  Next
+		  
+		  If reservednames.IndexOf(name) > -1 Then name = "_" + name
+		  #If TargetWin32 Then
+		    ' Windows doesn't like it even if the reserved name is used with an extension, e.g. 'aux.c' is illegal.
+		    If reservednames.IndexOf(NthField(name, ".", 1)) > -1 Then name = "_" + name
+		  #endif
+		  
+		  Return name
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a TAR file to the ExtractTo directory
@@ -979,26 +1002,8 @@ Protected Module zlib
 		  Dim ret() As FolderItem
 		  Dim zip As New ZipArchive(bs)
 		  
-		  #If TargetWin32 Then
-		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
-		    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9")
-		    Static reservedchars() As String = Array("<", ">", ":", """", "/", "\", "|", "?", "*")
-		  #ElseIf TargetLinux Then
-		    Static reservednames() As String = Array(".", "..")
-		    Static reservedchars() As String = Array("/", Chr(0))
-		  #ElseIf TargetLinux Then
-		    Static reservednames() As String ' none
-		    Static reservedchars() As String = Array(":", Chr(0))
-		  #endif
-		  
 		  Do Until zip.LastError <> 0
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
-		    Dim name As String = f.Name
-		    For Each char As String In Name.Split("")
-		      If reservedchars.IndexOf(char) > -1 Then name = ReplaceAll(name, char, "_")
-		    Next
-		    If reservednames.IndexOf(name) > -1 Then name = name + "_"
-		    f.Name = name
 		    Dim outstream As BinaryStream
 		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
 		    Call zip.MoveNext(outstream)
