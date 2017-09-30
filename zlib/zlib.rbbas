@@ -946,6 +946,49 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
+		  //Checks the zip magic number. Returns True if the TargetFile is likely a zip archive
+		  
+		  Const FILE_SIGNATURE = &h04034b50
+		  
+		  If Not TargetFile.Exists Then Return False
+		  If TargetFile.Directory Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsZip As Boolean
+		  Try
+		    bs = BinaryStream.Open(TargetFile)
+		    bs.LittleEndian = True
+		    IsZip = (bs.ReadUInt32 = FILE_SIGNATURE)
+		  Catch
+		    IsZip = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsZip
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function ListZip(ZipFile As FolderItem) As String()
+		  ' Extracts a ZIP file to the ExtractTo directory
+		  
+		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		  Dim ret() As String
+		  Dim zip As New ZipArchive(bs)
+		  
+		  Do Until zip.LastError <> 0
+		    ret.Append(zip.CurrentName)
+		    Call zip.MoveNext(Nil)
+		  Loop
+		  zip.Close
+		  Return ret
+		  
+		Exception
+		  Return ret
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function NormalizeFilename(Name As String) As String
 		  'If InStr(Name, "aux") > 0 Then Break
