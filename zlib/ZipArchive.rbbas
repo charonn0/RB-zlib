@@ -90,13 +90,13 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h0
 		Sub Close()
-		  If mArchiveStream <> Nil Then
-		    mArchiveStream.Close
-		    mZipStream.Close
-		    mArchiveStream = Nil
-		    mIndex = -1
-		    mDirectoryHeaderOffset = 0
-		  End If
+		  If mArchiveStream <> Nil Then mArchiveStream.Close
+		  If mZipStream <> Nil Then mZipStream.Close
+		  mArchiveStream = Nil
+		  mZipStream = Nil
+		  mIndex = -1
+		  mDirectoryHeaderOffset = 0
+		  
 		End Sub
 	#tag EndMethod
 
