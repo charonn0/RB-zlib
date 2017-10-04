@@ -971,7 +971,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h1
 		Protected Function ListZip(ZipFile As FolderItem) As String()
-		  ' Extracts a ZIP file to the ExtractTo directory
+		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
 		  
 		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
 		  Dim ret() As String
