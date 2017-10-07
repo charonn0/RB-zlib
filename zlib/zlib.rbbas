@@ -973,9 +973,8 @@ Protected Module zlib
 		Protected Function ListZip(ZipFile As FolderItem) As String()
 		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
 		  
-		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
 		  Dim ret() As String
-		  Dim zip As New ZipArchive(bs)
 		  
 		  Do Until zip.LastError <> 0
 		    ret.Append(zip.CurrentName)
@@ -1041,9 +1040,9 @@ Protected Module zlib
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a ZIP file to the ExtractTo directory
 		  
-		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
 		  Dim ret() As FolderItem
-		  Dim zip As New ZipArchive(bs)
+		  
 		  
 		  Do Until zip.LastError <> 0
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
@@ -1214,8 +1213,6 @@ Protected Module zlib
 		 Except as contained in this notice, the name of a copyright holder shall not
 		 be used in advertising or otherwise to promote the sale, use or other dealings
 		 in this Software without prior written authorization of the copyright holder.
-		
-		
 	#tag EndNote
 
 
