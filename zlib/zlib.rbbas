@@ -996,10 +996,10 @@ Protected Module zlib
 		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
 		    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9")
 		    Static reservedchars() As String = Array("<", ">", ":", """", "/", "\", "|", "?", "*")
-		  #ElseIf TargetMacOS Then
+		  #ElseIf TargetLinux Then
 		    Static reservednames() As String = Array(".", "..")
 		    Static reservedchars() As String = Array("/", Chr(0))
-		  #ElseIf TargetLinux Then
+		  #ElseIf TargetMacOS Then
 		    Static reservednames() As String ' none
 		    Static reservedchars() As String = Array(":", Chr(0))
 		  #endif
