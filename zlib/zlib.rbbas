@@ -990,7 +990,8 @@ Protected Module zlib
 
 	#tag Method, Flags = &h21
 		Private Function NormalizeFilename(Name As String) As String
-		  'If InStr(Name, "aux") > 0 Then Break
+		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
+		  ' the rules of the target system.
 		  
 		  #If TargetWin32 Then
 		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
