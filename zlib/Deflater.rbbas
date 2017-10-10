@@ -31,6 +31,7 @@ Inherits FlateEngine
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mLevel = CompressionLevel
 		  mStrategy = CompressionStrategy
+		  mEncoding = Encoding
 		End Sub
 	#tag EndMethod
 
@@ -47,6 +48,7 @@ Inherits FlateEngine
 		  mLevel = CopyStream.Level
 		  mStrategy = CopyStream.Strategy
 		  mDictionary = CopyStream.mDictionary
+		  mEncoding = CopyStream.Encoding
 		End Sub
 	#tag EndMethod
 
@@ -222,6 +224,15 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return mEncoding
+			End Get
+		#tag EndGetter
+		Encoding As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  Return mLevel
 			End Get
 		#tag EndGetter
@@ -243,6 +254,10 @@ Inherits FlateEngine
 		#tag EndSetter
 		Level As Integer
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h1
+		Protected mEncoding As Integer
+	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected mLevel As Integer = Z_DEFAULT_COMPRESSION
