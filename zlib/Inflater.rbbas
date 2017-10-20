@@ -160,6 +160,15 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return zstruct.data_type
+			End Get
+		#tag EndGetter
+		DataType As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  ' Returns the sliding dictionary being maintained by inflate()
 			  
 			  If Not IsOpen Then Return Nil
