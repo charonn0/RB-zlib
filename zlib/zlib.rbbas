@@ -42,32 +42,34 @@ Protected Module zlib
 		  
 		  If DataSize = -1 Then DataSize = Data.Size
 		  Dim OutSize As UInt32 = compressBound(DataSize)
-		  Dim OutBuffer As New MemoryBlock(OutSize)
+		  Dim OutBuffer As MemoryBlock
 		  Dim err As Integer
 		  
 		  Do
+		    If OutBuffer <> Nil Then OutSize = OutSize * 2
+		    OutBuffer = New MemoryBlock(OutSize)
 		    If CompressionLevel = Z_DEFAULT_COMPRESSION Then
 		      err = _compress(OutBuffer, OutSize, Data, DataSize)
 		    Else
 		      err = _compress2(OutBuffer, OutSize, Data, DataSize, CompressionLevel)
 		    End If
-		    Select Case err
-		    Case Z_STREAM_ERROR
-		      Break ' CompressionLevel is invalid; using default
-		      Return Compress(Data, Z_DEFAULT_COMPRESSION, DataSize)
-		      
-		    Case Z_BUF_ERROR
-		      OutSize = OutSize * 2
-		      OutBuffer = New MemoryBlock(OutSize)
-		      
-		    Case Z_MEM_ERROR
-		      Raise New OutOfMemoryException
-		      
-		    End Select
 		  Loop Until err <> Z_BUF_ERROR
 		  
-		  If err <> Z_OK Then Raise New zlibException(err)
-		  Return OutBuffer.StringValue(0, OutSize)
+		  Select Case err
+		  Case Z_OK
+		    Return OutBuffer.StringValue(0, OutSize)
+		    
+		  Case Z_STREAM_ERROR
+		    Break ' CompressionLevel is invalid; using default
+		    Return Compress(Data, Z_DEFAULT_COMPRESSION, DataSize)
+		    
+		  Case Z_MEM_ERROR
+		    Raise New OutOfMemoryException
+		    
+		  Else
+		    Raise New zlibException(err)
+		    
+		  End Select
 		End Function
 	#tag EndMethod
 
@@ -166,14 +168,7 @@ Protected Module zlib
 		  Dim s() As String = Split(Path, "/")
 		  If UBound(s) = -1 Then Return Root
 		  
-		  Dim name As String = s(0)
-		  name = ReplaceAll(name, "?", "_")
-		  name = ReplaceAll(name, "<", "_")
-		  name = ReplaceAll(name, ">", "_")
-		  name = ReplaceAll(name, "\", "_")
-		  name = ReplaceAll(name, ":", "_")
-		  name = ReplaceAll(name, "*", "_")
-		  name = ReplaceAll(name, "|", "_")
+		  Dim name As String = NormalizeFilename(s(0))
 		  root = root.Child(name)
 		  s.Remove(0)
 		  If UBound(s) = -1 Then Return root
@@ -951,6 +946,79 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
+		  //Checks the zip magic number. Returns True if the TargetFile is likely a zip archive
+		  
+		  Const FILE_SIGNATURE = &h04034b50
+		  
+		  If Not TargetFile.Exists Then Return False
+		  If TargetFile.Directory Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsZip As Boolean
+		  Try
+		    bs = BinaryStream.Open(TargetFile)
+		    bs.LittleEndian = True
+		    IsZip = (bs.ReadUInt32 = FILE_SIGNATURE)
+		  Catch
+		    IsZip = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsZip
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function ListZip(ZipFile As FolderItem) As String()
+		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
+		  
+		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
+		  Dim ret() As String
+		  
+		  Do Until zip.LastError <> 0
+		    ret.Append(zip.CurrentName)
+		    Call zip.MoveNext(Nil)
+		  Loop
+		  zip.Close
+		  Return ret
+		  
+		Exception
+		  Return ret
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function NormalizeFilename(Name As String) As String
+		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
+		  ' the rules of the target system.
+		  
+		  #If TargetWin32 Then
+		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
+		    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9")
+		    Static reservedchars() As String = Array("<", ">", ":", """", "/", "\", "|", "?", "*")
+		  #ElseIf TargetLinux Then
+		    Static reservednames() As String = Array(".", "..")
+		    Static reservedchars() As String = Array("/", Chr(0))
+		  #ElseIf TargetMacOS Then
+		    Static reservednames() As String ' none
+		    Static reservedchars() As String = Array(":", Chr(0))
+		  #endif
+		  
+		  For Each char As String In Name.Split("")
+		    If reservedchars.IndexOf(char) > -1 Then name = ReplaceAll(name, char, "_")
+		  Next
+		  
+		  If reservednames.IndexOf(name) > -1 Then name = "_" + name
+		  #If TargetWin32 Then
+		    ' Windows doesn't like it even if the reserved name is used with an extension, e.g. 'aux.c' is illegal.
+		    If reservednames.IndexOf(NthField(name, ".", 1)) > -1 Then name = "_" + name
+		  #endif
+		  
+		  Return name
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a TAR file to the ExtractTo directory
@@ -973,9 +1041,10 @@ Protected Module zlib
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a ZIP file to the ExtractTo directory
 		  
-		  Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
 		  Dim ret() As FolderItem
-		  Dim zip As New ZipArchive(bs)
+		  
+		  
 		  Do Until zip.LastError <> 0
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
 		    Dim outstream As BinaryStream
@@ -1008,18 +1077,23 @@ Protected Module zlib
 		    OutSize = OutputBuffer.Size
 		    err = _uncompress(OutputBuffer, OutSize, Data, DataSize)
 		    ExpandedSize = ExpandedSize * 2
-		    Select Case err
-		    Case Z_MEM_ERROR
-		      Raise New OutOfMemoryException
-		      
-		    Case Z_DATA_ERROR
-		      Raise New UnsupportedFormatException
-		      
-		    End Select
 		  Loop Until err <> Z_BUF_ERROR
 		  
-		  If err <> Z_OK Then Raise New zlibException(err)
-		  Return OutputBuffer.StringValue(0, OutSize)
+		  Select Case err
+		  Case Z_OK
+		    Return OutputBuffer.StringValue(0, OutSize)
+		    
+		  Case Z_MEM_ERROR
+		    Raise New OutOfMemoryException
+		    
+		  Case Z_DATA_ERROR
+		    Raise New UnsupportedFormatException
+		    
+		  Else
+		    Raise New zlibException(err)
+		    
+		  End Select
+		  
 		End Function
 	#tag EndMethod
 
@@ -1140,8 +1214,6 @@ Protected Module zlib
 		 Except as contained in this notice, the name of a copyright holder shall not
 		 be used in advertising or otherwise to promote the sale, use or other dealings
 		 in this Software without prior written authorization of the copyright holder.
-		
-		
 	#tag EndNote
 
 

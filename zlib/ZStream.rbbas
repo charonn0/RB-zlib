@@ -442,6 +442,19 @@ Implements zlib.CompressedStream
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  If mDeflater <> Nil Then
+			    Return mDeflater.Encoding
+			  ElseIf mInflater <> Nil Then
+			    Return mInflater.Encoding
+			  End If
+			End Get
+		#tag EndGetter
+		Encoding As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  If mDeflater <> Nil Then Return mDeflater.Level
 			End Get
 		#tag EndGetter

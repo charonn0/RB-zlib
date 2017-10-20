@@ -17,6 +17,7 @@ Inherits FlateEngine
 		    mLastError = inflateInit2_(zstruct, Encoding, "1.2.8" + Chr(0), zstruct.Size)
 		  End If
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
+		  mEncoding = Encoding
 		End Sub
 	#tag EndMethod
 
@@ -32,6 +33,7 @@ Inherits FlateEngine
 		  mLastError = inflateCopy(zstruct, CopyStream.zstruct)
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mDictionary = CopyStream.mDictionary
+		  mEncoding = CopyStream.Encoding
 		End Sub
 	#tag EndMethod
 
@@ -90,7 +92,7 @@ Inherits FlateEngine
 		  Do
 		    Dim chunk As MemoryBlock
 		    Dim sz As Integer
-		    If ReadCount > -1 Then sz = Min(ReadCount, CHUNK_SIZE) Else sz = CHUNK_SIZE
+		    If ReadCount > -1 Then sz = Min(ReadCount - count, CHUNK_SIZE) Else sz = CHUNK_SIZE
 		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
@@ -174,6 +176,15 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return zstruct.data_type
+			End Get
+		#tag EndGetter
+		DataType As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  ' Returns the sliding dictionary being maintained by inflate()
 			  
 			  If Not IsOpen Then Return Nil
@@ -197,6 +208,19 @@ Inherits FlateEngine
 		#tag EndSetter
 		Dictionary As MemoryBlock
 	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mEncoding
+			End Get
+		#tag EndGetter
+		Encoding As Integer
+	#tag EndComputedProperty
+
+	#tag Property, Flags = &h1
+		Protected mEncoding As Integer
+	#tag EndProperty
 
 
 	#tag ViewBehavior
