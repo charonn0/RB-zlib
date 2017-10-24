@@ -169,7 +169,8 @@ Inherits FlateEngine
 			  Dim mb As New MemoryBlock(sz)
 			  mLastError = inflateGetDictionary(zstruct, mb, sz)
 			  If mLastError <> Z_OK Then Return Nil
-			  Return mb.StringValue(0, sz)
+			  mb.Size = sz
+			  Return mb
 			End Get
 		#tag EndGetter
 		#tag Setter
