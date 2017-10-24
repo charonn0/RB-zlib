@@ -44,6 +44,7 @@ Protected Module zlib
 		  Dim OutSize As UInt32 = compressBound(DataSize)
 		  Dim OutBuffer As MemoryBlock
 		  Dim err As Integer
+		  If CompressionLevel < Z_NO_COMPRESSION Or CompressionLevel > Z_BEST_COMPRESSION Then CompressionLevel = Z_DEFAULT_COMPRESSION
 		  
 		  Do
 		    If OutBuffer <> Nil Then OutSize = OutSize * 2
@@ -55,21 +56,11 @@ Protected Module zlib
 		    End If
 		  Loop Until err <> Z_BUF_ERROR
 		  
-		  Select Case err
-		  Case Z_OK
-		    Return OutBuffer.StringValue(0, OutSize)
-		    
-		  Case Z_STREAM_ERROR
-		    Break ' CompressionLevel is invalid; using default
-		    Return Compress(Data, Z_DEFAULT_COMPRESSION, DataSize)
-		    
-		  Case Z_MEM_ERROR
-		    Raise New OutOfMemoryException
-		    
-		  Else
-		    Raise New zlibException(err)
-		    
-		  End Select
+		  If err <> Z_OK Then Raise New zlibException(err)
+		  
+		  OutBuffer.Size = OutSize
+		  Return OutBuffer
+		  
 		End Function
 	#tag EndMethod
 
@@ -1079,20 +1070,10 @@ Protected Module zlib
 		    ExpandedSize = ExpandedSize * 2
 		  Loop Until err <> Z_BUF_ERROR
 		  
-		  Select Case err
-		  Case Z_OK
-		    Return OutputBuffer.StringValue(0, OutSize)
-		    
-		  Case Z_MEM_ERROR
-		    Raise New OutOfMemoryException
-		    
-		  Case Z_DATA_ERROR
-		    Raise New UnsupportedFormatException
-		    
-		  Else
-		    Raise New zlibException(err)
-		    
-		  End Select
+		  If err <> Z_OK Then Raise New zlibException(err)
+		  
+		  OutputBuffer.Size = OutSize
+		  Return OutputBuffer
 		  
 		End Function
 	#tag EndMethod
