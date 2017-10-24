@@ -93,7 +93,10 @@ Inherits FlateEngine
 		      mLastError = inflate(zstruct, Z_NO_FLUSH)
 		      ' consume any output
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
-		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
+		      If have > 0 Then
+		        If have <> outbuff.Size Then outbuff.Size = have
+		        WriteTo.Write(outbuff)
+		      End If
 		      ' keep going until zlib doesn't use all the output space or an error
 		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
 		    
