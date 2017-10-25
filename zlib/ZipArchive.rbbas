@@ -300,7 +300,7 @@ Protected Class ZipArchive
 		        Return False
 		      End If
 		    Else
-		      mLastError = ERR_NOT_ZIPPED
+		      mLastError = ERR_UNSUPPORTED_COMPRESSION
 		      Return False
 		    End Select
 		  Else
