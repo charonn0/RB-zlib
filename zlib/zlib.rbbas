@@ -102,7 +102,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function compressBound_ Lib zlib1 Alias "compressBound" (sourceLen As UInt64) As UInt32
+		Private Soft Declare Function compressBound_ Lib zlib1 Alias "compressBound" (sourceLen As UInt32) As UInt32
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
