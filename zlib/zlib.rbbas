@@ -90,7 +90,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function CompressBound(DataLength As UInt64) As UInt32
+		Protected Function CompressBound(DataLength As UInt32) As UInt32
 		  ' Computes the upper bound of the compressed size after deflation of DataLength bytes.
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.CompressBound
 		  
