@@ -150,7 +150,8 @@ Implements zlib.CompressedStream
 		  Dim red As Integer = gzread(gzFile, mb, mb.Size)
 		  gzError() ' set LastError
 		  If red > 0 Then
-		    Return DefineEncoding(mb.StringValue(0, red), encoding)
+		    mb.Size = red
+		    Return DefineEncoding(mb, encoding)
 		  End If
 		End Function
 	#tag EndMethod

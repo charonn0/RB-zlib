@@ -16,6 +16,8 @@ Inherits RuntimeException
 		    Me.Message = "The archive is not zipped."
 		  Case ERR_UNSUPPORTED_COMPRESSION
 		    Me.Message = "The archive entry uses a non-standard compression algorithm."
+		  Case ERR_CHECKSUM_MISMATCH
+		    Me.Message = "The archive entry is corrupt."
 		    
 		    'zlib's built-in error messages suck; these are much better
 		  Case Z_BUF_ERROR

@@ -62,8 +62,7 @@ The third and final way to use this project is through the [Inflater](https://gi
   data = data + d.Deflate("e")
   data = data + d.Deflate("l")
   data = data + d.Deflate("l")
-  data = data + d.Deflate("o")
-  data = data + d.Deflate("", zlib.Z_FINISH)
+  data = data + d.Deflate("o", zlib.Z_FINISH)
   
   Dim i As New zlib.Inflater()
   data = i.Inflate(data)

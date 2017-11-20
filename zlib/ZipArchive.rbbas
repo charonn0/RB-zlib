@@ -300,7 +300,7 @@ Protected Class ZipArchive
 		        Return False
 		      End If
 		    Else
-		      mLastError = ERR_NOT_ZIPPED
+		      mLastError = ERR_UNSUPPORTED_COMPRESSION
 		      Return False
 		    End Select
 		  Else
@@ -318,24 +318,22 @@ Protected Class ZipArchive
 		  If mCurrentFile.Signature <> FILE_SIGNATURE Then
 		    mLastError = ERR_INVALID_ENTRY
 		    Return False
-		  Else
-		    mCurrentName = mArchiveStream.Read(mCurrentFile.FilenameLength)
-		    mCurrentExtra = mArchiveStream.Read(mCurrentFile.ExtraLength)
-		    
-		    If BitAnd(mCurrentFile.Flag, 4) = 4 And mCurrentFile.CompressedSize = 0 Then ' footer follows
-		      Dim footer As ZipFileFooter
-		      footer.StringValue(True) = mArchiveStream.Read(footer.Size)
-		      If footer.Signature <> FILE_FOOTER_SIGNATURE Then
-		        mArchiveStream.Position = mArchiveStream.Position - footer.Size
-		      Else
-		        mCurrentFile.CompressedSize = footer.ComressedSize
-		        mCurrentFile.UncompressedSize = footer.UncompressedSize
-		      End If
-		    End If
-		    mCurrentDataOffset = mArchiveStream.Position
-		    Return True
 		  End If
-		  Break
+		  mCurrentName = mArchiveStream.Read(mCurrentFile.FilenameLength)
+		  mCurrentExtra = mArchiveStream.Read(mCurrentFile.ExtraLength)
+		  
+		  If BitAnd(mCurrentFile.Flag, 4) = 4 And mCurrentFile.CompressedSize = 0 Then ' footer follows
+		    Dim footer As ZipFileFooter
+		    footer.StringValue(True) = mArchiveStream.Read(footer.Size)
+		    If footer.Signature <> FILE_FOOTER_SIGNATURE Then
+		      mArchiveStream.Position = mArchiveStream.Position - footer.Size
+		    Else
+		      mCurrentFile.CompressedSize = footer.ComressedSize
+		      mCurrentFile.UncompressedSize = footer.UncompressedSize
+		    End If
+		  End If
+		  mCurrentDataOffset = mArchiveStream.Position
+		  Return True
 		End Function
 	#tag EndMethod
 
