@@ -285,7 +285,7 @@ Protected Class ZipArchive
 		    Case 0 ' not compressed
 		      If mCurrentFile.UncompressedSize > 0 Then ExtractTo.Write(mArchiveStream.Read(mCurrentFile.CompressedSize))
 		    Case 8 ' deflated
-		      mZipStream.Inflater.Reset
+		      mZipStream.Reset
 		      Dim p As UInt64 = mArchiveStream.Position
 		      If ValidateChecksums Then mCurrentCRC = 0 Else mCurrentCRC = mCurrentFile.CRC32
 		      Do Until mArchiveStream.Position - p >= mCurrentFile.CompressedSize
