@@ -64,31 +64,6 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function CompressAsZip(Extends Root As FolderItem, Optional OutputFile As FolderItem) As FolderItem
-		  ' Zip the Root directory
-		  
-		  Dim dirs() As FolderItem = Array(Root)
-		  Dim files() As FolderItem
-		  Do Until UBound(dirs) = -1
-		    Dim item As FolderItem = dirs.Pop
-		    files.Append(item)
-		    If item.Directory Then
-		      Dim c As Integer = item.Count
-		      For i As Integer = 1 To c
-		        dirs.Append(item.Item(i))
-		      Next
-		    End If
-		  Loop
-		  If OutputFile = Nil Then OutputFile = Root.Parent.Child(Root.Name + ".zip")
-		  If Not WriteZip(Root, files, OutputFile) Then
-		    If OutputFile <> Nil Then OutputFile.Delete
-		    OutputFile = Nil
-		  End If
-		  Return OutputFile
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1
 		Protected Function CompressBound(DataLength As UInt32) As UInt32
 		  ' Computes the upper bound of the compressed size after deflation of DataLength bytes.
@@ -1099,31 +1074,6 @@ Protected Module zlib
 		    If Not tar.AppendFile(ToArchive(i)) Then Return False
 		  Next
 		  tar.Close
-		  Return True
-		  
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Function WriteZip(RelativeRoot As FolderItem = Nil, ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
-		  ' Creates/appends a Zip file with the ToArchive FolderItems
-		  Dim zip As ZipArchive
-		  If OutputFile.Exists Then
-		    zip = ZipArchive.Open(OutputFile, True)
-		  Else
-		    zip = ZipArchive.Create(OutputFile)
-		  End If
-		  For i As Integer = 0 To UBound(ToArchive)
-		    Dim item As FolderItem = ToArchive(i)
-		    Dim zippath As String
-		    If RelativeRoot <> Nil Then zippath = CreateTree(RelativeRoot, item) Else zippath = item.Name
-		    Dim bs As BinaryStream
-		    If Not item.Directory Then bs = BinaryStream.Open(item)
-		    If zippath = "" Then Continue
-		    If Not zip.AppendFile(zippath, bs) Then Return False
-		  Next
-		  zip.Close
 		  Return True
 		  
 		  
