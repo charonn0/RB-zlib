@@ -100,19 +100,6 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub CurrentModificationDate(Assigns NewModDate As Date)
-		  If mIndex = -1 Then Raise New OutOfBoundsException
-		  
-		  Dim p As Pair = ConvertDate(NewModDate)
-		  mCurrentFile.ModDate = p.Left
-		  mCurrentFile.ModTime = p.Right
-		  mArchiveStream.Position = mArchiveStream.Position - mCurrentFile.Size
-		  mArchiveStream.Write(mCurrentFile.StringValue(True).Left(mCurrentFile.Size))
-		  mArchiveStream.Flush
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function CurrentName() As String
 		  If mIndex > -1 Then Return mCurrentName
 		End Function
