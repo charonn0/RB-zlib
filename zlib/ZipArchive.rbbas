@@ -12,8 +12,8 @@ Protected Class ZipArchive
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Sub Constructor(ArchiveStream As BinaryStream)
+	#tag Method, Flags = &h0
+		Sub Constructor(ArchiveStream As BinaryStream)
 		  mArchiveStream = ArchiveStream
 		  mArchiveStream.LittleEndian = True
 		  If Not Me.Reset(0) Then Raise New zlibException(ERR_NOT_ZIPPED)
