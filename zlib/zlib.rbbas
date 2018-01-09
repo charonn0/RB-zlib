@@ -113,41 +113,30 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CreateTree(Root As FolderItem, Child As FolderItem) As String
-		  Dim s() As String
-		  If Root = Nil Or Not Root.Directory Or Child = Nil Or Root.AbsolutePath = Child.AbsolutePath Then Return ""
-		  If Child.Directory Then s.Append("")
-		  Do Until Root.AbsolutePath = Child.AbsolutePath
-		    s.Insert(0, Child.Name)
-		    Child = Child.Parent
-		  Loop Until Child = Nil
-		  
-		  Return Join(s, "/")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
 		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
 		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
 		  
 		  If Root = Nil Or Not Root.Directory Then Return Nil
 		  Dim s() As String = Split(Path, "/")
-		  If UBound(s) = -1 Then Return Root
+		  Dim bound As Integer = UBound(s)
+		  If bound = -1 Then Return Root
 		  
-		  Dim name As String = NormalizeFilename(s(0))
-		  root = root.Child(name)
-		  s.Remove(0)
-		  If UBound(s) = -1 Then Return root
-		  If Root.Exists Then
-		    If Not Root.Directory Then 
-		      Dim err As New IOException
-		      err.Message = "'" + name + "' is not a directory!"
-		      Raise err
+		  For i As Integer = 0 To bound
+		    Dim name As String = NormalizeFilename(s(i))
+		    If name.Trim = "" Then Continue
+		    root = root.Child(name)
+		    If bound = i Then Return root
+		    If Root.Exists Then
+		      If Not Root.Directory Then
+		        Dim err As New IOException
+		        err.Message = "'" + name + "' is not a directory!"
+		        Raise err
+		      End If
+		    Else
+		      root.CreateAsFolder
 		    End If
-		  Else
-		    Root.CreateAsFolder
-		  End If
-		  Return CreateTree(Root, Join(s, "/"))
+		  Next
+		  
 		End Function
 	#tag EndMethod
 
