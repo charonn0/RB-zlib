@@ -1017,6 +1017,7 @@ Protected Module zlib
 		    If outstream <> Nil Then outstream.Close
 		    ret.Append(f)
 		  Loop
+		  If zip.LastError <> ERR_END_ARCHIVE Then Raise New zlibException(zip.LastError)
 		  zip.Close
 		  Return ret
 		  
