@@ -153,8 +153,10 @@ Protected Class ZipArchive
 		        Dim offset As UInt64 = mArchiveStream.Position - p
 		        Dim sz As Integer = Min(mCurrentFile.CompressedSize - offset, CHUNK_SIZE)
 		        Dim data As MemoryBlock = mZipStream.Read(sz)
-		        If ValidateChecksums Then mCurrentCRC = CRC32(data, mCurrentCRC, data.Size)
-		        ExtractTo.Write(data)
+		        If data.Size > 0 Then
+		          If ValidateChecksums Then mCurrentCRC = CRC32(data, mCurrentCRC, data.Size)
+		          ExtractTo.Write(data)
+		        End If
 		      Loop
 		      If ValidateChecksums And Not (mCurrentCRC = mCurrentFile.CRC32) Then
 		        mLastError = ERR_CHECKSUM_MISMATCH
