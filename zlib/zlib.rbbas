@@ -120,10 +120,17 @@ Protected Module zlib
 		  Dim s() As String = Split(Path, "/")
 		  Dim bound As Integer = UBound(s)
 		  If bound = -1 Then Return Root
+		  For i As Integer = bound DownTo 0
+		    Dim n As String = NormalizeFilename(s(i))
+		    If n <> "" Then
+		      s(i) = n
+		    Else
+		      s.Remove(i)
+		    End If
+		  Next
 		  
 		  For i As Integer = 0 To bound
-		    Dim name As String = NormalizeFilename(s(i))
-		    If name.Trim = "" Then Continue
+		    Dim name As String = s(i)
 		    root = root.Child(name)
 		    If bound = i Then Return root
 		    If Root.Exists Then
@@ -137,6 +144,7 @@ Protected Module zlib
 		    End If
 		  Next
 		  
+		  Return root
 		End Function
 	#tag EndMethod
 
