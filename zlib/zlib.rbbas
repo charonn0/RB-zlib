@@ -119,20 +119,11 @@ Protected Module zlib
 		  If Root = Nil Or Not Root.Directory Then Return Nil
 		  Dim s() As String = Split(Path, "/")
 		  Dim bound As Integer = UBound(s)
-		  If bound = -1 Then Return Root
-		  For i As Integer = bound DownTo 0
-		    Dim n As String = NormalizeFilename(s(i))
-		    If n <> "" Then
-		      s(i) = n
-		    Else
-		      s.Remove(i)
-		    End If
-		  Next
 		  
-		  For i As Integer = 0 To bound
-		    Dim name As String = s(i)
-		    root = root.Child(name)
-		    If bound = i Then Return root
+		  For i As Integer = 0 To bound - 1
+		    Dim name As String = NormalizeFilename(s(i))
+		    If name = "" Then Continue
+		    root = root.TrueChild(name)
 		    If Root.Exists Then
 		      If Not Root.Directory Then
 		        Dim err As New IOException
@@ -144,7 +135,10 @@ Protected Module zlib
 		    End If
 		  Next
 		  
-		  Return root
+		  Dim name As String = NormalizeFilename(s(bound))
+		  If name <> "" Then Root = Root.Child(name)
+		  
+		  Return Root
 		End Function
 	#tag EndMethod
 
