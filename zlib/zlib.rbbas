@@ -984,8 +984,9 @@ Protected Module zlib
 		  Dim fs() As FolderItem
 		  Do
 		    If bs <> Nil Then bs.Close
-		    Dim g As FolderItem = ExtractTo.Child(tar.CurrentName)
-		    bs = BinaryStream.Create(g, Overwrite)
+		    bs = Nil
+		    Dim g As FolderItem = CreateTree(ExtractTo, tar.CurrentName)
+		    If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
 		    fs.Append(g)
 		  Loop Until Not tar.MoveNext(bs)
 		  bs.Close
