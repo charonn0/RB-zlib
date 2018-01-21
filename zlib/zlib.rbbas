@@ -1172,7 +1172,7 @@ Protected Module zlib
 	#tag Constant, Name = RAW_ENCODING, Type = Double, Dynamic = False, Default = \"-15", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = zlib1, Type = String, Dynamic = False, Default = \"", Scope = Private
+	#tag Constant, Name = zlib1, Type = String, Dynamic = False, Default = \"libz.so.1", Scope = Private
 		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"zlib1.dll"
 		#Tag Instance, Platform = Mac OS, Language = Default, Definition  = \"/usr/lib/libz.dylib"
 		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"libz.so.1"
