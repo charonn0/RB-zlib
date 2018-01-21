@@ -60,40 +60,30 @@ Implements zlib.CompressedStream
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub FinishBlock()
-		  ' A stronger version of Flush(). All remaining data is written and the gzip stream is completed in the output. If GZStream.Write is
-		  ' called again, a new gzip stream will be started in the output. GZStream.Read is able to read such concatented gzip streams. This
-		  ' will severely impact compression ratios, even into the negative.
-		  
-		  If Not Me.Flush(Z_FINISH) Then Raise New zlibException(mLastError)
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Flush() Implements Writeable.Flush
 		  // Part of the Writeable interface.
 		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary.
 		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long.
 		  
-		  If Not Me.Flush(Z_PARTIAL_FLUSH) Then Raise New zlibException(mLastError)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub Flush(Flushing As Integer) Implements zlib.CompressedStream.Flush
-		  // Part of the zlib.CompressedStream interface.
-		  If Not Me.Flush(Flushing) Then Break ' meh
+		  Me.Flush(Z_SYNC_FLUSH)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Flush(Flushing As Integer) As Boolean
+		Sub Flush(Flushing As Integer) Implements zlib.CompressedStream.Flush
+		  // Part of the zlib.CompressedStream interface.
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException
-		  mLastError = gzflush(gzFile, Flushing)
-		  Return mLastError = Z_OK
-		End Function
+		  Dim zerr As Integer = gzflush(gzFile, Flushing)
+		  gzError() ' set LastError
+		  If zerr <> Z_OK Then Raise New zlibException(zerr)
+		  If mLastError <> Z_OK Then
+		    Dim err As New zlibException(mLastError)
+		    err.Message = err.Message + EndOfLine + LastErrorMsg
+		    Raise err
+		  End If
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
