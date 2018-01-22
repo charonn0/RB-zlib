@@ -24,8 +24,10 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CopyStream As zlib.Inflater)
-		  ' Construct a new Inflater instance using the specified compression options.
-		  ' If the inflate engine could not be initialized an exception will be raised.
+		  ' Creates a duplicate of the CopyStream and its current state. Duplication can be useful
+		  ' when randomly accessing a long stream. The first pass through the stream can periodically
+		  ' record a duplicate of the inflate state, allowing restarting inflate at those points when
+		  ' randomly accessing the stream.
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
@@ -153,6 +155,7 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the decoding state
 			  Return zstruct.data_type
 			End Get
 		#tag EndGetter
