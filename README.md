@@ -59,10 +59,8 @@ The third and final way to use this project is through the [Inflater](https://gi
 ```vbnet
   Dim d As New zlib.Deflater()
   Dim data As MemoryBlock = d.Deflate("H")
-  data = data + d.Deflate("e")
-  data = data + d.Deflate("l")
-  data = data + d.Deflate("l")
-  data = data + d.Deflate("o", zlib.Z_FINISH)
+  data = data + d.Deflate("el")
+  data = data + d.Deflate("lo", zlib.Z_FINISH)
   
   Dim i As New zlib.Inflater()
   data = i.Inflate(data)
