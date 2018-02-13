@@ -1265,9 +1265,6 @@ Protected Module zlib
 	#tag Constant, Name = Z_TREES, Type = Double, Dynamic = False, Default = \"6", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = Z_UNFINISHED_ERROR, Type = Double, Dynamic = False, Default = \"-99", Scope = Private
-	#tag EndConstant
-
 	#tag Constant, Name = Z_UNKNOWN, Type = Double, Dynamic = False, Default = \"2", Scope = Protected
 	#tag EndConstant
 
