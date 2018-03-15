@@ -1,7 +1,7 @@
 ## Introduction
 [zlib](http://www.zlib.net/) is the reference implementation for the [deflate](https://en.wikipedia.org/wiki/DEFLATE) compression algorithm. Deflate is the algorithm used by the [gzip](https://tools.ietf.org/html/rfc1952) container format, the the [zip](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT) archive format, and [HTTP compression](https://tools.ietf.org/html/rfc7694).
 
-**RB-zlib** is a zlib [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects. It is designed and tested using Realstudio 2011r4.3 on Windows 7. 
+**RB-zlib** is a zlib [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects.
 
 ## Hilights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
