@@ -5,9 +5,9 @@ Protected Module zlib
 		  ' Calculate the Adler32 checksum for the NewData. Pass back the returned value
 		  ' to continue processing.
 		  '    Dim adler As UInt32
-		  '    While True
+		  '    Do
 		  '      adler = zlib.Adler32(NextInputData, adler)
-		  '    Wend
+		  '    Loop
 		  ' If NewData.Size is not known (-1) then specify the size as NewDataSize
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Adler32
 		  
@@ -44,6 +44,7 @@ Protected Module zlib
 		  Dim OutSize As UInt32 = compressBound(DataSize)
 		  Dim OutBuffer As MemoryBlock
 		  Dim err As Integer
+		  If CompressionLevel < Z_NO_COMPRESSION Or CompressionLevel > Z_BEST_COMPRESSION Then CompressionLevel = Z_DEFAULT_COMPRESSION
 		  
 		  Do
 		    If OutBuffer <> Nil Then OutSize = OutSize * 2
@@ -55,51 +56,16 @@ Protected Module zlib
 		    End If
 		  Loop Until err <> Z_BUF_ERROR
 		  
-		  Select Case err
-		  Case Z_OK
-		    Return OutBuffer.StringValue(0, OutSize)
-		    
-		  Case Z_STREAM_ERROR
-		    Break ' CompressionLevel is invalid; using default
-		    Return Compress(Data, Z_DEFAULT_COMPRESSION, DataSize)
-		    
-		  Case Z_MEM_ERROR
-		    Raise New OutOfMemoryException
-		    
-		  Else
-		    Raise New zlibException(err)
-		    
-		  End Select
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CompressAsZip(Extends Root As FolderItem, Optional OutputFile As FolderItem) As FolderItem
-		  ' Zip the Root directory
+		  If err <> Z_OK Then Raise New zlibException(err)
 		  
-		  Dim dirs() As FolderItem = Array(Root)
-		  Dim files() As FolderItem
-		  Do Until UBound(dirs) = -1
-		    Dim item As FolderItem = dirs.Pop
-		    files.Append(item)
-		    If item.Directory Then
-		      Dim c As Integer = item.Count
-		      For i As Integer = 1 To c
-		        dirs.Append(item.Item(i))
-		      Next
-		    End If
-		  Loop
-		  If OutputFile = Nil Then OutputFile = Root.Parent.Child(Root.Name + ".zip")
-		  If Not WriteZip(Root, files, OutputFile) Then
-		    If OutputFile <> Nil Then OutputFile.Delete
-		    OutputFile = Nil
-		  End If
-		  Return OutputFile
+		  OutBuffer.Size = OutSize
+		  Return OutBuffer
+		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function CompressBound(DataLength As UInt64) As UInt32
+		Protected Function CompressBound(DataLength As UInt32) As UInt32
 		  ' Computes the upper bound of the compressed size after deflation of DataLength bytes.
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.CompressBound
 		  
@@ -111,7 +77,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function compressBound_ Lib zlib1 Alias "compressBound" (sourceLen As UInt64) As UInt32
+		Private Soft Declare Function compressBound_ Lib zlib1 Alias "compressBound" (sourceLen As UInt32) As UInt32
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -147,41 +113,32 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CreateTree(Root As FolderItem, Child As FolderItem) As String
-		  Dim s() As String
-		  If Root = Nil Or Not Root.Directory Or Child = Nil Or Root.AbsolutePath = Child.AbsolutePath Then Return ""
-		  If Child.Directory Then s.Append("")
-		  Do Until Root.AbsolutePath = Child.AbsolutePath
-		    s.Insert(0, Child.Name)
-		    Child = Child.Parent
-		  Loop Until Child = Nil
-		  
-		  Return Join(s, "/")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
 		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
 		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
 		  
 		  If Root = Nil Or Not Root.Directory Then Return Nil
 		  Dim s() As String = Split(Path, "/")
-		  If UBound(s) = -1 Then Return Root
+		  Dim bound As Integer = UBound(s)
 		  
-		  Dim name As String = NormalizeFilename(s(0))
-		  root = root.Child(name)
-		  s.Remove(0)
-		  If UBound(s) = -1 Then Return root
-		  If Root.Exists Then
-		    If Not Root.Directory Then 
-		      Dim err As New IOException
-		      err.Message = "'" + name + "' is not a directory!"
-		      Raise err
+		  For i As Integer = 0 To bound - 1
+		    Dim name As String = NormalizeFilename(s(i))
+		    If name = "" Then Continue
+		    root = root.TrueChild(name)
+		    If Root.Exists Then
+		      If Not Root.Directory Then
+		        Dim err As New IOException
+		        err.Message = "'" + name + "' is not a directory!"
+		        Raise err
+		      End If
+		    Else
+		      root.CreateAsFolder
 		    End If
-		  Else
-		    Root.CreateAsFolder
-		  End If
-		  Return CreateTree(Root, Join(s, "/"))
+		  Next
+		  
+		  Dim name As String = NormalizeFilename(s(bound))
+		  If name <> "" Then Root = Root.Child(name)
+		  
+		  Return Root
 		End Function
 	#tag EndMethod
 
@@ -948,7 +905,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h0
 		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
-		  //Checks the zip magic number. Returns True if the TargetFile is likely a zip archive
+		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
 		  
 		  Const FILE_SIGNATURE = &h04034b50
 		  
@@ -1027,8 +984,9 @@ Protected Module zlib
 		  Dim fs() As FolderItem
 		  Do
 		    If bs <> Nil Then bs.Close
-		    Dim g As FolderItem = ExtractTo.Child(tar.CurrentName)
-		    bs = BinaryStream.Create(g, Overwrite)
+		    bs = Nil
+		    Dim g As FolderItem = CreateTree(ExtractTo, tar.CurrentName)
+		    If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
 		    fs.Append(g)
 		  Loop Until Not tar.MoveNext(bs)
 		  bs.Close
@@ -1038,10 +996,11 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
+		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False, VerifyCRC As Boolean = True) As FolderItem()
 		  ' Extracts a ZIP file to the ExtractTo directory
 		  
 		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
+		  zip.ValidateChecksums = VerifyCRC
 		  Dim ret() As FolderItem
 		  
 		  
@@ -1053,6 +1012,7 @@ Protected Module zlib
 		    If outstream <> Nil Then outstream.Close
 		    ret.Append(f)
 		  Loop
+		  If zip.LastError <> ERR_END_ARCHIVE Then Raise New zlibException(zip.LastError)
 		  zip.Close
 		  Return ret
 		  
@@ -1079,20 +1039,10 @@ Protected Module zlib
 		    ExpandedSize = ExpandedSize * 2
 		  Loop Until err <> Z_BUF_ERROR
 		  
-		  Select Case err
-		  Case Z_OK
-		    Return OutputBuffer.StringValue(0, OutSize)
-		    
-		  Case Z_MEM_ERROR
-		    Raise New OutOfMemoryException
-		    
-		  Case Z_DATA_ERROR
-		    Raise New UnsupportedFormatException
-		    
-		  Else
-		    Raise New zlibException(err)
-		    
-		  End Select
+		  If err <> Z_OK Then Raise New zlibException(err)
+		  
+		  OutputBuffer.Size = OutSize
+		  Return OutputBuffer
 		  
 		End Function
 	#tag EndMethod
@@ -1118,31 +1068,6 @@ Protected Module zlib
 		    If Not tar.AppendFile(ToArchive(i)) Then Return False
 		  Next
 		  tar.Close
-		  Return True
-		  
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Function WriteZip(RelativeRoot As FolderItem = Nil, ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
-		  ' Creates/appends a Zip file with the ToArchive FolderItems
-		  Dim zip As ZipArchive
-		  If OutputFile.Exists Then
-		    zip = ZipArchive.Open(OutputFile, True)
-		  Else
-		    zip = ZipArchive.Create(OutputFile)
-		  End If
-		  For i As Integer = 0 To UBound(ToArchive)
-		    Dim item As FolderItem = ToArchive(i)
-		    Dim zippath As String
-		    If RelativeRoot <> Nil Then zippath = CreateTree(RelativeRoot, item) Else zippath = item.Name
-		    Dim bs As BinaryStream
-		    If Not item.Directory Then bs = BinaryStream.Open(item)
-		    If zippath = "" Then Continue
-		    If Not zip.AppendFile(zippath, bs) Then Return False
-		  Next
-		  zip.Close
 		  Return True
 		  
 		  
@@ -1247,7 +1172,7 @@ Protected Module zlib
 	#tag Constant, Name = RAW_ENCODING, Type = Double, Dynamic = False, Default = \"-15", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = zlib1, Type = String, Dynamic = False, Default = \"", Scope = Private
+	#tag Constant, Name = zlib1, Type = String, Dynamic = False, Default = \"libz.so.1", Scope = Private
 		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"zlib1.dll"
 		#Tag Instance, Platform = Mac OS, Language = Default, Definition  = \"/usr/lib/libz.dylib"
 		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"libz.so.1"
@@ -1338,9 +1263,6 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = Z_TREES, Type = Double, Dynamic = False, Default = \"6", Scope = Protected
-	#tag EndConstant
-
-	#tag Constant, Name = Z_UNFINISHED_ERROR, Type = Double, Dynamic = False, Default = \"-99", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = Z_UNKNOWN, Type = Double, Dynamic = False, Default = \"2", Scope = Protected

@@ -15,6 +15,7 @@ Inherits FlateEngine
 		    mLastError = inflateInit_(zstruct, "1.2.8" + Chr(0), zstruct.Size)
 		  Else
 		    mLastError = inflateInit2_(zstruct, Encoding, "1.2.8" + Chr(0), zstruct.Size)
+		    If mLastError = Z_OK And Encoding >= GZIP_ENCODING Then mLastError = inflateGetHeader(zstruct, mGZHeader)
 		  End If
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mEncoding = Encoding
@@ -23,8 +24,10 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CopyStream As zlib.Inflater)
-		  ' Construct a new Inflater instance using the specified compression options.
-		  ' If the inflate engine could not be initialized an exception will be raised.
+		  ' Creates a duplicate of the CopyStream and its current state. Duplication can be useful
+		  ' when randomly accessing a long stream. The first pass through the stream can periodically
+		  ' record a duplicate of the inflate state, allowing restarting inflate at those points when
+		  ' randomly accessing the stream.
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
@@ -41,18 +44,6 @@ Inherits FlateEngine
 		Private Sub Destructor()
 		  If IsOpen Then mLastError = inflateEnd(zstruct)
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function GetHeader(ByRef HeaderStruct As zlib.gz_headerp) As Boolean
-		  ' Reads gzip header information when a gzip stream is opened. This method may be called after the constructor
-		  ' or a call to Reset(), but before the first call to inflate()
-		  
-		  If Not IsOpen Then Return False
-		  mLastError = inflateGetHeader(zstruct, HeaderStruct)
-		  Return mLastError = Z_OK
-		  
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -104,7 +95,10 @@ Inherits FlateEngine
 		      mLastError = inflate(zstruct, Z_NO_FLUSH)
 		      ' consume any output
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
-		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
+		      If have > 0 Then
+		        If have <> outbuff.Size Then outbuff.Size = have
+		        WriteTo.Write(outbuff)
+		      End If
 		      ' keep going until zlib doesn't use all the output space or an error
 		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
 		    
@@ -138,6 +132,7 @@ Inherits FlateEngine
 		  ' The stream will keep the attributes that may have been set by the constructor.
 		  
 		  If Not IsOpen Then Return
+		  If mGZHeader.Done = 1 Then mGZHeader.Done = 0
 		  If Encoding = 0 Then
 		    mLastError = inflateReset(zstruct)
 		  Else
@@ -176,6 +171,7 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the decoding state
 			  Return zstruct.data_type
 			End Get
 		#tag EndGetter
@@ -192,7 +188,8 @@ Inherits FlateEngine
 			  Dim mb As New MemoryBlock(sz)
 			  mLastError = inflateGetDictionary(zstruct, mb, sz)
 			  If mLastError <> Z_OK Then Return Nil
-			  Return mb.StringValue(0, sz)
+			  mb.Size = sz
+			  Return mb
 			End Get
 		#tag EndGetter
 		#tag Setter
@@ -218,8 +215,30 @@ Inherits FlateEngine
 		Encoding As Integer
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mGZHeader
+			End Get
+		#tag EndGetter
+		GZHeader As zlib.gz_headerp
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mGZHeader.Done = 1
+			End Get
+		#tag EndGetter
+		HasHeader As Boolean
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h1
 		Protected mEncoding As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mGZHeader As gz_headerp
 	#tag EndProperty
 
 

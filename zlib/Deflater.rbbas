@@ -105,13 +105,16 @@ Inherits FlateEngine
 		      If mLastError = Z_STREAM_ERROR Then Return False ' the stream state is inconsistent!!!
 		      ' consume any output
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
-		      If have > 0 Then WriteTo.Write(outbuff.StringValue(0, have))
+		      If have > 0 Then
+		        If have <> outbuff.Size Then outbuff.Size = have
+		        WriteTo.Write(outbuff)
+		      End If
 		      ' keep going until zlib doesn't use all the output space or an error
 		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
-		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(Z_UNFINISHED_ERROR)
+		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
 		  Return zstruct.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
 		  
 		  
