@@ -46,6 +46,12 @@ Private Class FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Msg() As MemoryBlock
+		  If zstruct.msg <> Nil Then Return zstruct.msg
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Total_In() As UInt32
 		  Return zstruct.total_in
 		End Function

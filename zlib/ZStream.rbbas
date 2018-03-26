@@ -243,7 +243,11 @@ Implements zlib.CompressedStream
 		    End If
 		  End If
 		  If readsz > 0 Then
-		    If Not mInflater.Inflate(mSource, ret, readsz) Then Raise New zlibException(mInflater.LastError)
+		    If Not mInflater.Inflate(mSource, ret, readsz) Then 
+		      Dim err As New zlibException(mInflater.LastError)
+		      If mInflater.Msg <> Nil Then err.Message = err.Message + EndOfLine + "Additional info: " + mInflater.Msg.CString(0)
+		      Raise err
+		    End If
 		    ret.Close
 		    If BufferedReading Then
 		      If data.Size >= Count Then
