@@ -349,9 +349,14 @@ Implements zlib.CompressedStream
 		  ' Reads compressed bytes from the input stream until a possible deflate stream is detected.
 		  
 		  If mInflater = Nil Or Not mSource IsA BinaryStream Then Raise New IOException
-		  If Not mInflater.SyncToNextFlush(mSource, MaxCount) Then Return False
-		  BinaryStream(mSource).Position = Inflater.Total_In
-		  Return True
+		  Dim pos As UInt64 = BinaryStream(mSource).Position
+		  If mInflater.SyncToNextFlush(mSource, MaxCount) Then
+		    BinaryStream(mSource).Position = Inflater.Total_In
+		    Return True
+		  Else
+		    BinaryStream(mSource).Position = pos
+		    Return False
+		  End If
 		  
 		End Function
 	#tag EndMethod
