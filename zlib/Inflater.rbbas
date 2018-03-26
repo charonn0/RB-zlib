@@ -151,7 +151,6 @@ Inherits FlateEngine
 		  
 		  Dim count As Integer
 		  Do
-		    Dim sz As Integer
 		    Dim chunk As MemoryBlock = ReadFrom.Read(2)
 		    If chunk.Size <> 2 Then Return False
 		    zstruct.avail_in = chunk.Size
