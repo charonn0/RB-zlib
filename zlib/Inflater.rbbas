@@ -149,17 +149,17 @@ Inherits FlateEngine
 		  
 		  If Not IsOpen Then Return False
 		  
-		  Dim outbuff As New MemoryBlock(CHUNK_SIZE)
 		  Dim count As Integer
 		  Do
-		    Dim chunk As MemoryBlock = ReadFrom.Read(CHUNK_SIZE)
-		    If chunk.Size = 0 Then Return False
+		    Dim sz As Integer
+		    Dim chunk As MemoryBlock = ReadFrom.Read(2)
+		    If chunk.Size <> 2 Then Return False
 		    zstruct.avail_in = chunk.Size
 		    zstruct.next_in = chunk
 		    count = count + chunk.Size
 		    
-		    zstruct.next_out = outbuff
-		    zstruct.avail_out = outbuff.Size
+		    zstruct.next_out = Nil
+		    zstruct.avail_out = 0
 		    mLastError = inflateSync(zstruct)
 		  Loop Until mLastError <> Z_DATA_ERROR Or ReadFrom.EOF Or (MaxCount > -1 And count >= MaxCount)
 		  
