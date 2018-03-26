@@ -5,9 +5,9 @@ Protected Module zlib
 		  ' Calculate the Adler32 checksum for the NewData. Pass back the returned value
 		  ' to continue processing.
 		  '    Dim adler As UInt32
-		  '    While True
+		  '    Do
 		  '      adler = zlib.Adler32(NextInputData, adler)
-		  '    Wend
+		  '    Loop
 		  ' If NewData.Size is not known (-1) then specify the size as NewDataSize
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Adler32
 		  
@@ -905,7 +905,7 @@ Protected Module zlib
 
 	#tag Method, Flags = &h0
 		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
-		  //Checks the zip magic number. Returns True if the TargetFile is likely a zip archive
+		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
 		  
 		  Const FILE_SIGNATURE = &h04034b50
 		  
@@ -1263,9 +1263,6 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = Z_TREES, Type = Double, Dynamic = False, Default = \"6", Scope = Protected
-	#tag EndConstant
-
-	#tag Constant, Name = Z_UNFINISHED_ERROR, Type = Double, Dynamic = False, Default = \"-99", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = Z_UNKNOWN, Type = Double, Dynamic = False, Default = \"2", Scope = Protected

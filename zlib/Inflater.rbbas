@@ -24,8 +24,10 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CopyStream As zlib.Inflater)
-		  ' Construct a new Inflater instance using the specified compression options.
-		  ' If the inflate engine could not be initialized an exception will be raised.
+		  ' Creates a duplicate of the CopyStream and its current state. Duplication can be useful
+		  ' when randomly accessing a long stream. The first pass through the stream can periodically
+		  ' record a duplicate of the inflate state, allowing restarting inflate at those points when
+		  ' randomly accessing the stream.
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
@@ -140,11 +142,27 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function SyncToNextFlush() As Boolean
-		  ' Skips invalid compressed data until a possible full flush point can be found, or until all available input is skipped.
+		Function SyncToNextFlush(ReadFrom As Readable, MaxCount As Integer = -1) As Boolean
+		  ' Reads compressed bytes from ReadFrom until a possible deflate stream is detected. If a possible stream
+		  ' is detected then this method returns True and the Total_In property will reflect the point in the input
+		  ' where it was detected.
 		  
 		  If Not IsOpen Then Return False
-		  mLastError = inflateSync(zstruct)
+		  
+		  Dim count As Integer
+		  Do
+		    Dim sz As Integer
+		    Dim chunk As MemoryBlock = ReadFrom.Read(2)
+		    If chunk.Size <> 2 Then Return False
+		    zstruct.avail_in = chunk.Size
+		    zstruct.next_in = chunk
+		    count = count + chunk.Size
+		    
+		    zstruct.next_out = Nil
+		    zstruct.avail_out = 0
+		    mLastError = inflateSync(zstruct)
+		  Loop Until mLastError <> Z_DATA_ERROR Or ReadFrom.EOF Or (MaxCount > -1 And count >= MaxCount)
+		  
 		  Return mLastError = Z_OK
 		End Function
 	#tag EndMethod
@@ -153,6 +171,7 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the decoding state
 			  Return zstruct.data_type
 			End Get
 		#tag EndGetter
