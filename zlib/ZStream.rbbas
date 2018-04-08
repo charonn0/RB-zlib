@@ -243,7 +243,11 @@ Implements zlib.CompressedStream
 		    End If
 		  End If
 		  If readsz > 0 Then
-		    If Not mInflater.Inflate(mSource, ret, readsz) Then Raise New zlibException(mInflater.LastError)
+		    If Not mInflater.Inflate(mSource, ret, readsz) Then 
+		      Dim err As New zlibException(mInflater.LastError)
+		      If mInflater.Msg <> Nil Then err.Message = err.Message + EndOfLine + "Additional info: " + mInflater.Msg.CString(0)
+		      Raise err
+		    End If
 		    ret.Close
 		    If BufferedReading Then
 		      If data.Size >= Count Then
@@ -345,20 +349,30 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Sync(MaxCount As Integer = -1) As Boolean
-		  ' Reads compressed bytes from the input stream until a possible deflate stream is detected.
+		Function Sync(MaxCount As Integer = - 1) As Boolean
+		  ' Reads compressed bytes from the input stream until a possible full flush point is detected.
+		  ' If a flush point was found then decompressor switches to RAW_ENCODING, the Position
+		  ' property of the Source BinaryStream is moved to the flush point, and this method returns True.
 		  
-		  If BufferedReading Or mInflater = Nil Or Not mSource IsA BinaryStream Then Raise New IOException
-		  
+		  If mInflater = Nil Or Not mSource IsA BinaryStream Then Return False
+		  Dim raw As New zlib.Inflater(RAW_ENCODING)
 		  Dim pos As UInt64 = BinaryStream(mSource).Position
-		  If mInflater.SyncToNextFlush(mSource, MaxCount) Then
-		    BinaryStream(mSource).Position = Inflater.Total_In
-		    Return True
-		  Else
-		    BinaryStream(mSource).Position = pos
-		    Return False
+		  If raw.SyncToNextFlush(mSource, MaxCount) Then
+		    Dim mb As New MemoryBlock(0)
+		    Dim tmp As New BinaryStream(mb)
+		    Dim flushpos As UInt64 = raw.Total_In + pos
+		    BinaryStream(mSource).Position = flushpos
+		    If raw.Inflate(mSource, tmp, 1024) Then
+		      BinaryStream(mSource).Position = flushpos
+		      raw.IgnoreChecksums = True
+		      mInflater.Reset(RAW_ENCODING)
+		      mInflater.IgnoreChecksums = True
+		      mReadBuffer = ""
+		      Return True
+		    End If
 		  End If
-		  
+		  BinaryStream(mSource).Position = pos
+		  Return False
 		End Function
 	#tag EndMethod
 
