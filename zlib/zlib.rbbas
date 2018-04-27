@@ -931,6 +931,7 @@ Protected Module zlib
 		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
 		  
 		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
+		  zip.ValidateChecksums = False
 		  Dim ret() As String
 		  
 		  Do Until zip.LastError <> 0
