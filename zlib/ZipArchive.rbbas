@@ -24,6 +24,10 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h21
 		Private Shared Function ConvertDate(NewDate As Date) As Pair
+		  ' Convert the passed Date object into MS-DOS style datestamp and timestamp (16 bits each)
+		  ' The DOS format has a resolution of two seconds, no concept of time zones, and is valid 
+		  ' for dates between 1/1/1980 and 12/31/2107
+		  
 		  Dim h, m, s, dom, mon, year As UInt32
 		  Dim dt, tm As UInt16
 		  h = NewDate.Hour
@@ -49,6 +53,10 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h21
 		Private Shared Function ConvertDate(Dt As UInt16, tm As UInt16) As Date
+		  ' Convert the passed MS-DOS style date and time into a Date object. 
+		  ' The DOS format has a resolution of two seconds, no concept of time zones, 
+		  ' and is valid for dates between 1/1/1980 and 12/31/2107
+		  
 		  Dim h, m, s, dom, mon, year As Integer
 		  h = ShiftRight(tm, 11)
 		  m = ShiftRight(tm, 5) And &h3F
