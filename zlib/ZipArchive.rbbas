@@ -166,7 +166,7 @@ Protected Class ZipArchive
 		          ExtractTo.Write(data)
 		        End If
 		      Loop
-		      If ValidateChecksums And Not (mCurrentCRC = mCurrentFile.CRC32) Then
+		      If ValidateChecksums And (mCurrentCRC <> mCurrentFile.CRC32) Then
 		        mLastError = ERR_CHECKSUM_MISMATCH
 		        Return False
 		      End If
