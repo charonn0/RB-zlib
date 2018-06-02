@@ -261,19 +261,12 @@ Protected Class ZipArchive
 		  If Not Me.Reset(0) Then Return False
 		  Dim vc As Boolean = ValidateChecksums
 		  ValidateChecksums = True
-		  Dim bs As BinaryStream
+		  Dim nullstream As New BinaryStream(New MemoryBlock(0))
+		  nullstream.Close
 		  Do
-		    If bs <> Nil Then bs.Close
-		    Dim data As New MemoryBlock(0)
-		    bs = New BinaryStream(data)
-		  Loop Until Not Me.MoveNext(bs)
+		  Loop Until Not Me.MoveNext(nullstream)
 		  ValidateChecksums = vc
-		  If mDirectoryHeader.CRC32 <> 0 Then ' archive crc included
-		    Return mLastError = ERR_END_ARCHIVE And mRunningCRC = mDirectoryHeader.CRC32
-		  Else
-		    Return mLastError = ERR_END_ARCHIVE
-		  End If
-		  
+		  Return mLastError = ERR_END_ARCHIVE
 		End Function
 	#tag EndMethod
 
