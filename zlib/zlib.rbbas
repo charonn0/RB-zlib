@@ -1007,6 +1007,7 @@ Protected Module zlib
 		  
 		  Do Until zip.LastError <> 0
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
+		    If f = Nil Then Raise New zlibException(ERR_INVALID_NAME)
 		    Dim outstream As BinaryStream
 		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
 		    Call zip.MoveNext(outstream)
@@ -1159,6 +1160,9 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_INVALID_ENTRY, Type = Double, Dynamic = False, Default = \"-201", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = ERR_INVALID_NAME, Type = Double, Dynamic = False, Default = \"-205", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_NOT_ZIPPED, Type = Double, Dynamic = False, Default = \"-200", Scope = Protected
