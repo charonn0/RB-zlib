@@ -1183,7 +1183,7 @@ Protected Module zlib
 		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"libz.so.1"
 	#tag EndConstant
 
-	#tag Constant, Name = Z_ASCII, Type = Double, Dynamic = False, Default = \"Z_TEXT", Scope = Protected
+	#tag Constant, Name = Z_ASCII, Type = Double, Dynamic = False, Default = \"1", Scope = Protected, Attributes = \"deprecated \x3D "DataType.ASCII""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_BEST_COMPRESSION, Type = Double, Dynamic = False, Default = \"9", Scope = Protected
@@ -1192,7 +1192,7 @@ Protected Module zlib
 	#tag Constant, Name = Z_BEST_SPEED, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = Z_BINARY, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
+	#tag Constant, Name = Z_BINARY, Type = Double, Dynamic = False, Default = \"0", Scope = Protected, Attributes = \"deprecated \x3D "DataType.Binary""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_BLOCK, Type = Double, Dynamic = False, Default = \"5", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Block""
@@ -1264,13 +1264,13 @@ Protected Module zlib
 	#tag Constant, Name = Z_SYNC_FLUSH, Type = Double, Dynamic = False, Default = \"2", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Sync""
 	#tag EndConstant
 
-	#tag Constant, Name = Z_TEXT, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
+	#tag Constant, Name = Z_TEXT, Type = Double, Dynamic = False, Default = \"1", Scope = Protected, Attributes = \"deprecated \x3D "DataType.Text""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_TREES, Type = Double, Dynamic = False, Default = \"6", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Trees""
 	#tag EndConstant
 
-	#tag Constant, Name = Z_UNKNOWN, Type = Double, Dynamic = False, Default = \"2", Scope = Protected
+	#tag Constant, Name = Z_UNKNOWN, Type = Double, Dynamic = False, Default = \"2", Scope = Protected, Attributes = \"deprecated \x3D "DataType.Unknown""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_VERSION_ERROR, Type = Double, Dynamic = False, Default = \"-6", Scope = Private
@@ -1372,6 +1372,13 @@ Protected Module zlib
 		  Directory
 		  FIFO
 		Contiguous
+	#tag EndEnum
+
+	#tag Enum, Name = DataType, Type = Integer, Flags = &h1
+		Binary=0
+		  Text=1
+		  ASCII=1
+		Unknown=2
 	#tag EndEnum
 
 	#tag Enum, Name = FlushMode, Type = Integer, Flags = &h1
