@@ -195,10 +195,10 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return zstruct.data_type
+			  Return zlib.DataType(zstruct.data_type)
 			End Get
 		#tag EndGetter
-		DataType As UInt32
+		DataType As zlib.DataType
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0

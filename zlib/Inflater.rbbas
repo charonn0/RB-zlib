@@ -172,16 +172,6 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' Returns the decoding state
-			  Return zlib.DataType(zstruct.data_type)
-			End Get
-		#tag EndGetter
-		DataType As zlib.DataType
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
 			  ' Returns the sliding dictionary being maintained by inflate()
 			  
 			  If Not IsOpen Then Return Nil
@@ -245,6 +235,16 @@ Inherits FlateEngine
 	#tag Property, Flags = &h21
 		Private mGZHeader As gz_headerp
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns the decoding state
+			  Return zstruct.data_type
+			End Get
+		#tag EndGetter
+		State As UInt32
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior
