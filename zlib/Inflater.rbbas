@@ -2,20 +2,20 @@
 Protected Class Inflater
 Inherits FlateEngine
 	#tag Method, Flags = &h0
-		Sub Constructor(Encoding As Integer = zlib.DEFLATE_ENCODING)
+		Sub Constructor(Encoding As zlib.Encoding = zlib.Encoding.Deflate)
 		  ' Construct a new Inflater instance using the specified Encoding. Encoding control,
-		  ' among other things, the type of compression being used. (For GZip pass GZIP_ENCODING)
+		  ' among other things, the type of compression being used. (For GZip pass zlib.Encoding.GZip)
 		  ' If the inflate engine could not be initialized an exception will be raised.
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
 		  Super.Constructor()
 		  
-		  If Encoding = DEFLATE_ENCODING Then
+		  If Encoding = zlib.Encoding.Deflate Then
 		    mLastError = inflateInit_(zstruct, "1.2.8" + Chr(0), zstruct.Size)
 		  Else
 		    mLastError = inflateInit2_(zstruct, Encoding, "1.2.8" + Chr(0), zstruct.Size)
-		    If mLastError = Z_OK And Encoding >= GZIP_ENCODING Then mLastError = inflateGetHeader(zstruct, mGZHeader)
+		    If mLastError = Z_OK And Integer(Encoding) >= Integer(zlib.Encoding.GZip) Then mLastError = inflateGetHeader(zstruct, mGZHeader)
 		  End If
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mEncoding = Encoding
@@ -127,13 +127,13 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Reset(Encoding As Integer = 0)
+		Sub Reset(Encoding As zlib.Encoding = zlib.Encoding.Detect)
 		  ' Reinitializes the decompressor but does not free and reallocate all the internal decompression state.
 		  ' The stream will keep the attributes that may have been set by the constructor.
 		  
 		  If Not IsOpen Then Return
 		  If mGZHeader.Done = 1 Then mGZHeader.Done = 0
-		  If Encoding = 0 Then
+		  If Encoding = zlib.Encoding.Detect Then
 		    mLastError = inflateReset(zstruct)
 		  Else
 		    mLastError = inflateReset2(zstruct, Encoding)
@@ -203,7 +203,7 @@ Inherits FlateEngine
 			  Return mEncoding
 			End Get
 		#tag EndGetter
-		Encoding As Integer
+		Encoding As zlib.Encoding
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -229,7 +229,7 @@ Inherits FlateEngine
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mEncoding As Integer
+		Protected mEncoding As zlib.Encoding
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

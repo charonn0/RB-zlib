@@ -17,7 +17,7 @@ Protected Class ZipArchive
 		  mArchiveStream = ArchiveStream
 		  mArchiveStream.LittleEndian = True
 		  If Not Me.Reset(0) Then Raise New zlibException(ERR_NOT_ZIPPED)
-		  mZipStream = ZStream.Open(mArchiveStream, RAW_ENCODING)
+		  mZipStream = ZStream.Open(mArchiveStream, zlib.Encoding.Raw)
 		  mZipStream.BufferedReading = False
 		End Sub
 	#tag EndMethod
