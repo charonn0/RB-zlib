@@ -8,7 +8,7 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Flush(Flushing As Integer)
+		Sub Flush(Flushing As zlib.FlushMode)
 		  
 		End Sub
 	#tag EndMethod

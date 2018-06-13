@@ -92,7 +92,7 @@ Inherits FlateEngine
 		      ' provide more output space
 		      zstruct.next_out = outbuff
 		      zstruct.avail_out = outbuff.Size
-		      mLastError = inflate(zstruct, Z_NO_FLUSH)
+		      mLastError = inflate(zstruct, FlushMode.None)
 		      ' consume any output
 		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
 		      If have > 0 Then

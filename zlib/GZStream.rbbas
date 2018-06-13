@@ -63,15 +63,12 @@ Implements zlib.CompressedStream
 	#tag Method, Flags = &h21
 		Private Sub Flush() Implements Writeable.Flush
 		  // Part of the Writeable interface.
-		  ' Z_PARTIAL_FLUSH: All pending output is flushed to the output buffer, but the output is not aligned to a byte boundary.
-		  ' This completes the current deflate block and follows it with an empty fixed codes block that is 10 bits long.
-		  
-		  Me.Flush(Z_SYNC_FLUSH)
+		  Me.Flush(FlushMode.Sync)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Flush(Flushing As Integer) Implements zlib.CompressedStream.Flush
+		Sub Flush(Flushing As zlib.FlushMode) Implements zlib.CompressedStream.Flush
 		  // Part of the zlib.CompressedStream interface.
 		  If Not mIsWriteable Then Raise New IOException ' opened for reading!
 		  If gzFile = Nil Then Raise New NilObjectException

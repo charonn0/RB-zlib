@@ -143,7 +143,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
+		Private Soft Declare Function deflate Lib zlib1 (ByRef Stream As z_stream, Flush As FlushMode) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -468,7 +468,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzflush Lib zlib1 (gzFile As Ptr, Flush As Integer) As Integer
+		Private Soft Declare Function gzflush Lib zlib1 (gzFile As Ptr, Flush As FlushMode) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -588,7 +588,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
+		Private Soft Declare Function inflate Lib zlib1 (ByRef Stream As z_stream, Flush As FlushMode) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -1195,7 +1195,7 @@ Protected Module zlib
 	#tag Constant, Name = Z_BINARY, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = Z_BLOCK, Type = Double, Dynamic = False, Default = \"5", Scope = Protected
+	#tag Constant, Name = Z_BLOCK, Type = Double, Dynamic = False, Default = \"5", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Block""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_BUF_ERROR, Type = Double, Dynamic = False, Default = \"-5", Scope = Private
@@ -1222,13 +1222,13 @@ Protected Module zlib
 	#tag Constant, Name = Z_FILTERED, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = Z_FINISH, Type = Double, Dynamic = False, Default = \"4", Scope = Protected
+	#tag Constant, Name = Z_FINISH, Type = Double, Dynamic = False, Default = \"4", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Finish""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_FIXED, Type = Double, Dynamic = False, Default = \"4", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = Z_FULL_FLUSH, Type = Double, Dynamic = False, Default = \"3", Scope = Protected
+	#tag Constant, Name = Z_FULL_FLUSH, Type = Double, Dynamic = False, Default = \"3", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Full""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_HUFFMAN_ONLY, Type = Double, Dynamic = False, Default = \"2", Scope = Protected
@@ -1243,13 +1243,13 @@ Protected Module zlib
 	#tag Constant, Name = Z_NO_COMPRESSION, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = Z_NO_FLUSH, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
+	#tag Constant, Name = Z_NO_FLUSH, Type = Double, Dynamic = False, Default = \"0", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.None""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_OK, Type = Double, Dynamic = False, Default = \"0", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = Z_PARTIAL_FLUSH, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
+	#tag Constant, Name = Z_PARTIAL_FLUSH, Type = Double, Dynamic = False, Default = \"1", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Partial""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_RLE, Type = Double, Dynamic = False, Default = \"3", Scope = Protected
@@ -1261,13 +1261,13 @@ Protected Module zlib
 	#tag Constant, Name = Z_STREAM_ERROR, Type = Double, Dynamic = False, Default = \"-2", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = Z_SYNC_FLUSH, Type = Double, Dynamic = False, Default = \"2", Scope = Protected
+	#tag Constant, Name = Z_SYNC_FLUSH, Type = Double, Dynamic = False, Default = \"2", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Sync""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_TEXT, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = Z_TREES, Type = Double, Dynamic = False, Default = \"6", Scope = Protected
+	#tag Constant, Name = Z_TREES, Type = Double, Dynamic = False, Default = \"6", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Trees""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_UNKNOWN, Type = Double, Dynamic = False, Default = \"2", Scope = Protected
@@ -1374,6 +1374,15 @@ Protected Module zlib
 		Contiguous
 	#tag EndEnum
 
+	#tag Enum, Name = FlushMode, Type = Integer, Flags = &h1
+		None=0
+		  Partial=1
+		  Sync=2
+		  Full=3
+		  Finish=4
+		  Block=5
+		Trees=6
+	#tag EndEnum
 
 	#tag ViewBehavior
 		#tag ViewProperty

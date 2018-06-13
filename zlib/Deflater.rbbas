@@ -53,7 +53,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
+		Function Deflate(Data As MemoryBlock, Flushing As zlib.FlushMode = zlib.FlushMode.None) As MemoryBlock
 		  ' Compresses Data and returns it as a new MemoryBlock, or Nil on error.
 		  ' Check LastError for details if there was an error.
 		  
@@ -69,7 +69,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH, ReadCount As Integer = - 1) As Boolean
+		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As zlib.FlushMode = zlib.FlushMode.None, ReadCount As Integer = - 1) As Boolean
 		  ' Reads uncompressed bytes from ReadFrom and writes all compressed output to WriteTo. If
 		  ' ReadCount is specified then exactly ReadCount uncompressed bytes are read; otherwise
 		  ' uncompressed bytes will continue to be read until ReadFrom.EOF. If ReadFrom represents 
@@ -114,7 +114,7 @@ Inherits FlateEngine
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
-		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
+		  If Flushing = FlushMode.Finish And mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
 		  Return zstruct.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
 		  
 		  

@@ -11,7 +11,7 @@ Implements zlib.CompressedStream
 		  
 		  If mDeflater <> Nil Then
 		    Try
-		      Me.Flush(Z_FINISH)
+		      Me.Flush(FlushMode.Finish)
 		    Catch
 		    End Try
 		  End If
@@ -140,12 +140,12 @@ Implements zlib.CompressedStream
 		  ' Flushing may degrade compression so it should be used only when necessary. This completes the
 		  ' current deflate block and follows it with an empty stored block that is three bits plus filler bits
 		  ' to the next byte, followed by four bytes (00 00 ff ff).
-		  Me.Flush(Z_SYNC_FLUSH)
+		  Me.Flush(FlushMode.Sync)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Flush(Flushing As Integer)
+		Sub Flush(Flushing As zlib.FlushMode)
 		  // Part of the zlib.CompressedStream interface.
 		  ' Flushing may be:
 		  '   Z_NO_FLUSH:      allows deflate to decide how much data to accumulate before producing output
