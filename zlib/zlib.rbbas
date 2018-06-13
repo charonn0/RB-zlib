@@ -1210,7 +1210,7 @@ Protected Module zlib
 	#tag Constant, Name = Z_DEFAULT_STRATEGY, Type = Double, Dynamic = False, Default = \"0", Scope = Protected, Attributes = \"deprecated \x3D "Strategies.Default""
 	#tag EndConstant
 
-	#tag Constant, Name = Z_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Protected
+	#tag Constant, Name = Z_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = Z_DETECT, Type = Double, Dynamic = False, Default = \"47", Scope = Protected
