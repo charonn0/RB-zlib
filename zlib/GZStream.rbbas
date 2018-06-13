@@ -28,7 +28,7 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(OutputFile As FolderItem, Append As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY) As zlib.GZStream
+		 Shared Function Create(OutputFile As FolderItem, Append As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As zlib.Strategies = zlib.Strategies.Default) As zlib.GZStream
 		  ' Creates an empty gzip stream, or opens an existing stream for appending
 		  If OutputFile = Nil Or OutputFile.Directory Then Raise New IOException
 		  Dim mode As String = "wb"
@@ -300,7 +300,7 @@ Implements zlib.CompressedStream
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mStrategy As Integer = Z_DEFAULT_STRATEGY
+		Private mStrategy As zlib.Strategies = zlib.Strategies.Default
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -340,7 +340,7 @@ Implements zlib.CompressedStream
 			  
 			End Set
 		#tag EndSetter
-		Strategy As Integer
+		Strategy As zlib.Strategies
 	#tag EndComputedProperty
 
 

@@ -283,7 +283,7 @@ Protected Module zlib
 		  ' memory overhead.
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate
 		  
-		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Z_DEFAULT_STRATEGY, Encoding)
+		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Strategies.Default, Encoding)
 		  Try
 		    Do Until Source.EOF
 		      z.Write(Source.Read(CHUNK_SIZE))
@@ -309,7 +309,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateInit2_ Lib zlib1 (ByRef Stream As z_stream, CompressionLevel As Integer, CompressionMethod As Integer, Encoding As Integer, MemLevel As Integer, Strategy As Integer, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function deflateInit2_ Lib zlib1 (ByRef Stream As z_stream, CompressionLevel As Integer, CompressionMethod As Integer, Encoding As Integer, MemLevel As Integer, Strategy As Strategies, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -317,7 +317,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateParams Lib zlib1 (ByRef Stream As z_stream, Level As Integer, Strategy As Integer) As Integer
+		Private Soft Declare Function deflateParams Lib zlib1 (ByRef Stream As z_stream, Level As Integer, Strategy As Strategies) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -580,7 +580,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzsetparams Lib zlib1 (gzFile As Ptr, Level As Integer, Strategy As Integer) As Integer
+		Private Soft Declare Function gzsetparams Lib zlib1 (gzFile As Ptr, Level As Integer, Strategy As Strategies) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
@@ -1207,7 +1207,7 @@ Protected Module zlib
 	#tag Constant, Name = Z_DEFAULT_COMPRESSION, Type = Double, Dynamic = False, Default = \"-1", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = Z_DEFAULT_STRATEGY, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
+	#tag Constant, Name = Z_DEFAULT_STRATEGY, Type = Double, Dynamic = False, Default = \"0", Scope = Protected, Attributes = \"deprecated \x3D "Strategies.Default""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Protected
@@ -1219,19 +1219,19 @@ Protected Module zlib
 	#tag Constant, Name = Z_ERRNO, Type = Double, Dynamic = False, Default = \"-1", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = Z_FILTERED, Type = Double, Dynamic = False, Default = \"1", Scope = Protected
+	#tag Constant, Name = Z_FILTERED, Type = Double, Dynamic = False, Default = \"1", Scope = Protected, Attributes = \"deprecated \x3D "Strategies.Filtered""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_FINISH, Type = Double, Dynamic = False, Default = \"4", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Finish""
 	#tag EndConstant
 
-	#tag Constant, Name = Z_FIXED, Type = Double, Dynamic = False, Default = \"4", Scope = Protected
+	#tag Constant, Name = Z_FIXED, Type = Double, Dynamic = False, Default = \"4", Scope = Protected, Attributes = \"deprecated \x3D "Strategies.Fixed""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_FULL_FLUSH, Type = Double, Dynamic = False, Default = \"3", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Full""
 	#tag EndConstant
 
-	#tag Constant, Name = Z_HUFFMAN_ONLY, Type = Double, Dynamic = False, Default = \"2", Scope = Protected
+	#tag Constant, Name = Z_HUFFMAN_ONLY, Type = Double, Dynamic = False, Default = \"2", Scope = Protected, Attributes = \"deprecated \x3D "Strategies.HuffmanOnly""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_MEM_ERROR, Type = Double, Dynamic = False, Default = \"-4", Scope = Private
@@ -1252,7 +1252,7 @@ Protected Module zlib
 	#tag Constant, Name = Z_PARTIAL_FLUSH, Type = Double, Dynamic = False, Default = \"1", Scope = Protected, Attributes = \"deprecated \x3D "FlushMode.Partial""
 	#tag EndConstant
 
-	#tag Constant, Name = Z_RLE, Type = Double, Dynamic = False, Default = \"3", Scope = Protected
+	#tag Constant, Name = Z_RLE, Type = Double, Dynamic = False, Default = \"3", Scope = Protected, Attributes = \"deprecated \x3D "Strategies.RLE""
 	#tag EndConstant
 
 	#tag Constant, Name = Z_STREAM_END, Type = Double, Dynamic = False, Default = \"1", Scope = Private
@@ -1383,6 +1383,15 @@ Protected Module zlib
 		  Block=5
 		Trees=6
 	#tag EndEnum
+
+	#tag Enum, Name = Strategies, Type = Integer, Flags = &h1
+		Default=0
+		  Filtered=1
+		  HuffmanOnly=2
+		  RLE=3
+		Fixed=4
+	#tag EndEnum
+
 
 	#tag ViewBehavior
 		#tag ViewProperty

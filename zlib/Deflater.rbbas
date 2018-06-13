@@ -10,7 +10,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, Encoding As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As zlib.Strategies = zlib.Strategies.Default, Encoding As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
 		  ' Construct a new Deflater instance using the specified compression options.
 		  ' If the deflate engine could not be initialized an exception will be raised.
 		  
@@ -18,7 +18,7 @@ Inherits FlateEngine
 		  // Constructor() -- From zlib.FlateEngine
 		  Super.Constructor()
 		  
-		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or Encoding <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
+		  If CompressionStrategy <> Strategies.Default Or Encoding <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
 		    ' Open the compressed stream using custom options
 		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, "1.2.8" + Chr(0), zstruct.Size)
 		    
@@ -267,7 +267,7 @@ Inherits FlateEngine
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mStrategy As Integer = Z_DEFAULT_STRATEGY
+		Protected mStrategy As zlib.Strategies = zlib.Strategies.Default
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -290,7 +290,7 @@ Inherits FlateEngine
 			  
 			End Set
 		#tag EndSetter
-		Strategy As Integer
+		Strategy As zlib.Strategies
 	#tag EndComputedProperty
 
 
