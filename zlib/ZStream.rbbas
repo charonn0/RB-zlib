@@ -24,7 +24,7 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(Source As BinaryStream, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As zlib.Strategies = zlib.Strategies.Default, Encoding As Integer = zlib.Z_DETECT, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		Sub Constructor(Source As BinaryStream, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As zlib.Strategies = zlib.Strategies.Default, Encoding As zlib.Encoding = zlib.Encoding.Detect, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
 		  ' Constructs a ZStream from the Source BinaryStream. If the Source's current position is equal
 		  ' to its length then compressed output will be appended, otherwise the Source will be used as 
 		  ' input to be decompressed.
