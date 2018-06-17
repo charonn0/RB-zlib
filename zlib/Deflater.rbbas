@@ -10,7 +10,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As zlib.Strategies = zlib.Strategies.Default, Encoding As zlib.Encoding = zlib.Encoding.Deflate, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
+		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As zlib.Encoding = zlib.Encoding.Deflate, CompressionStrategy As zlib.Strategies = zlib.Strategies.Default, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
 		  ' Construct a new Deflater instance using the specified compression options.
 		  ' If the deflate engine could not be initialized an exception will be raised.
 		  

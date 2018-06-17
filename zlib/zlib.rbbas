@@ -283,7 +283,7 @@ Protected Module zlib
 		  ' memory overhead.
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate
 		  
-		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Strategies.Default, Encoding)
+		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Encoding)
 		  Try
 		    Do Until Source.EOF
 		      z.Write(Source.Read(CHUNK_SIZE))
