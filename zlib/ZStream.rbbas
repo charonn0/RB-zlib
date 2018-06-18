@@ -499,8 +499,8 @@ Implements zlib.CompressedStream
 		Private mReadBuffer As String
 	#tag EndProperty
 
-	#tag Property, Flags = &h1
-		Protected mSource As Readable
+	#tag Property, Flags = &h21
+		Private mSource As Readable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
