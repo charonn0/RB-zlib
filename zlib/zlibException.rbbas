@@ -9,7 +9,7 @@ Inherits RuntimeException
 		    
 		    ' archive-related errors (non-zlib)
 		  Case ERR_END_ARCHIVE
-		    Me.Message = "The archive contains no additional entries."
+		    Me.Message = "The archive contains no further entries."
 		  Case ERR_INVALID_ENTRY
 		    Me.Message = "The archive entry is corrupt."
 		  Case ERR_NOT_ZIPPED
