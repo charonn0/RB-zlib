@@ -951,6 +951,8 @@ Protected Module zlib
 		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
 		  ' the rules of the target system.
 		  
+		  If name.Encoding = Nil Then name = DefineEncoding(name, Encodings.UTF8)
+		  
 		  #If TargetWin32 Then
 		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
 		    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9")
