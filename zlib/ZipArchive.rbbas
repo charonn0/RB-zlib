@@ -137,6 +137,7 @@ Protected Class ZipArchive
 		  mIndex = mIndex + 1
 		  mCurrentFile.StringValue(True) = mArchiveStream.Read(mCurrentFile.Size)
 		  If mCurrentFile.Signature <> FILE_SIGNATURE Then
+		  If mCurrentFile.Signature <> ZIP_ENTRY_SIGNATURE Then
 		    mLastError = ERR_INVALID_ENTRY
 		    Return False
 		  End If
@@ -146,8 +147,8 @@ Protected Class ZipArchive
 		  If BitAnd(mCurrentFile.Flag, 4) = 4 And mCurrentFile.CompressedSize = 0 Then ' footer follows
 		    Dim footer As ZipFileFooter
 		    footer.StringValue(True) = mArchiveStream.Read(footer.Size)
-		    If footer.Signature <> FILE_FOOTER_SIGNATURE Then
-		      mArchiveStream.Position = mArchiveStream.Position - footer.Size
+		    If footer.Signature <> ZIP_ENTRY_FOOTER_SIGNATURE Then
+		      mArchiveStream.Position = mArchiveStream.Position - ZIP_ENTRY_FOOTER_SIZE
 		    Else
 		      mCurrentFile.CompressedSize = footer.ComressedSize
 		      mCurrentFile.UncompressedSize = footer.UncompressedSize
@@ -171,7 +172,7 @@ Protected Class ZipArchive
 		  mDirectoryHeader.StringValue(True) = ""
 		  mRunningCRC = 0
 		  Do Until mDirectoryHeaderOffset > 0
-		    If mArchiveStream.ReadUInt32 = DIRECTORY_FOOTER_HEADER Then
+		    If mArchiveStream.ReadUInt32 = ZIP_DIRECTORY_FOOTER_SIGNATURE Then
 		      mArchiveStream.Position = mArchiveStream.Position - 4
 		      mDirectoryFooter.StringValue(True) = mArchiveStream.Read(mDirectoryFooter.Size)
 		      mArchiveStream.Position = mDirectoryFooter.Offset
@@ -187,7 +188,7 @@ Protected Class ZipArchive
 		    Else
 		      mArchiveStream.Position = mArchiveStream.Position - 5
 		    End If
-		  Loop Until mArchiveStream.Position < 22
+		  Loop Until mArchiveStream.Position < MIN_ARCHIVE_SIZE
 		  
 		  mIndex = -1
 		  mCurrentExtra = Nil
@@ -427,16 +428,31 @@ Protected Class ZipArchive
 	#tag EndProperty
 
 
-	#tag Constant, Name = DIRECTORY_FOOTER_HEADER, Type = Double, Dynamic = False, Default = \"&h06054b50", Scope = Protected
+	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = DIRECTORY_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h02014b50", Scope = Protected
+	#tag Constant, Name = ZIP_DIRECTORY_FOOTER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h06054b50", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = FILE_FOOTER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h08074b50", Scope = Protected
+	#tag Constant, Name = ZIP_DIRECTORY_FOOTER_SIZE, Type = Double, Dynamic = False, Default = \"22", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = FILE_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h04034b50", Scope = Protected
+	#tag Constant, Name = ZIP_DIRECTORY_HEADER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h02014b50", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = ZIP_DIRECTORY_HEADER_SIZE, Type = Double, Dynamic = False, Default = \"46", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = ZIP_ENTRY_FOOTER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h08074b50", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = ZIP_ENTRY_FOOTER_SIZE, Type = Double, Dynamic = False, Default = \"16", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = ZIP_ENTRY_HEADER_SIZE, Type = Double, Dynamic = False, Default = \"30", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = ZIP_ENTRY_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h04034b50", Scope = Private
 	#tag EndConstant
 
 
