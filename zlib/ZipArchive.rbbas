@@ -252,28 +252,28 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Function Reset(Index As Integer = 0) As Boolean
 		  mArchiveStream.Position = mArchiveStream.Length - 4
-		  mDirectoryHeaderOffset = 0
 		  mDirectoryHeader.StringValue(True) = ""
 		  mRunningCRC = 0
-		  Do Until mDirectoryHeaderOffset > 0
-		    If mArchiveStream.ReadUInt32 = ZIP_DIRECTORY_FOOTER_SIGNATURE Then
-		      mArchiveStream.Position = mArchiveStream.Position - 4
-		      mDirectoryFooter = ReadDirectoryFooter(mArchiveStream)
-		      mArchiveStream.Position = mDirectoryFooter.Offset
-		      mDirectoryHeaderOffset = mArchiveStream.Position
-		      mDirectoryHeader = ReadDirectoryHeader(mArchiveStream)
-		      mArchiveName = mArchiveStream.Read(mDirectoryHeader.FilenameLength)
-		      mExtraData = mArchiveStream.Read(mDirectoryHeader.ExtraLength)
-		      mArchiveComment = mArchiveStream.Read(mDirectoryHeader.CommentLength)
-		      If mDirectoryFooter.ThisRecordCount = 0 Then
-		        mIndex = -1
-		        Return True
-		      End If
-		    Else
-		      mArchiveStream.Position = mArchiveStream.Position - 5
-		    End If
-		  Loop Until mArchiveStream.Position < MIN_ARCHIVE_SIZE
 		  
+		  If Not FindDirectoryFooter(mArchiveStream, mDirectoryFooter) Then
+		    mLastError = ERR_NOT_ZIPPED
+		    Return False
+		  End If
+		  
+		  mArchiveStream.Position = mDirectoryFooter.Offset
+		  mDirectoryHeaderOffset = mArchiveStream.Position
+		  If Not ReadDirectoryHeader(mArchiveStream, mDirectoryHeader) Then
+		    mLastError = ERR_NOT_ZIPPED
+		    Return False
+		  End If
+		  
+		  mArchiveName = mArchiveStream.Read(mDirectoryHeader.FilenameLength)
+		  mExtraData = mArchiveStream.Read(mDirectoryHeader.ExtraLength)
+		  mArchiveComment = mArchiveStream.Read(mDirectoryHeader.CommentLength)
+		  If mDirectoryFooter.ThisRecordCount = 0 Then
+		    mIndex = -1
+		    Return True
+		  End If
 		  mIndex = -1
 		  mCurrentExtra = Nil
 		  mCurrentEntry.StringValue(True) = ""
