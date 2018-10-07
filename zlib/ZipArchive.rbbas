@@ -135,8 +135,7 @@ Protected Class ZipArchive
 		    Return False
 		  End If
 		  mIndex = mIndex + 1
-		  mCurrentFile.StringValue(True) = mArchiveStream.Read(mCurrentFile.Size)
-		  If mCurrentFile.Signature <> FILE_SIGNATURE Then
+		  mCurrentFile = ReadFileHeader(mArchiveStream)
 		  If mCurrentFile.Signature <> ZIP_ENTRY_SIGNATURE Then
 		    mLastError = ERR_INVALID_ENTRY
 		    Return False
@@ -145,8 +144,7 @@ Protected Class ZipArchive
 		  mCurrentExtra = mArchiveStream.Read(mCurrentFile.ExtraLength)
 		  
 		  If BitAnd(mCurrentFile.Flag, 4) = 4 And mCurrentFile.CompressedSize = 0 Then ' footer follows
-		    Dim footer As ZipFileFooter
-		    footer.StringValue(True) = mArchiveStream.Read(footer.Size)
+		    Dim footer As ZipEntryFooter = ReadFileFooter(mArchiveStream)
 		    If footer.Signature <> ZIP_ENTRY_FOOTER_SIGNATURE Then
 		      mArchiveStream.Position = mArchiveStream.Position - ZIP_ENTRY_FOOTER_SIZE
 		    Else
@@ -165,6 +163,82 @@ Protected Class ZipArchive
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Shared Function ReadDirectoryFooter(Stream As BinaryStream) As ZipDirectoryFooter
+		  Dim struct As ZipDirectoryFooter
+		  struct.Signature = Stream.ReadUInt32
+		  struct.ThisDisk = Stream.ReadUInt16
+		  struct.FirstDisk = Stream.ReadUInt16
+		  struct.ThisRecordCount = Stream.ReadUInt16
+		  struct.TotalRecordCount = Stream.ReadUInt16
+		  struct.DirectorySize = Stream.ReadUInt32
+		  struct.Offset = Stream.ReadUInt32
+		  struct.CommentLength = Stream.ReadUInt16
+		  
+		  Return struct
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Function ReadDirectoryHeader(Stream As BinaryStream) As ZipDirectoryHeader
+		  Dim struct As ZipDirectoryHeader
+		  struct.Signature = Stream.ReadUInt32
+		  struct.Version = Stream.ReadUInt16
+		  struct.VersionNeeded = Stream.ReadUInt16
+		  struct.Flag = Stream.ReadUInt16
+		  struct.Method = Stream.ReadUInt16
+		  struct.ModTime = Stream.ReadUInt16
+		  struct.ModDate = Stream.ReadUInt16
+		  struct.CRC32 = Stream.ReadUInt32
+		  struct.CompressedSize = Stream.ReadUInt32
+		  struct.UncompressedSize = Stream.ReadUInt32
+		  struct.FilenameLength = Stream.ReadUInt16
+		  struct.ExtraLength = Stream.ReadUInt16
+		  struct.CommentLength = Stream.ReadUInt16
+		  struct.DiskNumber = Stream.ReadUInt16
+		  struct.InternalAttributes = Stream.ReadUInt16
+		  struct.ExternalAttributes = Stream.ReadUInt32
+		  struct.Offset = Stream.ReadUInt32
+		  
+		  Return struct
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Function ReadFileFooter(Stream As BinaryStream) As ZipEntryFooter
+		  Dim struct As ZipEntryFooter
+		  struct.Signature = Stream.ReadUInt32
+		  struct.CRC32 = Stream.ReadUInt32
+		  struct.ComressedSize = Stream.ReadUInt32
+		  struct.UncompressedSize = Stream.ReadUInt32
+		  
+		  Return struct
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Function ReadFileHeader(Stream As BinaryStream) As ZipEntryHeader
+		  Dim struct As ZipEntryHeader
+		  struct.Signature = Stream.ReadUInt32
+		  struct.Version = Stream.ReadUInt16
+		  struct.Flag = Stream.ReadUInt16
+		  struct.Method = Stream.ReadUInt16
+		  struct.ModTime = Stream.ReadUInt16
+		  struct.ModDate = Stream.ReadUInt16
+		  struct.CRC32 = Stream.ReadUInt32
+		  struct.CompressedSize = Stream.ReadUInt32
+		  struct.UncompressedSize = Stream.ReadUInt32
+		  struct.FilenameLength = Stream.ReadUInt16
+		  struct.ExtraLength = Stream.ReadUInt16
+		  
+		  Return struct
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Reset(Index As Integer = 0) As Boolean
 		  mArchiveStream.Position = mArchiveStream.Length - 4
@@ -174,10 +248,10 @@ Protected Class ZipArchive
 		  Do Until mDirectoryHeaderOffset > 0
 		    If mArchiveStream.ReadUInt32 = ZIP_DIRECTORY_FOOTER_SIGNATURE Then
 		      mArchiveStream.Position = mArchiveStream.Position - 4
-		      mDirectoryFooter.StringValue(True) = mArchiveStream.Read(mDirectoryFooter.Size)
+		      mDirectoryFooter = ReadDirectoryFooter(mArchiveStream)
 		      mArchiveStream.Position = mDirectoryFooter.Offset
 		      mDirectoryHeaderOffset = mArchiveStream.Position
-		      mDirectoryHeader.StringValue(True) = mArchiveStream.Read(mDirectoryHeader.Size)
+		      mDirectoryHeader = ReadDirectoryHeader(mArchiveStream)
 		      mArchiveName = mArchiveStream.Read(mDirectoryHeader.FilenameLength)
 		      mExtraData = mArchiveStream.Read(mDirectoryHeader.ExtraLength)
 		      mArchiveComment = mArchiveStream.Read(mDirectoryHeader.CommentLength)
@@ -380,7 +454,7 @@ Protected Class ZipArchive
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentFile As ZipFileHeader
+		Private mCurrentFile As ZipEntryHeader
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
