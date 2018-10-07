@@ -16,7 +16,7 @@ Protected Class ZipArchive
 		Sub Constructor(ArchiveStream As BinaryStream)
 		  mArchiveStream = ArchiveStream
 		  mArchiveStream.LittleEndian = True
-		  If Not Me.Reset(0) Then Raise New zlibException(ERR_NOT_ZIPPED)
+		  If Not Me.Reset(0) Then Raise New zlibException(mLastError)
 		  mZipStream = ZStream.Open(mArchiveStream, RAW_ENCODING)
 		  mZipStream.BufferedReading = False
 		End Sub
