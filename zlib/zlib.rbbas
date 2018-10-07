@@ -11,13 +11,13 @@ Protected Module zlib
 		  ' If NewData.Size is not known (-1) then specify the size as NewDataSize
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Adler32
 		  
-		  If Not zlib.IsAvailable Then Return 0
+		  If Not zlib.IsAvailable Or NewData = Nil Then Return 0
 		  Static ADLER_POLYNOMIAL As UInt32
 		  If ADLER_POLYNOMIAL = 0 Then ADLER_POLYNOMIAL = _adler32(0, Nil, 0)
 		  
 		  If NewDataSize = -1 Then NewDataSize = NewData.Size
 		  If LastAdler = 0 Then LastAdler = ADLER_POLYNOMIAL
-		  If NewData <> Nil Then Return _adler32(LastAdler, NewData, NewDataSize)
+		  Return _adler32(LastAdler, NewData, NewDataSize)
 		  
 		End Function
 	#tag EndMethod
@@ -91,13 +91,13 @@ Protected Module zlib
 		  ' If NewData.Size is not known (-1) then specify the size as NewDataSize
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.CRC32
 		  
-		  If Not zlib.IsAvailable Then Return 0
+		  If Not zlib.IsAvailable Or NewData = Nil Then Return 0
 		  Static CRC_POLYNOMIAL As UInt32
 		  If CRC_POLYNOMIAL = 0 Then CRC_POLYNOMIAL = _crc32(0, Nil, 0)
 		  
 		  If NewDataSize = -1 Then NewDataSize = NewData.Size
 		  If LastCRC = 0 Then LastCRC = CRC_POLYNOMIAL
-		  If NewData <> Nil Then Return _crc32(LastCRC, NewData, NewDataSize)
+		  Return _crc32(LastCRC, NewData, NewDataSize)
 		  
 		End Function
 	#tag EndMethod
