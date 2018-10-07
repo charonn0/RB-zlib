@@ -75,56 +75,6 @@ Protected Class ZipArchive
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function CurrentCRC32() As UInt32
-		  If mIndex > -1 Then Return mCurrentFile.CRC32 Else Return 0
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CurrentDataOffset() As UInt64
-		  Return mCurrentDataOffset
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CurrentExtra() As MemoryBlock
-		  If mIndex > -1 Then Return mCurrentExtra
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CurrentIndex() As Integer
-		  Return mIndex
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CurrentModificationDate() As Date
-		  If mIndex = -1 Then Return Nil
-		  
-		  Return ConvertDate(mCurrentFile.ModDate, mCurrentFile.ModTime)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CurrentName() As String
-		  If mIndex > -1 Then Return mCurrentName
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CurrentSize() As Integer
-		  If mIndex > -1 Then Return mCurrentFile.CompressedSize Else Return -1
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CurrentUncompressedSize() As Integer
-		  If mIndex > -1 Then Return mCurrentFile.UncompressedSize Else Return -1
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
@@ -324,6 +274,80 @@ Protected Class ZipArchive
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  If mIndex > -1 Then Return mCurrentFile.CRC32 Else Return 0
+			End Get
+		#tag EndGetter
+		CurrentCRC32 As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mCurrentDataOffset
+			End Get
+		#tag EndGetter
+		CurrentDataOffset As UInt64
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mIndex > -1 Then Return mCurrentExtra
+			End Get
+		#tag EndGetter
+		CurrentExtraData As MemoryBlock
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mIndex
+			End Get
+		#tag EndGetter
+		CurrentIndex As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mIndex = -1 Then Return Nil
+			  
+			  Return ConvertDate(mCurrentFile.ModDate, mCurrentFile.ModTime)
+			End Get
+		#tag EndGetter
+		CurrentModificationDate As Date
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mIndex > -1 Then Return mCurrentName
+			End Get
+		#tag EndGetter
+		CurrentName As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mIndex > -1 Then Return mCurrentFile.CompressedSize Else Return -1
+			End Get
+		#tag EndGetter
+		CurrentSize As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mIndex > -1 Then Return mCurrentFile.UncompressedSize Else Return -1
+			End Get
+		#tag EndGetter
+		CurrentUncompressedSize As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  Return BitAnd(mDirectoryHeader.Flag, 1) = 1
 			End Get
 		#tag EndGetter
@@ -471,11 +495,31 @@ Protected Class ZipArchive
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="ArchiveComment"
+			Group="Behavior"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ArchiveName"
+			Group="Behavior"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="CompressionLevel"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Index"
 			Visible=true
 			Group="ID"
 			InitialValue="-2147483648"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsEncrypted"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -502,6 +546,12 @@ Protected Class ZipArchive
 			Group="Position"
 			InitialValue="0"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ValidateChecksums"
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
