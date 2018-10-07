@@ -100,23 +100,23 @@ Protected Class ZipArchive
 		  If mDirectoryHeaderOffset = 0 Then Raise New IOException
 		  ' extract the current item
 		  If ExtractTo <> Nil Then
-		    Select Case mCurrentFile.Method
+		    Select Case mCurrentEntry.Method
 		    Case 0 ' not compressed
-		      If mCurrentFile.UncompressedSize > 0 Then ExtractTo.Write(mArchiveStream.Read(mCurrentFile.CompressedSize))
+		      If mCurrentEntry.UncompressedSize > 0 Then ExtractTo.Write(mArchiveStream.Read(mCurrentEntry.CompressedSize))
 		    Case 8 ' deflated
 		      mZipStream.Reset
 		      Dim p As UInt64 = mArchiveStream.Position
-		      If ValidateChecksums Then mCurrentCRC = 0 Else mCurrentCRC = mCurrentFile.CRC32
-		      Do Until mArchiveStream.Position - p >= mCurrentFile.CompressedSize
+		      If ValidateChecksums Then mCurrentCRC = 0 Else mCurrentCRC = mCurrentEntry.CRC32
+		      Do Until mArchiveStream.Position - p >= mCurrentEntry.CompressedSize
 		        Dim offset As UInt64 = mArchiveStream.Position - p
-		        Dim sz As Integer = Min(mCurrentFile.CompressedSize - offset, CHUNK_SIZE)
+		        Dim sz As Integer = Min(mCurrentEntry.CompressedSize - offset, CHUNK_SIZE)
 		        Dim data As MemoryBlock = mZipStream.Read(sz)
 		        If data.Size > 0 Then
 		          If ValidateChecksums Then mCurrentCRC = CRC32(data, mCurrentCRC, data.Size)
 		          ExtractTo.Write(data)
 		        End If
 		      Loop
-		      If ValidateChecksums And (mCurrentCRC <> mCurrentFile.CRC32) Then
+		      If ValidateChecksums And (mCurrentCRC <> mCurrentEntry.CRC32) Then
 		        mLastError = ERR_CHECKSUM_MISMATCH
 		        Return False
 		      End If
@@ -125,9 +125,9 @@ Protected Class ZipArchive
 		      Return False
 		    End Select
 		  Else
-		    mArchiveStream.Position = mArchiveStream.Position + mCurrentFile.CompressedSize
+		    mArchiveStream.Position = mArchiveStream.Position + mCurrentEntry.CompressedSize
 		  End If
-		  If ValidateChecksums Then mRunningCRC = CRC32Combine(mRunningCRC, mCurrentCRC, mCurrentFile.UncompressedSize)
+		  If ValidateChecksums Then mRunningCRC = CRC32Combine(mRunningCRC, mCurrentCRC, mCurrentEntry.UncompressedSize)
 		  
 		  ' read the next entry header
 		  If mArchiveStream.Position >= mDirectoryHeaderOffset Then
@@ -140,16 +140,16 @@ Protected Class ZipArchive
 		    mLastError = ERR_INVALID_ENTRY
 		    Return False
 		  End If
-		  mCurrentName = mArchiveStream.Read(mCurrentFile.FilenameLength)
-		  mCurrentExtra = mArchiveStream.Read(mCurrentFile.ExtraLength)
+		  mCurrentName = mArchiveStream.Read(mCurrentEntry.FilenameLength)
+		  mCurrentExtra = mArchiveStream.Read(mCurrentEntry.ExtraLength)
 		  
-		  If BitAnd(mCurrentFile.Flag, 4) = 4 And mCurrentFile.CompressedSize = 0 Then ' footer follows
 		    Dim footer As ZipEntryFooter = ReadFileFooter(mArchiveStream)
 		    If footer.Signature <> ZIP_ENTRY_FOOTER_SIGNATURE Then
+		  If BitAnd(mCurrentEntry.Flag, 4) = 4 And mCurrentEntry.CompressedSize = 0 Then ' footer follows
 		      mArchiveStream.Position = mArchiveStream.Position - ZIP_ENTRY_FOOTER_SIZE
 		    Else
-		      mCurrentFile.CompressedSize = footer.ComressedSize
-		      mCurrentFile.UncompressedSize = footer.UncompressedSize
+		      mCurrentEntry.CompressedSize = footer.ComressedSize
+		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
 		    End If
 		  End If
 		  mCurrentDataOffset = mArchiveStream.Position
@@ -266,7 +266,7 @@ Protected Class ZipArchive
 		  
 		  mIndex = -1
 		  mCurrentExtra = Nil
-		  mCurrentFile.StringValue(True) = ""
+		  mCurrentEntry.StringValue(True) = ""
 		  mCurrentName = ""
 		  If mDirectoryHeaderOffset = 0 Then
 		    mLastError = ERR_NOT_ZIPPED
@@ -349,7 +349,7 @@ Protected Class ZipArchive
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  If mIndex > -1 Then Return mCurrentFile.CRC32 Else Return 0
+			  If mIndex > -1 Then Return mCurrentEntry.CRC32 Else Return 0
 			End Get
 		#tag EndGetter
 		CurrentCRC32 As UInt32
@@ -387,7 +387,7 @@ Protected Class ZipArchive
 			Get
 			  If mIndex = -1 Then Return Nil
 			  
-			  Return ConvertDate(mCurrentFile.ModDate, mCurrentFile.ModTime)
+			  Return ConvertDate(mCurrentEntry.ModDate, mCurrentEntry.ModTime)
 			End Get
 		#tag EndGetter
 		CurrentModificationDate As Date
@@ -405,7 +405,7 @@ Protected Class ZipArchive
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  If mIndex > -1 Then Return mCurrentFile.CompressedSize Else Return -1
+			  If mIndex > -1 Then Return mCurrentEntry.CompressedSize Else Return -1
 			End Get
 		#tag EndGetter
 		CurrentSize As UInt32
@@ -414,7 +414,7 @@ Protected Class ZipArchive
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  If mIndex > -1 Then Return mCurrentFile.UncompressedSize Else Return -1
+			  If mIndex > -1 Then Return mCurrentEntry.UncompressedSize Else Return -1
 			End Get
 		#tag EndGetter
 		CurrentUncompressedSize As UInt32
@@ -450,11 +450,11 @@ Protected Class ZipArchive
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentExtra As MemoryBlock
+		Private mCurrentEntry As ZipEntryHeader
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentFile As ZipEntryHeader
+		Private mCurrentExtra As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
