@@ -102,6 +102,44 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		 Shared Function GetDirectory(Stream As BinaryStream) As Dictionary
+		  Dim footer As ZipDirectoryFooter
+		  Dim isempty As Boolean
+		  If Not FindDirectoryFooter(Stream, footer, isempty) Then Return Nil
+		  Stream.Position = footer.Offset
+		  Dim data As MemoryBlock = Stream.Read(footer.DirectorySize)
+		  Dim ret As New Dictionary
+		  Dim bs As New BinaryStream(data)
+		  Do Until bs.EOF
+		    Dim header As ZipDirectoryHeader
+		    If Not ReadDirectoryHeader(bs, header) Then Break
+		    Dim name As String = bs.Read(header.FilenameLength)
+		    Call bs.Read(header.CommentLength + header.ExtraLength)
+		    ret.Value(name) = header.Offset
+		  Loop
+		  Return ret
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function GetEntryIndexByName(Stream As BinaryStream, Name As String) As Integer
+		  Dim footer As ZipDirectoryFooter
+		  Dim isempty As Boolean
+		  If Not FindDirectoryFooter(Stream, footer, isempty) Then Return -2
+		  Stream.Position = footer.Offset
+		  Dim index As Integer
+		  Do Until Stream.Position >= footer.Offset + footer.DirectorySize
+		    Dim header As ZipDirectoryHeader
+		    If Not ReadDirectoryHeader(Stream, header) Then Return -3
+		    If name = Stream.Read(header.FilenameLength) Then Return index
+		    index = index + 1
+		  Loop
+		  
+		  Return -1
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function LastError() As Integer
 		  Return mLastError
 		End Function
