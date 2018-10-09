@@ -537,7 +537,7 @@ Protected Class ZipArchive
 		#tag ViewProperty
 			Name="CompressionLevel"
 			Group="Behavior"
-			Type="String"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="CurrentIndex"
