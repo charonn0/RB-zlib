@@ -168,6 +168,7 @@ Protected Class ZipArchive
 		    s.Insert(0, Item.Name)
 		    Item = Item.Parent
 		  Loop Until Item = Nil
+		  If Item = Nil Then Return s(s.Ubound) ' not relative
 		  Return Join(s, "/")
 		End Function
 	#tag EndMethod
