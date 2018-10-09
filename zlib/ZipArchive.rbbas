@@ -84,14 +84,17 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h21
 		Private Shared Function FindDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter) As Boolean
 		  Dim pos As UInt64 = Stream.Position
-		  Stream.Position = Stream.Length - MIN_ARCHIVE_SIZE
-		  Do Until footer.Offset > 0
+		  If Stream.Length >= MIN_ARCHIVE_SIZE + &hFFFF Then 
+		    Stream.Position = Stream.Length - (MIN_ARCHIVE_SIZE + &hFFFF) ' footer size + max comment length
+		  End If
+		  Do Until Footer.Offset > 0
 		    If Stream.ReadUInt32 = ZIP_DIRECTORY_FOOTER_SIGNATURE Then
 		      Stream.Position = Stream.Position - 4
 		      If ReadDirectoryFooter(Stream, Footer) Then Exit Do
+		    Else
+		      Stream.Position = Stream.Position - 3
 		    End If
-		    Stream.Position = Stream.Position - 5
-		  Loop Until Stream.Position < MIN_ARCHIVE_SIZE
+		  Loop Until Stream.EOF
 		  Stream.Position = pos
 		  Return footer.Offset > MIN_ARCHIVE_SIZE
 		End Function
