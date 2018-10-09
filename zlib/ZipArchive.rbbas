@@ -82,7 +82,7 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Function FindDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter) As Boolean
+		Private Shared Function FindDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter, ByRef IsEmpty As Boolean) As Boolean
 		  Dim pos As UInt64 = Stream.Position
 		  If Stream.Length >= MIN_ARCHIVE_SIZE + &hFFFF Then 
 		    Stream.Position = Stream.Length - (MIN_ARCHIVE_SIZE + &hFFFF) ' footer size + max comment length
@@ -96,7 +96,8 @@ Protected Class ZipArchive
 		    End If
 		  Loop Until Stream.EOF
 		  Stream.Position = pos
-		  Return footer.Offset > MIN_ARCHIVE_SIZE
+		  IsEmpty = (Stream.Length = MIN_ARCHIVE_SIZE And Footer.Offset = 0 And Footer.DirectorySize = 0)
+		  Return footer.Offset > MIN_ARCHIVE_SIZE Or IsEmpty
 		End Function
 	#tag EndMethod
 
@@ -116,7 +117,6 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable) As Boolean
-		  If mDirectoryFooter.Offset < MIN_ARCHIVE_SIZE Then Raise New IOException
 		  ' extract the current item
 		  If ExtractTo <> Nil Then
 		    Dim crc As UInt32
@@ -256,31 +256,28 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Function Reset(Index As Integer = 0) As Boolean
 		  mRunningCRC = 0
-		  
-		  If Not FindDirectoryFooter(mArchiveStream, mDirectoryFooter) Or mDirectoryFooter.Offset = 0 Then
+		  mIndex = -1
+		  mCurrentExtra = Nil
+		  mCurrentEntry.StringValue(True) = ""
+		  mCurrentName = ""
+		  Dim isempty As Boolean
+		  If Not FindDirectoryFooter(mArchiveStream, mDirectoryFooter, isempty) Then
 		    mLastError = ERR_NOT_ZIPPED
 		    Return False
 		  End If
 		  
 		  mArchiveStream.Position = mDirectoryFooter.Offset
-		  Dim header As ZipDirectoryHeader
-		  If Not ReadDirectoryHeader(mArchiveStream, header) Then
-		    mLastError = ERR_NOT_ZIPPED
-		    Return False
+		  If Not isempty Then
+		    Dim header As ZipDirectoryHeader
+		    If Not ReadDirectoryHeader(mArchiveStream, header) Then
+		      mLastError = ERR_NOT_ZIPPED
+		      Return False
+		    End If
+		    mArchiveStream.Position = header.Offset ' move to offset of first entry
 		  End If
 		  
-		  If mDirectoryFooter.ThisRecordCount = 0 Then
-		    mIndex = -1
-		    Return True
-		  End If
-		  mIndex = -1
-		  mCurrentExtra = Nil
-		  mCurrentEntry.StringValue(True) = ""
-		  mCurrentName = ""
-		  
-		  mArchiveStream.Position = header.Offset ' move to offset of first entry
 		  Do
-		    If Not Me.MoveNext(Nil) Then Return (Index = -1 And mLastError = ERR_END_ARCHIVE)
+		    If Not Me.MoveNext(Nil) Then Return ((Index = -1 Or isempty) And mLastError = ERR_END_ARCHIVE)
 		  Loop Until mIndex >= Index And Index > -1
 		  Return True
 		End Function
