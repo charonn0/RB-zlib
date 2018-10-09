@@ -5,9 +5,9 @@
 
 ## Hilights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
-* Read and write [tape archive](https://github.com/charonn0/RB-zlib/wiki/zlib.TapeArchive) (.tar) files (Experimental)
+* Read and write [zip archives](https://github.com/charonn0/RB-zlib/wiki/zlib.ZipArchive) (.zip)
 * Read and write [gzip](https://github.com/charonn0/RB-zlib/wiki/zlib.GZStream) (.gz) files with seek/rewind
-* Read [zip archives](https://github.com/charonn0/RB-zlib/wiki/zlib.ZipArchive) (.zip) (Experimental)
+* Read and write [tape archive](https://github.com/charonn0/RB-zlib/wiki/zlib.TapeArchive) (.tar) files (Experimental)
 * Supports gzip, deflate, and raw deflate compressed streams
 
 ## Getting started
