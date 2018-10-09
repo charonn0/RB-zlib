@@ -75,6 +75,54 @@ Protected Class ZipArchive
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		 Shared Function Create(ZipFile As FolderItem, Items() As FolderItem, RootDirectory As FolderItem = Nil, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		  Dim directory() As ZipDirectoryHeader
+		  Dim names() As String
+		  Dim stream As BinaryStream = BinaryStream.Create(ZipFile, Overwrite)
+		  stream.LittleEndian = True
+		  
+		  Dim c As Integer = UBound(Items)
+		  For i As Integer = 0 To c
+		    Dim item As FolderItem = Items(i)
+		    Dim name As String = GetRelativePath(RootDirectory, item)
+		    #If USE_CP437 Then
+		      name = ConvertEncoding(name, Encodings.DOSLatinUS)
+		    #EndIf
+		    If item.Directory Then name = name + "/"
+		    Dim bs As BinaryStream
+		    If item.Exists And Not item.Directory Then bs = BinaryStream.Open(item)
+		    Dim dirheader As ZipDirectoryHeader
+		    WriteEntryHeader(stream, name, item.Length, bs, item.ModificationDate, CompressionLevel, dirheader)
+		    directory.Append(dirheader)
+		    names.Append(name)
+		  Next
+		  Dim dirstart As UInt64 = stream.Position
+		  For i As Integer = 0 To c
+		    WriteDirectoryHeader(stream, directory(i), names(i), "", Nil)
+		  Next
+		  Dim dirsz As UInt32 = stream.Position - dirstart
+		  Dim footer As ZipDirectoryFooter
+		  footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE
+		  footer.DirectorySize = dirsz
+		  footer.CommentLength = 0
+		  footer.Offset = dirstart
+		  footer.ThisRecordCount = c + 1
+		  footer.TotalRecordCount = c + 1
+		  WriteDirectoryFooter(stream, footer)
+		  stream.Close
+		  Return ZipFile.IsZipped
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function Create(ZipFile As FolderItem, RootDirectory As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		  Dim items() As FolderItem
+		  GetChildren(RootDirectory, items)
+		  Return Create(ZipFile, items, RootDirectory, Overwrite, CompressionLevel)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
@@ -98,6 +146,29 @@ Protected Class ZipArchive
 		  Stream.Position = pos
 		  IsEmpty = (Stream.Length = MIN_ARCHIVE_SIZE And Footer.Offset = 0 And Footer.DirectorySize = 0)
 		  Return footer.Offset > MIN_ARCHIVE_SIZE Or IsEmpty
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub GetChildren(Root As FolderItem, ByRef Results() As FolderItem)
+		  Dim c As Integer = Root.Count
+		  For i As Integer = 1 To c
+		    Dim item As FolderItem = Root.Item(i)
+		    Results.Append(item)
+		    If item.Directory Then GetChildren(item, Results)
+		  Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
+		  If Root = Nil Then Return Item.Name
+		  Dim s() As String
+		  Do Until Item.AbsolutePath = Root.AbsolutePath
+		    s.Insert(0, Item.Name)
+		    Item = Item.Parent
+		  Loop Until Item = Nil
+		  Return Join(s, "/")
 		End Function
 	#tag EndMethod
 
@@ -297,6 +368,121 @@ Protected Class ZipArchive
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Shared Sub WriteDirectoryFooter(Stream As BinaryStream, Footer As ZipDirectoryFooter)
+		  Stream.WriteUInt32(Footer.Signature)
+		  Stream.WriteUInt16(Footer.ThisDisk)
+		  Stream.WriteUInt16(Footer.FirstDisk)
+		  Stream.WriteUInt16(Footer.ThisRecordCount)
+		  Stream.WriteUInt16(Footer.TotalRecordCount)
+		  Stream.WriteUInt32(Footer.DirectorySize)
+		  Stream.WriteUInt32(Footer.Offset)
+		  Stream.WriteUInt16(Footer.CommentLength)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub WriteDirectoryHeader(Stream As BinaryStream, Header As ZipDirectoryHeader, Name As String, Comment As String, Extra As MemoryBlock)
+		  Header.CommentLength = Comment.LenB
+		  Header.FilenameLength = Name.LenB
+		  If Extra <> Nil Then Header.ExtraLength = Extra.Size Else Header.ExtraLength = 0
+		  
+		  Stream.WriteUInt32(Header.Signature)
+		  Stream.WriteUInt16(Header.Version)
+		  Stream.WriteUInt16(Header.VersionNeeded)
+		  Stream.WriteUInt16(Header.Flag)
+		  Stream.WriteUInt16(Header.Method)
+		  Stream.WriteUInt16(Header.ModTime)
+		  Stream.WriteUInt16(Header.ModDate)
+		  Stream.WriteUInt32(Header.CRC32)
+		  Stream.WriteUInt32(Header.CompressedSize)
+		  Stream.WriteUInt32(Header.UncompressedSize)
+		  Stream.WriteUInt16(Header.FilenameLength)
+		  Stream.WriteUInt16(Header.ExtraLength)
+		  Stream.WriteUInt16(Header.CommentLength)
+		  Stream.WriteUInt16(Header.DiskNumber)
+		  Stream.WriteUInt16(Header.InternalAttributes)
+		  Stream.WriteUInt32(Header.ExternalAttributes)
+		  Stream.WriteUInt32(Header.Offset)
+		  Stream.Write(Name)
+		  If Extra <> Nil Then Stream.Write(Extra)
+		  Stream.Write(Comment)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader)
+		  DirectoryHeader.Offset = Stream.Position
+		  Dim crcoff, compszoff, dataoff As UInt64
+		  Stream.WriteUInt32(ZIP_ENTRY_HEADER_SIGNATURE)
+		  DirectoryHeader.Signature = ZIP_DIRECTORY_HEADER_SIGNATURE
+		  
+		  Stream.WriteUInt16(20) ' version
+		  DirectoryHeader.Version = 20
+		  DirectoryHeader.VersionNeeded = 10
+		  
+		  Stream.WriteUInt16(0) ' flag
+		  DirectoryHeader.Flag = 0
+		  
+		  If Length = 0 Or CompressionLevel = 0 Then
+		    Stream.WriteUInt16(0) ' method=none
+		    DirectoryHeader.Method = 0
+		  Else
+		    Stream.WriteUInt16(Z_DEFLATED) ' method=deflate
+		    DirectoryHeader.Method = Z_DEFLATED
+		  End If
+		  Dim modtim As Pair = ConvertDate(ModDate)
+		  Stream.WriteUInt16(modtim.Right) ' modtime
+		  Stream.WriteUInt16(modtim.Left) ' moddate
+		  DirectoryHeader.ModDate = modtim.Left
+		  DirectoryHeader.ModTime = modtim.Right
+		  
+		  crcoff = Stream.Position
+		  Stream.WriteUInt32(&hF00D) ' crc32
+		  
+		  compszoff = Stream.Position
+		  Stream.WriteUInt32(0) ' compressed size
+		  
+		  DirectoryHeader.UncompressedSize = Length
+		  Stream.WriteUInt32(Length) ' uncompressed size
+		  
+		  DirectoryHeader.FilenameLength = Name.LenB
+		  Stream.WriteUInt16(Name.LenB) ' name length
+		  
+		  DirectoryHeader.ExtraLength = 0
+		  Stream.WriteUInt16(0) ' extra length
+		  
+		  Stream.Write(name)
+		  //Stream.Write("") ' extra
+		  
+		  dataoff = Stream.Position
+		  Dim crc As UInt32
+		  If Source <> Nil And Length > 0 Then
+		    Dim z As Writeable
+		    If CompressionLevel <> 0 Then
+		      z = ZStream.Create(Stream, CompressionLevel, Z_DEFAULT_STRATEGY, RAW_ENCODING)
+		    Else
+		      z = Stream
+		    End If
+		    Do Until Source.EOF
+		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
+		      crc = zlib.CRC32(data, crc)
+		      z.Write(data)
+		    Loop
+		    If z IsA ZStream Then ZStream(z).Close
+		  End If
+		  Dim endoff As UInt64 = Stream.Position
+		  Dim compsz As UInt32 = endoff - dataoff
+		  Stream.Position = compszoff
+		  Stream.WriteUInt32(compsz)
+		  DirectoryHeader.CompressedSize = compsz
+		  Stream.Position = crcoff
+		  Stream.WriteUInt32(crc)
+		  DirectoryHeader.CRC32 = crc
+		  Stream.Position = endoff
+		End Sub
+	#tag EndMethod
+
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -453,6 +639,9 @@ Protected Class ZipArchive
 
 
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = USE_CP437, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = ZIP_DIRECTORY_FOOTER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h06054b50", Scope = Private
