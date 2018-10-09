@@ -1083,6 +1083,20 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
+		  ' Creates a ZIP file with the ToArchive FolderItems
+		  Return zlib.ZipArchive.Create(OutputFile, ToArchive)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem) As Boolean
+		  ' Creates a ZIP file with the ToArchive FolderItems
+		  Return zlib.ZipArchive.Create(OutputFile, ToArchive)
+		End Function
+	#tag EndMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function zError Lib zlib1 (ErrorCode As Integer) As Ptr
 	#tag EndExternalMethod
