@@ -988,6 +988,7 @@ Protected Module zlib
 		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a TAR file to the ExtractTo directory
 		  Dim tar As TapeArchive = TapeArchive.Open(TarFile)
+		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
 		  Dim bs As BinaryStream
 		  Dim fs() As FolderItem
 		  Do
@@ -1010,7 +1011,7 @@ Protected Module zlib
 		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
 		  zip.ValidateChecksums = VerifyCRC
 		  Dim ret() As FolderItem
-		  
+		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
 		  
 		  Do Until zip.LastError <> 0
 		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
