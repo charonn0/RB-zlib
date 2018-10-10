@@ -3,9 +3,7 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Sub Close()
 		  If mArchiveStream <> Nil Then mArchiveStream.Close
-		  If mZipStream <> Nil Then mZipStream.Close
 		  mArchiveStream = Nil
-		  mZipStream = Nil
 		  mIndex = -1
 		  mDirectoryFooter.Offset = 0
 		  
@@ -17,8 +15,6 @@ Protected Class ZipArchive
 		  mArchiveStream = ArchiveStream
 		  mArchiveStream.LittleEndian = True
 		  If Not Me.Reset(0) Then Raise New zlibException(mLastError)
-		  mZipStream = ZStream.Open(mArchiveStream, RAW_ENCODING)
-		  mZipStream.BufferedReading = False
 		End Sub
 	#tag EndMethod
 
@@ -190,61 +186,16 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable) As Boolean
 		  ' extract the current item
-		  If ExtractTo <> Nil Then
-		    Dim crc As UInt32
-		    Select Case mCurrentEntry.Method
-		    Case 0 ' not compressed
-		      If mCurrentEntry.UncompressedSize > 0 Then ExtractTo.Write(mArchiveStream.Read(mCurrentEntry.CompressedSize))
-		    Case 8 ' deflated
-		      mZipStream.Reset
-		      Dim p As UInt64 = mArchiveStream.Position
-		      Do Until mArchiveStream.Position - p >= mCurrentEntry.CompressedSize
-		        Dim offset As UInt64 = mArchiveStream.Position - p
-		        Dim sz As Integer = Min(mCurrentEntry.CompressedSize - offset, CHUNK_SIZE)
-		        Dim data As MemoryBlock = mZipStream.Read(sz)
-		        If data.Size > 0 Then
-		          If ValidateChecksums Then crc = CRC32(data, crc, data.Size)
-		          ExtractTo.Write(data)
-		        End If
-		      Loop
-		      If ValidateChecksums And (crc <> mCurrentEntry.CRC32) Then
-		        mLastError = ERR_CHECKSUM_MISMATCH
-		        Return False
-		      End If
-		    Else
-		      mLastError = ERR_UNSUPPORTED_COMPRESSION
-		      Return False
-		    End Select
-		    If ValidateChecksums Then mRunningCRC = CRC32Combine(mRunningCRC, crc, mCurrentEntry.UncompressedSize)
-		  Else
-		    mArchiveStream.Position = mArchiveStream.Position + mCurrentEntry.CompressedSize
-		    If ValidateChecksums Then mRunningCRC = CRC32Combine(mRunningCRC, mCurrentEntry.CRC32, mCurrentEntry.UncompressedSize)
-		  End If
-		  
-		  ' read the next entry header
-		  If mArchiveStream.Position >= mDirectoryFooter.Offset Then
-		    mLastError = ERR_END_ARCHIVE
+		  Dim crc As UInt32
+		  If Not ReadEntry(ExtractTo, crc) Then Return False
+		  If ValidateChecksums And (crc <> mCurrentEntry.CRC32) Then
+		    mLastError = ERR_CHECKSUM_MISMATCH
 		    Return False
 		  End If
-		  mIndex = mIndex + 1
-		  If Not ReadEntryHeader(mArchiveStream, mCurrentEntry) Then
-		    mLastError = ERR_INVALID_ENTRY
-		    Return False
-		  End If
-		  mCurrentName = mArchiveStream.Read(mCurrentEntry.FilenameLength)
-		  mCurrentExtra = mArchiveStream.Read(mCurrentEntry.ExtraLength)
 		  
-		  If BitAnd(mCurrentEntry.Flag, 4) = 4 And mCurrentEntry.CompressedSize = 0 Then ' footer follows
-		    Dim footer As ZipEntryFooter
-		    If Not ReadEntryFooter(mArchiveStream, footer) Then
-		      mArchiveStream.Position = mArchiveStream.Position - ZIP_ENTRY_FOOTER_SIZE
-		    Else
-		      mCurrentEntry.CompressedSize = footer.ComressedSize
-		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
-		    End If
-		  End If
-		  mStreamPosition = mArchiveStream.Position
-		  Return True
+		  If ValidateChecksums Then mRunningCRC = CRC32Combine(mRunningCRC, crc, mCurrentEntry.UncompressedSize)
+		  
+		  Return ReadHeader()
 		End Function
 	#tag EndMethod
 
@@ -296,6 +247,44 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function ReadEntry(Destination As Writeable, ByRef CRC As UInt32) As Boolean
+		  If Destination = Nil Or mCurrentEntry.UncompressedSize = 0 Then
+		    ' skip the current item
+		    mArchiveStream.Position = mArchiveStream.Position + mCurrentEntry.CompressedSize
+		    CRC = mCurrentEntry.CRC32
+		    Return True
+		  End If
+		  
+		  Dim zipstream As Readable
+		  Select Case mCurrentEntry.Method
+		  Case Z_DEFLATED
+		    Dim z As ZStream = ZStream.Open(mArchiveStream, RAW_ENCODING)
+		    z.BufferedReading = False
+		    zipstream = z
+		  Case 0 ' store
+		    zipstream = mArchiveStream
+		  Else
+		    mLastError = ERR_UNSUPPORTED_COMPRESSION
+		    Return False
+		  End Select
+		  
+		  ' read the compressed data
+		  Dim p As UInt64 = mArchiveStream.Position
+		  Do Until mArchiveStream.Position - p >= mCurrentEntry.CompressedSize
+		    Dim offset As UInt64 = mArchiveStream.Position - p
+		    Dim sz As Integer = Min(mCurrentEntry.CompressedSize - offset, CHUNK_SIZE)
+		    Dim data As MemoryBlock = zipstream.Read(sz)
+		    If data.Size > 0 Then
+		      If ValidateChecksums Then CRC = CRC32(data, crc, data.Size)
+		      Destination.Write(data)
+		    End If
+		  Loop
+		  
+		  Return True
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Shared Function ReadEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
 		  Footer.Signature = Stream.ReadUInt32
 		  Footer.CRC32 = Stream.ReadUInt32
@@ -322,6 +311,36 @@ Protected Class ZipArchive
 		  Header.ExtraLength = Stream.ReadUInt16
 		  
 		  Return Header.Signature = ZIP_ENTRY_HEADER_SIGNATURE
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ReadHeader() As Boolean
+		  ' read the next entry header
+		  If mArchiveStream.Position >= mDirectoryFooter.Offset Then
+		    mLastError = ERR_END_ARCHIVE
+		    Return False
+		  End If
+		  
+		  mIndex = mIndex + 1
+		  If Not ReadEntryHeader(mArchiveStream, mCurrentEntry) Then
+		    mLastError = ERR_INVALID_ENTRY
+		    Return False
+		  End If
+		  mCurrentName = mArchiveStream.Read(mCurrentEntry.FilenameLength)
+		  mCurrentExtra = mArchiveStream.Read(mCurrentEntry.ExtraLength)
+		  
+		  If BitAnd(mCurrentEntry.Flag, 4) = 4 And mCurrentEntry.CompressedSize = 0 Then ' footer follows
+		    Dim footer As ZipEntryFooter
+		    If Not ReadEntryFooter(mArchiveStream, footer) Then
+		      mArchiveStream.Position = mArchiveStream.Position - ZIP_ENTRY_FOOTER_SIZE
+		    Else
+		      mCurrentEntry.CompressedSize = footer.ComressedSize
+		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
+		    End If
+		  End If
+		  mStreamPosition = mArchiveStream.Position
+		  Return True
 		End Function
 	#tag EndMethod
 
@@ -619,10 +638,6 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h21
 		Private mStreamPosition As UInt64
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mZipStream As zlib.ZStream
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
