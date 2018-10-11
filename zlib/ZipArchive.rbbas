@@ -138,7 +138,7 @@ Protected Class ZipArchive
 		    Else
 		      Stream.Position = Stream.Position - 3
 		    End If
-		  Loop Until Stream.EOF
+		  Loop Until Stream.EOF Or Stream.Position >= Stream.Length - 3
 		  Stream.Position = pos
 		  IsEmpty = (Stream.Length = MIN_ARCHIVE_SIZE And Footer.Offset = 0 And Footer.DirectorySize = 0)
 		  Return footer.Offset > MIN_ARCHIVE_SIZE Or IsEmpty
