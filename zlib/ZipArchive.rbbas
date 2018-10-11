@@ -77,6 +77,7 @@ Protected Class ZipArchive
 		  Dim names() As String
 		  Dim stream As BinaryStream = BinaryStream.Create(ZipFile, Overwrite)
 		  stream.LittleEndian = True
+		  Dim zipstream As ZStream
 		  
 		  Dim c As Integer = UBound(Items)
 		  For i As Integer = 0 To c
@@ -89,7 +90,7 @@ Protected Class ZipArchive
 		    Dim bs As BinaryStream
 		    If item.Exists And Not item.Directory Then bs = BinaryStream.Open(item)
 		    Dim dirheader As ZipDirectoryHeader
-		    WriteEntryHeader(stream, name, item.Length, bs, item.ModificationDate, CompressionLevel, dirheader)
+		    WriteEntryHeader(stream, zipstream, name, item.Length, bs, item.ModificationDate, CompressionLevel, dirheader)
 		    directory.Append(dirheader)
 		    names.Append(name)
 		  Next
@@ -274,9 +275,13 @@ Protected Class ZipArchive
 		  Dim zipstream As Readable
 		  Select Case mCurrentEntry.Method
 		  Case Z_DEFLATED
-		    Dim z As ZStream = ZStream.Open(mArchiveStream, RAW_ENCODING)
-		    z.BufferedReading = False
-		    zipstream = z
+		    If mZipStream = Nil Then 
+		      mZipStream = ZStream.Open(mArchiveStream, RAW_ENCODING)
+		      mZipStream.BufferedReading = False
+		    Else
+		      mZipStream.Reset()
+		    End If
+		    zipstream = mZipStream
 		  Case 0 ' store
 		    zipstream = mArchiveStream
 		  Else
@@ -448,7 +453,7 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader)
+		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, ZipStream As ZStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader)
 		  DirectoryHeader.Offset = Stream.Position
 		  Dim crcoff, compszoff, dataoff As UInt64
 		  Stream.WriteUInt32(ZIP_ENTRY_HEADER_SIGNATURE)
@@ -497,7 +502,9 @@ Protected Class ZipArchive
 		  If Source <> Nil And Length > 0 Then
 		    Dim z As Writeable
 		    If CompressionLevel <> 0 Then
-		      z = ZStream.Create(Stream, CompressionLevel, Z_DEFAULT_STRATEGY, RAW_ENCODING)
+		      If ZipStream = Nil Then ZipStream = ZStream.Create(Stream, CompressionLevel, Z_DEFAULT_STRATEGY, RAW_ENCODING)
+		      ZipStream.Reset()
+		      z = ZipStream
 		    Else
 		      z = Stream
 		    End If
@@ -655,6 +662,10 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h21
 		Private mStreamPosition As UInt64
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mZipStream As zlib.ZStream
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
