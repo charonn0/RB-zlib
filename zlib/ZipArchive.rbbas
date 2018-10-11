@@ -146,6 +146,22 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Shared Function FindEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
+		  Dim pos As UInt64 = Stream.Position
+		  Do Until Footer.ComressedSize > 0
+		    If Stream.ReadUInt32 = ZIP_ENTRY_FOOTER_SIGNATURE Then
+		      Stream.Position = Stream.Position - 4
+		      If ReadEntryFooter(Stream, Footer) Then Exit Do
+		    Else
+		      Stream.Position = Stream.Position - 3
+		    End If
+		  Loop Until Stream.EOF
+		  Stream.Position = pos
+		  Return footer.ComressedSize > 0
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Shared Sub GetChildren(Root As FolderItem, ByRef Results() As FolderItem)
 		  Dim c As Integer = Root.Count
 		  For i As Integer = 1 To c
@@ -332,8 +348,9 @@ Protected Class ZipArchive
 		  
 		  If BitAnd(mCurrentEntry.Flag, 4) = 4 And mCurrentEntry.CompressedSize = 0 Then ' footer follows
 		    Dim footer As ZipEntryFooter
-		    If Not ReadEntryFooter(mArchiveStream, footer) Then
-		      mArchiveStream.Position = mArchiveStream.Position - ZIP_ENTRY_FOOTER_SIZE
+		    If Not FindEntryFooter(mArchiveStream, footer) Then
+		      mLastError = ERR_INVALID_ENTRY
+		      Return False
 		    Else
 		      mCurrentEntry.CompressedSize = footer.ComressedSize
 		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
@@ -458,10 +475,10 @@ Protected Class ZipArchive
 		  DirectoryHeader.ModTime = modtim.Right
 		  
 		  crcoff = Stream.Position
-		  Stream.WriteUInt32(&hF00D) ' crc32
+		  Stream.WriteUInt32(0) ' crc32; to be filled later
 		  
 		  compszoff = Stream.Position
-		  Stream.WriteUInt32(0) ' compressed size
+		  Stream.WriteUInt32(0) ' compressed size; to be filled later
 		  
 		  DirectoryHeader.UncompressedSize = Length
 		  Stream.WriteUInt32(Length) ' uncompressed size
