@@ -20,6 +20,8 @@ Inherits RuntimeException
 		    Me.Message = "The archive entry failed verification."
 		  Case ERR_INVALID_NAME
 		    Me.Message = "The archive entry has an illegal file name."
+		  Case ERR_TOO_LARGE
+		    Me.Message = "The file is too large for the zip archive format."
 		    
 		    'zlib's built-in error messages suck; these are much better
 		  Case Z_BUF_ERROR

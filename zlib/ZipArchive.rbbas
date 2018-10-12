@@ -82,6 +82,7 @@ Protected Class ZipArchive
 		  Dim c As Integer = UBound(Items)
 		  For i As Integer = 0 To c
 		    Dim item As FolderItem = Items(i)
+		    If item.Length > &hFFFFFFFF Then Raise New zlibException(ERR_TOO_LARGE)
 		    Dim name As String = GetRelativePath(RootDirectory, item)
 		    #If USE_CP437 Then
 		      name = ConvertEncoding(name, Encodings.DOSLatinUS)
