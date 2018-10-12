@@ -211,8 +211,6 @@ Protected Class ZipArchive
 		    Return False
 		  End If
 		  
-		  If ValidateChecksums Then mRunningCRC = CRC32Combine(mRunningCRC, crc, mCurrentEntry.UncompressedSize)
-		  
 		  Return ReadHeader()
 		End Function
 	#tag EndMethod
@@ -369,7 +367,6 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h0
 		Function Reset(Index As Integer = 0) As Boolean
-		  mRunningCRC = 0
 		  mIndex = -1
 		  mCurrentExtra = Nil
 		  mCurrentEntry.StringValue(True) = ""
@@ -653,10 +650,6 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mRunningCRC As UInt32
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
