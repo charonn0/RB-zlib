@@ -108,8 +108,9 @@ Protected Class ZipArchive
 		  footer.ThisRecordCount = c + 1
 		  footer.TotalRecordCount = c + 1
 		  WriteDirectoryFooter(stream, footer)
+		  Dim ok As Boolean = stream.IsZipped()
 		  stream.Close
-		  Return ZipFile.IsZipped
+		  Return ok
 		End Function
 	#tag EndMethod
 
