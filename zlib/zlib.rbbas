@@ -1097,16 +1097,16 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  ' Creates a ZIP file with the ToArchive FolderItems
-		  Return zlib.ZipArchive.Create(OutputFile, ToArchive)
+		  Return zlib.ZipArchive.Create(OutputFile, ToArchive, Nil, Overwrite, CompressionLevel)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  ' Creates a ZIP file with the ToArchive FolderItems
-		  Return zlib.ZipArchive.Create(OutputFile, ToArchive)
+		  Return zlib.ZipArchive.Create(OutputFile, ToArchive, Overwrite, CompressionLevel)
 		End Function
 	#tag EndMethod
 
