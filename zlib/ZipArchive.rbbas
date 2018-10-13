@@ -204,13 +204,7 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable) As Boolean
 		  ' extract the current item
-		  Dim crc As UInt32
-		  If Not ReadEntry(ExtractTo, crc) Then Return False
-		  If ValidateChecksums And (crc <> mCurrentEntry.CRC32) Then
-		    mLastError = ERR_CHECKSUM_MISMATCH
-		    Return False
-		  End If
-		  
+		  If Not ReadEntry(ExtractTo) Then Return False
 		  Return ReadHeader()
 		End Function
 	#tag EndMethod
@@ -263,11 +257,10 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function ReadEntry(Destination As Writeable, ByRef CRC As UInt32) As Boolean
+		Private Function ReadEntry(Destination As Writeable) As Boolean
 		  If Destination = Nil Or mCurrentEntry.UncompressedSize = 0 Then
 		    ' skip the current item
 		    mArchiveStream.Position = mArchiveStream.Position + mCurrentEntry.CompressedSize
-		    CRC = mCurrentEntry.CRC32
 		    Return True
 		  End If
 		  
@@ -290,6 +283,7 @@ Protected Class ZipArchive
 		  
 		  ' read the compressed data
 		  Dim p As UInt64 = mArchiveStream.Position
+		  Dim CRC As UInt32
 		  Do Until mArchiveStream.Position - p >= mCurrentEntry.CompressedSize
 		    Dim offset As UInt64 = mArchiveStream.Position - p
 		    Dim sz As Integer = Min(mCurrentEntry.CompressedSize - offset, CHUNK_SIZE)
@@ -299,6 +293,11 @@ Protected Class ZipArchive
 		      Destination.Write(data)
 		    End If
 		  Loop
+		  
+		  If ValidateChecksums And (crc <> mCurrentEntry.CRC32) Then
+		    mLastError = ERR_CHECKSUM_MISMATCH
+		    Return False
+		  End If
 		  
 		  Return True
 		End Function
