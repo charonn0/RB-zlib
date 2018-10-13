@@ -150,7 +150,7 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h21
 		Private Shared Function FindEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
 		  Dim pos As UInt64 = Stream.Position
-		  Do Until Footer.ComressedSize > 0
+		  Do Until Footer.CompressedSize > 0
 		    If Stream.ReadUInt32 = ZIP_ENTRY_FOOTER_SIGNATURE Then
 		      Stream.Position = Stream.Position - 4
 		      If ReadEntryFooter(Stream, Footer) Then Exit Do
@@ -159,7 +159,7 @@ Protected Class ZipArchive
 		    End If
 		  Loop Until Stream.EOF
 		  Stream.Position = pos
-		  Return footer.ComressedSize > 0
+		  Return footer.CompressedSize > 0
 		End Function
 	#tag EndMethod
 
@@ -308,7 +308,7 @@ Protected Class ZipArchive
 		Private Shared Function ReadEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
 		  Footer.Signature = Stream.ReadUInt32
 		  Footer.CRC32 = Stream.ReadUInt32
-		  Footer.ComressedSize = Stream.ReadUInt32
+		  Footer.CompressedSize = Stream.ReadUInt32
 		  Footer.UncompressedSize = Stream.ReadUInt32
 		  
 		  Return Footer.Signature = ZIP_ENTRY_FOOTER_SIGNATURE
@@ -356,7 +356,7 @@ Protected Class ZipArchive
 		      mLastError = ERR_INVALID_ENTRY
 		      Return False
 		    Else
-		      mCurrentEntry.CompressedSize = footer.ComressedSize
+		      mCurrentEntry.CompressedSize = footer.CompressedSize
 		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
 		    End If
 		  End If
@@ -739,7 +739,7 @@ Protected Class ZipArchive
 	#tag Structure, Name = ZipEntryFooter, Flags = &h21
 		Signature As UInt32
 		  CRC32 As UInt32
-		  ComressedSize As UInt32
+		  CompressedSize As UInt32
 		UncompressedSize As UInt32
 	#tag EndStructure
 
