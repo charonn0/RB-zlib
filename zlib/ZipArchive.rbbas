@@ -129,19 +129,22 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h21
 		Private Shared Function FindDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter, ByRef IsEmpty As Boolean) As Boolean
-		  Dim pos As UInt64 = Stream.Position
-		  If Stream.Length >= MIN_ARCHIVE_SIZE + &hFFFF Then 
-		    Stream.Position = Stream.Length - (MIN_ARCHIVE_SIZE + &hFFFF) ' footer size + max comment length
-		  End If
-		  Do Until Footer.Offset > 0
-		    If Stream.ReadUInt32 = ZIP_DIRECTORY_FOOTER_SIGNATURE Then
-		      Stream.Position = Stream.Position - 4
-		      If ReadDirectoryFooter(Stream, Footer) Then Exit Do
-		    Else
-		      Stream.Position = Stream.Position - 3
-		    End If
-		  Loop Until Stream.EOF Or Stream.Position >= Stream.Length - 3
-		  Stream.Position = pos
+		  'Dim pos As UInt64 = Stream.Position
+		  'If Stream.Length >= MIN_ARCHIVE_SIZE + &hFFFF Then
+		  'Stream.Position = Stream.Length - (MIN_ARCHIVE_SIZE + &hFFFF) ' footer size + max comment length
+		  'End If
+		  'Do Until Footer.Offset > 0
+		  'If Stream.ReadUInt32 = ZIP_DIRECTORY_FOOTER_SIGNATURE Then
+		  'Stream.Position = Stream.Position - 4
+		  'If ReadDirectoryFooter(Stream, Footer) Then Exit Do
+		  'Else
+		  'Stream.Position = Stream.Position - 3
+		  'End If
+		  'Loop Until Stream.EOF Or Stream.Position >= Stream.Length - 3
+		  'Stream.Position = pos
+		  
+		  If Not SeekSignature(Stream, ZIP_DIRECTORY_FOOTER_SIGNATURE) Then Return False
+		  If Not ReadDirectoryFooter(Stream, Footer) Then Return False
 		  IsEmpty = (Stream.Length = MIN_ARCHIVE_SIZE And Footer.Offset = 0 And Footer.DirectorySize = 0)
 		  Return footer.Offset > MIN_ARCHIVE_SIZE Or IsEmpty
 		End Function
@@ -149,16 +152,8 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h21
 		Private Shared Function FindEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
-		  Dim pos As UInt64 = Stream.Position
-		  Do Until Footer.CompressedSize > 0
-		    If Stream.ReadUInt32 = ZIP_ENTRY_FOOTER_SIGNATURE Then
-		      Stream.Position = Stream.Position - 4
-		      If ReadEntryFooter(Stream, Footer) Then Exit Do
-		    Else
-		      Stream.Position = Stream.Position - 3
-		    End If
-		  Loop Until Stream.EOF
-		  Stream.Position = pos
+		  If Not SeekSignature(Stream, ZIP_ENTRY_FOOTER_SIGNATURE) Then Return False
+		  If ReadEntryFooter(Stream, Footer) Then Return False
 		  Return footer.CompressedSize > 0
 		End Function
 	#tag EndMethod
@@ -390,6 +385,28 @@ Protected Class ZipArchive
 		    If Not Me.MoveNext(Nil) Then Return ((Index = -1 Or isempty) And mLastError = ERR_END_ARCHIVE)
 		  Loop Until mIndex >= Index And Index > -1
 		  Return True
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Function SeekSignature(Stream As BinaryStream, Signature As UInt32) As Boolean
+		  Dim pos As UInt64 = Stream.Position
+		  Dim ok As Boolean
+		  Dim sig As New MemoryBlock(4)
+		  sig.LittleEndian = True
+		  sig.UInt32Value(0) = Signature
+		  
+		  Do Until Stream.EOF
+		    Dim data As String = Stream.Read(CHUNK_SIZE)
+		    Dim offset As Integer = InStrB(data, sig)
+		    If offset > 0 Then
+		      Stream.Position = Stream.Position - (data.LenB - offset + 1)
+		      ok = True
+		      Exit Do
+		    End If
+		  Loop
+		  If Not ok Then Stream.Position = pos
+		  Return ok
 		End Function
 	#tag EndMethod
 
