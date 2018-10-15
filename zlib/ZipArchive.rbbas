@@ -128,24 +128,12 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Function FindDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter, ByRef IsEmpty As Boolean) As Boolean
-		  'Dim pos As UInt64 = Stream.Position
-		  'If Stream.Length >= MIN_ARCHIVE_SIZE + &hFFFF Then
-		  'Stream.Position = Stream.Length - (MIN_ARCHIVE_SIZE + &hFFFF) ' footer size + max comment length
-		  'End If
-		  'Do Until Footer.Offset > 0
-		  'If Stream.ReadUInt32 = ZIP_DIRECTORY_FOOTER_SIGNATURE Then
-		  'Stream.Position = Stream.Position - 4
-		  'If ReadDirectoryFooter(Stream, Footer) Then Exit Do
-		  'Else
-		  'Stream.Position = Stream.Position - 3
-		  'End If
-		  'Loop Until Stream.EOF Or Stream.Position >= Stream.Length - 3
-		  'Stream.Position = pos
-		  
+		Private Shared Function FindDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter, ByRef IsEmpty As Boolean, ByRef ArchComment As String) As Boolean
+		  Stream.Position = Max(0, Stream.Length - &hFFFF - MIN_ARCHIVE_SIZE)
 		  If Not SeekSignature(Stream, ZIP_DIRECTORY_FOOTER_SIGNATURE) Then Return False
 		  If Not ReadDirectoryFooter(Stream, Footer) Then Return False
-		  IsEmpty = (Stream.Length = MIN_ARCHIVE_SIZE And Footer.Offset = 0 And Footer.DirectorySize = 0)
+		  ArchComment = Stream.Read(Footer.CommentLength)
+		  IsEmpty = (Stream.Length = MIN_ARCHIVE_SIZE + Footer.CommentLength And Footer.Offset = 0 And Footer.DirectorySize = 0)
 		  Return footer.Offset > MIN_ARCHIVE_SIZE Or IsEmpty
 		End Function
 	#tag EndMethod
@@ -153,7 +141,7 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h21
 		Private Shared Function FindEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
 		  If Not SeekSignature(Stream, ZIP_ENTRY_FOOTER_SIGNATURE) Then Return False
-		  If ReadEntryFooter(Stream, Footer) Then Return False
+		  If Not ReadEntryFooter(Stream, Footer) Then Return False
 		  Return footer.CompressedSize > 0
 		End Function
 	#tag EndMethod
@@ -253,7 +241,7 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h21
 		Private Function ReadEntry(Destination As Writeable) As Boolean
-		  If Destination = Nil Or mCurrentEntry.UncompressedSize = 0 Then
+		  If Destination = Nil Or mCurrentEntry.CompressedSize = 0 Then
 		    ' skip the current item
 		    mArchiveStream.Position = mArchiveStream.Position + mCurrentEntry.CompressedSize
 		    Return True
@@ -288,6 +276,7 @@ Protected Class ZipArchive
 		      Destination.Write(data)
 		    End If
 		  Loop
+		  If BitAnd(mCurrentEntry.Flag, 8) = 8 Then mArchiveStream.Position = mArchiveStream.Position + ZIP_ENTRY_FOOTER_SIZE
 		  
 		  If ValidateChecksums And (crc <> mCurrentEntry.CRC32) Then
 		    mLastError = ERR_CHECKSUM_MISMATCH
@@ -344,7 +333,8 @@ Protected Class ZipArchive
 		  mCurrentName = mArchiveStream.Read(mCurrentEntry.FilenameLength)
 		  mCurrentExtra = mArchiveStream.Read(mCurrentEntry.ExtraLength)
 		  
-		  If BitAnd(mCurrentEntry.Flag, 4) = 4 And mCurrentEntry.CompressedSize = 0 Then ' footer follows
+		  If BitAnd(mCurrentEntry.Flag, 8) = 8 And mCurrentEntry.CompressedSize = 0 Then ' footer follows
+		    Dim datastart As UInt64 = mArchiveStream.Position
 		    Dim footer As ZipEntryFooter
 		    If Not FindEntryFooter(mArchiveStream, footer) Then
 		      mLastError = ERR_INVALID_ENTRY
@@ -352,7 +342,9 @@ Protected Class ZipArchive
 		    Else
 		      mCurrentEntry.CompressedSize = footer.CompressedSize
 		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
+		      mCurrentEntry.CRC32 = footer.CRC32
 		    End If
+		    mArchiveStream.Position = datastart
 		  End If
 		  mStreamPosition = mArchiveStream.Position
 		  Return True
@@ -366,7 +358,7 @@ Protected Class ZipArchive
 		  mCurrentEntry.StringValue(True) = ""
 		  mCurrentName = ""
 		  Dim isempty As Boolean
-		  If Not FindDirectoryFooter(mArchiveStream, mDirectoryFooter, isempty) Then
+		  If Not FindDirectoryFooter(mArchiveStream, mDirectoryFooter, isempty, mArchiveComment) Then
 		    mLastError = ERR_NOT_ZIPPED
 		    Return False
 		  End If
@@ -545,6 +537,15 @@ Protected Class ZipArchive
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return mArchiveComment
+			End Get
+		#tag EndGetter
+		ArchiveComment As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  Select Case True
 			  Case BitAnd(mCurrentEntry.Flag, 1) = 1 And BitAnd(mCurrentEntry.Flag, 2) = 2
 			    Return 1 ' fastest
@@ -637,6 +638,10 @@ Protected Class ZipArchive
 		#tag EndGetter
 		IsEncrypted As Boolean
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private mArchiveComment As String
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mArchiveStream As BinaryStream
