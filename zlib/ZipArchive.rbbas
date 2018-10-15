@@ -149,7 +149,7 @@ Protected Class ZipArchive
 		  ' want the "outermost" directory footer, i.e. the last one.
 		  Do Until Stream.EOF
 		    If Not SeekSignature(Stream, ZIP_DIRECTORY_FOOTER_SIGNATURE) Then
-		      If last = 0 And Stream.Length > MIN_ARCHIVE_SIZE Then Return False
+		      If last = 0 And Stream.Length >= MIN_ARCHIVE_SIZE + MAX_COMMENT_SIZE Then Return False
 		      Stream.Position = last
 		      Exit Do
 		    Else
