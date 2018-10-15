@@ -123,6 +123,17 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Shared Sub DeleteTree(Root As FolderItem)
+		  Dim c As Integer = Root.Count
+		  For i As Integer = c DownTo 1
+		    Dim item As FolderItem = Root.Item(i)
+		    If item.Directory Then DeleteTree(item)
+		    item.Delete
+		  Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
 		End Sub
@@ -344,7 +355,11 @@ Protected Class ZipArchive
 		  
 		  mIndex = mIndex + 1
 		  If Not ReadEntryHeader(mArchiveStream, mCurrentEntry) Then
-		    mLastError = ERR_INVALID_ENTRY
+		    If Not mForced Then
+		      mLastError = ERR_INVALID_ENTRY
+		    Else
+		      mLastError = ERR_END_ARCHIVE
+		    End If
 		    Return False
 		  End If
 		  mCurrentName = mArchiveStream.Read(mCurrentEntry.FilenameLength)
@@ -369,6 +384,48 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		 Shared Function Repair(ZipFile As FolderItem, RecoveryFile As FolderItem) As Boolean
+		  Dim root As FolderItem
+		  Dim cleanup As Boolean
+		  Dim ok As Boolean = True
+		  If RecoveryFile.Directory Then
+		    root = RecoveryFile
+		  Else
+		    Dim rand As New Random
+		    rand.Seed = Microseconds
+		    root = SpecialFolder.Temporary.Child("_extract" + Hex(rand.InRange(1, &hFFFFFFFE)))
+		    cleanup = True
+		    root.CreateAsFolder
+		  End If
+		  Try
+		    Dim items() As FolderItem
+		    Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		    Dim z As New ZipArchive(bs, True)
+		    
+		    Do Until z.LastError = ERR_END_ARCHIVE
+		      Dim f As FolderItem = CreateTree(root, z.CurrentName)
+		      Dim out As BinaryStream
+		      If Not f.Directory Then out = BinaryStream.Create(f)
+		      Call z.MoveNext(out)
+		      If out <> Nil Then out.Close
+		      items.Append(f)
+		      If z.LastError = ERR_INVALID_ENTRY And Not SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) Then Exit Do
+		    Loop
+		    
+		    If Not RecoveryFile.Directory Then ok = ZipArchive.Create(RecoveryFile, items, root, True)
+		  Catch Err
+		    ok = False
+		  Finally
+		    If cleanup Then
+		      DeleteTree(root)
+		      root.Delete
+		    End If
+		  End Try
+		  Return ok
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reset(Index As Integer = 0) As Boolean
 		  mIndex = -1
 		  mCurrentExtra = Nil
@@ -377,6 +434,10 @@ Protected Class ZipArchive
 		  Dim isempty As Boolean
 		  If mForced Then
 		    mArchiveStream.Position = 0
+		    If Not SeekSignature(mArchiveStream, ZIP_ENTRY_HEADER_SIGNATURE) Then
+		      mLastError = ERR_NOT_ZIPPED
+		      Return False
+		    End If
 		  Else
 		    If Not FindDirectoryFooter(mArchiveStream, mDirectoryFooter, isempty, mArchiveComment) Then
 		      mLastError = ERR_NOT_ZIPPED
