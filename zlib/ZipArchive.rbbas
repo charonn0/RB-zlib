@@ -129,11 +129,26 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h21
 		Private Shared Function FindDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter, ByRef IsEmpty As Boolean, ByRef ArchComment As String) As Boolean
-		  Stream.Position = Max(0, Stream.Length - &hFFFF - MIN_ARCHIVE_SIZE)
-		  If Not SeekSignature(Stream, ZIP_DIRECTORY_FOOTER_SIGNATURE) Then Return False
+		  Stream.Position = Max(0, Stream.Length - MAX_COMMENT_SIZE - MIN_ARCHIVE_SIZE)
+		  Dim ok As Boolean
+		  Dim last As UInt64
+		  ' a zip archive can contain other zip archives, in which case it's possible
+		  ' for there to be more than one Central Directory Footer in the file. We only
+		  ' want the "outermost" directory footer, i.e. the last one.
+		  Do Until Stream.EOF
+		    If Not SeekSignature(Stream, ZIP_DIRECTORY_FOOTER_SIGNATURE) Then
+		      If last = 0 And Stream.Length > MIN_ARCHIVE_SIZE Then Return False
+		      Stream.Position = last
+		      Exit Do
+		    Else
+		      last = Stream.Position
+		      Stream.Position = Stream.Position + 4
+		    End If
+		  Loop Until Stream.Position + MAX_COMMENT_SIZE + MIN_ARCHIVE_SIZE <= Stream.Length
+		  
 		  If Not ReadDirectoryFooter(Stream, Footer) Then Return False
 		  ArchComment = Stream.Read(Footer.CommentLength)
-		  IsEmpty = (Stream.Length = MIN_ARCHIVE_SIZE + Footer.CommentLength And Footer.Offset = 0 And Footer.DirectorySize = 0)
+		  IsEmpty = (Stream.Length = MIN_ARCHIVE_SIZE + Footer.CommentLength)
 		  Return footer.Offset > MIN_ARCHIVE_SIZE Or IsEmpty
 		End Function
 	#tag EndMethod
@@ -696,6 +711,9 @@ Protected Class ZipArchive
 		ValidateChecksums As Boolean = True
 	#tag EndProperty
 
+
+	#tag Constant, Name = MAX_COMMENT_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
+	#tag EndConstant
 
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
 	#tag EndConstant
