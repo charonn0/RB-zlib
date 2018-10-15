@@ -11,9 +11,10 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(ArchiveStream As BinaryStream)
+		Sub Constructor(ArchiveStream As BinaryStream, Force As Boolean = False)
 		  mArchiveStream = ArchiveStream
 		  mArchiveStream.LittleEndian = True
+		  mForced = Force
 		  If Not Me.Reset(0) Then Raise New zlibException(mLastError)
 		End Sub
 	#tag EndMethod
@@ -290,12 +291,12 @@ Protected Class ZipArchive
 		      If ValidateChecksums Then CRC = CRC32(data, crc, data.Size)
 		      Destination.Write(data)
 		    End If
-		  Loop
+		  Loop Until zipstream.EOF
 		  If BitAnd(mCurrentEntry.Flag, 8) = 8 Then mArchiveStream.Position = mArchiveStream.Position + ZIP_ENTRY_FOOTER_SIZE
 		  
 		  If ValidateChecksums And (crc <> mCurrentEntry.CRC32) Then
 		    mLastError = ERR_CHECKSUM_MISMATCH
-		    Return False
+		    Return False Or mForced
 		  End If
 		  
 		  Return True
@@ -335,7 +336,8 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h21
 		Private Function ReadHeader() As Boolean
 		  ' read the next entry header
-		  If mArchiveStream.Position >= mDirectoryFooter.Offset Then
+		  Dim doitanyway As Boolean = mForced And (mArchiveStream.Length - mArchiveStream.Position >= MIN_ARCHIVE_SIZE)
+		  If mArchiveStream.Position >= mDirectoryFooter.Offset And Not doitanyway Then
 		    mLastError = ERR_END_ARCHIVE
 		    Return False
 		  End If
@@ -373,19 +375,23 @@ Protected Class ZipArchive
 		  mCurrentEntry.StringValue(True) = ""
 		  mCurrentName = ""
 		  Dim isempty As Boolean
-		  If Not FindDirectoryFooter(mArchiveStream, mDirectoryFooter, isempty, mArchiveComment) Then
-		    mLastError = ERR_NOT_ZIPPED
-		    Return False
-		  End If
-		  
-		  mArchiveStream.Position = mDirectoryFooter.Offset
-		  If Not isempty Then
-		    Dim header As ZipDirectoryHeader
-		    If Not ReadDirectoryHeader(mArchiveStream, header) Then
+		  If mForced Then
+		    mArchiveStream.Position = 0
+		  Else
+		    If Not FindDirectoryFooter(mArchiveStream, mDirectoryFooter, isempty, mArchiveComment) Then
 		      mLastError = ERR_NOT_ZIPPED
 		      Return False
 		    End If
-		    mArchiveStream.Position = header.Offset ' move to offset of first entry
+		    
+		    mArchiveStream.Position = mDirectoryFooter.Offset
+		    If Not isempty Then
+		      Dim header As ZipDirectoryHeader
+		      If Not ReadDirectoryHeader(mArchiveStream, header) Then
+		        mLastError = ERR_NOT_ZIPPED
+		        Return False
+		      End If
+		      mArchiveStream.Position = header.Offset ' move to offset of first entry
+		    End If
 		  End If
 		  
 		  Do
@@ -680,6 +686,10 @@ Protected Class ZipArchive
 
 	#tag Property, Flags = &h21
 		Private mExtraData As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mForced As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
