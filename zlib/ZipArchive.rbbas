@@ -789,9 +789,6 @@ Protected Class ZipArchive
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = USE_CP437, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
-	#tag EndConstant
-
 	#tag Constant, Name = ZIP_DIRECTORY_FOOTER_SIGNATURE, Type = Double, Dynamic = False, Default = \"&h06054b50", Scope = Private
 	#tag EndConstant
 
