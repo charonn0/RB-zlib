@@ -964,11 +964,13 @@ Protected Module zlib
 		  ' the rules of the target system.
 		  
 		  name = DefineEncoding(name, Encodings.UTF8).Trim
-		  If name <> DefineEncoding(name, Encodings.DOSLatinUS) Then
-		    ' the zip format says names can be either UTF8 or cp437 (AKA DOSLatinUS)
-		    ' we'll assume it's UTF8 unless the cp437 version doesn't match the UTF8 version
-		    name = DefineEncoding(name, Encodings.DOSLatinUS)
-		  End If
+		  #If USE_CP437 Then
+		    If name <> DefineEncoding(name, Encodings.DOSLatinUS) Then
+		      ' the zip format says names can be either UTF8 or cp437 (AKA DOSLatinUS)
+		      ' we'll assume it's UTF8 unless the cp437 version doesn't match the UTF8 version
+		      name = DefineEncoding(name, Encodings.DOSLatinUS)
+		    End If
+		  #endif
 		  
 		  #If TargetWin32 Then
 		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
