@@ -177,7 +177,7 @@ Protected Class ZipArchive
 		Private Shared Sub GetChildren(Root As FolderItem, ByRef Results() As FolderItem)
 		  Dim c As Integer = Root.Count
 		  For i As Integer = 1 To c
-		    Dim item As FolderItem = Root.Item(i)
+		    Dim item As FolderItem = Root.TrueItem(i)
 		    Results.Append(item)
 		    If item.Directory Then GetChildren(item, Results)
 		  Next
