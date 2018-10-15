@@ -403,6 +403,8 @@ Protected Class ZipArchive
 		      Stream.Position = Stream.Position - (data.LenB - offset + 1)
 		      ok = True
 		      Exit Do
+		    ElseIf Stream.Length - Stream.Position >= 4 Then
+		      Stream.Position = Stream.Position - 3
 		    End If
 		  Loop
 		  If Not ok Then Stream.Position = pos
