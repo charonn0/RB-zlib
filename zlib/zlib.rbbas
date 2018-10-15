@@ -963,7 +963,7 @@ Protected Module zlib
 		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
 		  ' the rules of the target system.
 		  
-		  name = DefineEncoding(name, Encodings.UTF8)
+		  name = DefineEncoding(name, Encodings.UTF8).Trim
 		  If name <> DefineEncoding(name, Encodings.DOSLatinUS) Then
 		    ' the zip format says names can be either UTF8 or cp437 (AKA DOSLatinUS)
 		    ' we'll assume it's UTF8 unless the cp437 version doesn't match the UTF8 version
