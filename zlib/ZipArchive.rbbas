@@ -86,6 +86,8 @@ Protected Class ZipArchive
 		    Dim name As String = GetRelativePath(RootDirectory, item)
 		    #If USE_CP437 Then
 		      name = ConvertEncoding(name, Encodings.DOSLatinUS)
+		    #Else
+		      name = ConvertEncoding(name, Encodings.UTF8)
 		    #EndIf
 		    If item.Directory Then name = name + "/"
 		    Dim bs As BinaryStream
