@@ -84,11 +84,7 @@ Protected Class ZipArchive
 		    Dim item As FolderItem = Items(i)
 		    If item.Length > &hFFFFFFFF Then Raise New zlibException(ERR_TOO_LARGE)
 		    Dim name As String = GetRelativePath(RootDirectory, item)
-		    #If USE_CP437 Then
-		      name = ConvertEncoding(name, Encodings.DOSLatinUS)
-		    #Else
-		      name = ConvertEncoding(name, Encodings.UTF8)
-		    #EndIf
+		    name = ConvertEncoding(name, Encodings.UTF8)
 		    If item.Directory Then name = name + "/"
 		    Dim bs As BinaryStream
 		    If item.Exists And Not item.Directory Then bs = BinaryStream.Open(item)
@@ -305,7 +301,9 @@ Protected Class ZipArchive
 		      Destination.Write(data)
 		    End If
 		  Loop Until zipstream.EOF
-		  If BitAnd(mCurrentEntry.Flag, 8) = 8 Then mArchiveStream.Position = mArchiveStream.Position + ZIP_ENTRY_FOOTER_SIZE
+		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR Then
+		    mArchiveStream.Position = mArchiveStream.Position + ZIP_ENTRY_FOOTER_SIZE
+		  End If
 		  
 		  If ValidateChecksums And (crc <> mCurrentEntry.CRC32) Then
 		    mLastError = ERR_CHECKSUM_MISMATCH
@@ -365,9 +363,14 @@ Protected Class ZipArchive
 		    Return False
 		  End If
 		  mCurrentName = mArchiveStream.Read(mCurrentEntry.FilenameLength)
+		  If BitAnd(mCurrentEntry.Flag, FLAG_NAME_ENCODING) = FLAG_NAME_ENCODING Then ' UTF8 names
+		    mCurrentName = DefineEncoding(mCurrentName, Encodings.UTF8)
+		  Else ' CP437 names
+		    mCurrentName = DefineEncoding(mCurrentName, Encodings.DOSLatinUS)
+		  End If
 		  mCurrentExtra = mArchiveStream.Read(mCurrentEntry.ExtraLength)
 		  
-		  If BitAnd(mCurrentEntry.Flag, 8) = 8 And mCurrentEntry.CompressedSize = 0 Then ' footer follows
+		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR And mCurrentEntry.CompressedSize = 0 Then ' footer follows
 		    Dim datastart As UInt64 = mArchiveStream.Position
 		    Dim footer As ZipEntryFooter
 		    If Not FindEntryFooter(mArchiveStream, footer) Then
@@ -555,8 +558,10 @@ Protected Class ZipArchive
 		  DirectoryHeader.Version = 20
 		  DirectoryHeader.VersionNeeded = 10
 		  
-		  Stream.WriteUInt16(0) ' flag
-		  DirectoryHeader.Flag = 0
+		  If Name.Encoding = Encodings.UTF8 Then 
+		    DirectoryHeader.Flag = 2048
+		  End If
+		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
 		  
 		  If Length = 0 Or CompressionLevel = 0 Then
 		    Stream.WriteUInt16(0) ' method=none
@@ -717,7 +722,7 @@ Protected Class ZipArchive
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return BitAnd(mCurrentEntry.Flag, 1) = 1
+			  Return BitAnd(mCurrentEntry.Flag, FLAG_ENCRYPTED) = FLAG_ENCRYPTED
 			End Get
 		#tag EndGetter
 		IsEncrypted As Boolean
@@ -784,6 +789,15 @@ Protected Class ZipArchive
 		ValidateChecksums As Boolean = True
 	#tag EndProperty
 
+
+	#tag Constant, Name = FLAG_DESCRIPTOR, Type = Double, Dynamic = False, Default = \"8", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = FLAG_ENCRYPTED, Type = Double, Dynamic = False, Default = \"1", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = FLAG_NAME_ENCODING, Type = Double, Dynamic = False, Default = \"2048", Scope = Private
+	#tag EndConstant
 
 	#tag Constant, Name = MAX_COMMENT_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
 	#tag EndConstant

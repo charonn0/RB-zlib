@@ -963,15 +963,6 @@ Protected Module zlib
 		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
 		  ' the rules of the target system.
 		  
-		  name = DefineEncoding(name, Encodings.UTF8).Trim
-		  #If USE_CP437 Then
-		    If name <> DefineEncoding(name, Encodings.DOSLatinUS) Then
-		      ' the zip format says names can be either UTF8 or cp437 (AKA DOSLatinUS)
-		      ' we'll assume it's UTF8 unless the cp437 version doesn't match the UTF8 version
-		      name = DefineEncoding(name, Encodings.DOSLatinUS)
-		    End If
-		  #endif
-		  
 		  #If TargetWin32 Then
 		    Static reservednames() As String = Array("con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", _
 		    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9")
@@ -1214,9 +1205,6 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = RAW_ENCODING, Type = Double, Dynamic = False, Default = \"-15", Scope = Protected
-	#tag EndConstant
-
-	#tag Constant, Name = USE_CP437, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = zlib1, Type = String, Dynamic = False, Default = \"libz.so.1", Scope = Private
