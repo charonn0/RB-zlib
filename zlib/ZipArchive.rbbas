@@ -190,7 +190,7 @@ Protected Class ZipArchive
 		    s.Insert(0, Item.Name)
 		    Item = Item.Parent
 		  Loop Until Item = Nil
-		  If Item = Nil Then Return s(s.Ubound) ' not relative
+		  If Item = Nil Then Return s.Pop ' not relative
 		  Return Join(s, "/")
 		End Function
 	#tag EndMethod
