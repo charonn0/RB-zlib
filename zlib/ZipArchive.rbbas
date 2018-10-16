@@ -140,7 +140,6 @@ Protected Class ZipArchive
 	#tag Method, Flags = &h21
 		Private Shared Function FindDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter, ByRef IsEmpty As Boolean, ByRef ArchComment As String) As Boolean
 		  Stream.Position = Max(0, Stream.Length - MAX_COMMENT_SIZE - MIN_ARCHIVE_SIZE)
-		  Dim ok As Boolean
 		  Dim last As UInt64
 		  ' a zip archive can contain other zip archives, in which case it's possible
 		  ' for there to be more than one Central Directory Footer in the file. We only
