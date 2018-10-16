@@ -393,16 +393,25 @@ Protected Class ZipArchive
 		  Dim items() As FolderItem
 		  Try
 		    Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
-		    Dim z As New ZipArchive(bs, True)
+		    Dim z As ZipArchive
+		    Try
+		      z = New ZipArchive(bs, True)
+		    Catch err
+		      Return False
+		    End Try
 		    
 		    Do Until z.LastError = ERR_END_ARCHIVE
 		      Dim f As FolderItem = CreateTree(root, z.CurrentName)
 		      Dim out As BinaryStream
-		      If Not f.Directory Then out = BinaryStream.Create(f)
-		      Call z.MoveNext(out)
-		      If out <> Nil Then out.Close
+		      If Not f.Directory Then out = BinaryStream.Create(f, True)
+		      Try
+		        Call z.ReadEntry(out)
+		      Catch err
+		      Finally
+		        If out <> Nil Then out.Close
+		      End Try
 		      items.Append(f)
-		      If z.LastError = ERR_INVALID_ENTRY And Not SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) Then Exit Do
+		      If Not (SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) And z.ReadHeader) Then Exit Do
 		    Loop
 		    
 		    If Not RecoveryFile.Directory Then ok = ZipArchive.Create(RecoveryFile, items, root, True)
