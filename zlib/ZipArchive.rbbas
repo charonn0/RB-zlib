@@ -121,17 +121,6 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Sub DeleteTree(Root As FolderItem)
-		  Dim c As Integer = Root.Count
-		  For i As Integer = c DownTo 1
-		    Dim item As FolderItem = Root.Item(i)
-		    If item.Directory Then DeleteTree(item)
-		    item.Delete
-		  Next
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
 		End Sub
@@ -361,7 +350,7 @@ Protected Class ZipArchive
 		    End If
 		    Return False
 		  End If
-		  mCurrentName = mArchiveStream.Read(mCurrentEntry.FilenameLength)
+		  mCurrentName = mArchiveStream.Read(mCurrentEntry.FilenameLength).Trim
 		  If BitAnd(mCurrentEntry.Flag, FLAG_NAME_ENCODING) = FLAG_NAME_ENCODING Then ' UTF8 names
 		    mCurrentName = DefineEncoding(mCurrentName, Encodings.UTF8)
 		  Else ' CP437 names
@@ -401,8 +390,8 @@ Protected Class ZipArchive
 		    cleanup = True
 		    root.CreateAsFolder
 		  End If
+		  Dim items() As FolderItem
 		  Try
-		    Dim items() As FolderItem
 		    Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
 		    Dim z As New ZipArchive(bs, True)
 		    
@@ -421,7 +410,9 @@ Protected Class ZipArchive
 		    ok = False
 		  Finally
 		    If cleanup Then
-		      DeleteTree(root)
+		      Do Until UBound(items) = -1
+		        items.Pop.Delete
+		      Loop
 		      root.Delete
 		    End If
 		  End Try
