@@ -73,9 +73,10 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(ZipFile As FolderItem, Items() As FolderItem, RootDirectory As FolderItem = Nil, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		 Shared Function Create(ZipFile As FolderItem, Items() As FolderItem, RootDirectory As FolderItem = Nil, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, ArchiveComment As String = "") As Boolean
 		  Dim directory() As ZipDirectoryHeader
-		  Dim names() As String
+		  Dim names(), comments() As String
+		  Dim extras() As MemoryBlock
 		  Dim stream As BinaryStream = BinaryStream.Create(ZipFile, Overwrite)
 		  stream.LittleEndian = True
 		  
@@ -92,20 +93,12 @@ Protected Class ZipArchive
 		    WriteEntryHeader(stream, name, item.Length, bs, item.ModificationDate, CompressionLevel, dirheader)
 		    directory.Append(dirheader)
 		    names.Append(name)
+		    comments.Append("")
+		    extras.Append(Nil)
 		  Next
-		  Dim dirstart As UInt64 = stream.Position
-		  For i As Integer = 0 To c
-		    WriteDirectoryHeader(stream, directory(i), names(i), "", Nil)
-		  Next
-		  Dim dirsz As UInt32 = stream.Position - dirstart
-		  Dim footer As ZipDirectoryFooter
-		  footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE
-		  footer.DirectorySize = dirsz
-		  footer.CommentLength = 0
-		  footer.Offset = dirstart
-		  footer.ThisRecordCount = c + 1
-		  footer.TotalRecordCount = c + 1
-		  WriteDirectoryFooter(stream, footer)
+		  
+		  WriteDirectory(stream, directory, names, comments, extras, ArchiveComment)
+		  
 		  Dim ok As Boolean = stream.IsZipped()
 		  stream.Close
 		  Return ok
@@ -113,10 +106,10 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(ZipFile As FolderItem, RootDirectory As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		 Shared Function Create(ZipFile As FolderItem, RootDirectory As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, ArchiveComment As String = "") As Boolean
 		  Dim items() As FolderItem
 		  GetChildren(RootDirectory, items)
-		  Return Create(ZipFile, items, RootDirectory, Overwrite, CompressionLevel)
+		  Return Create(ZipFile, items, RootDirectory, Overwrite, CompressionLevel, ArchiveComment)
 		End Function
 	#tag EndMethod
 
@@ -510,6 +503,28 @@ Protected Class ZipArchive
 		  ValidateChecksums = vc
 		  Return mLastError = ERR_END_ARCHIVE
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub WriteDirectory(Stream As BinaryStream, Headers() As ZipDirectoryHeader, Names() As String, Comments() As String, Extras() As MemoryBlock, ArchiveComment As String)
+		  ArchiveComment = ConvertEncoding(ArchiveComment, Encodings.UTF8)
+		  Dim c As Integer = UBound(Headers)
+		  Dim footer As ZipDirectoryFooter
+		  footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE
+		  footer.CommentLength = ArchiveComment.LenB
+		  footer.ThisRecordCount = c + 1
+		  footer.TotalRecordCount = c + 1
+		  footer.Offset = stream.Position
+		  
+		  For i As Integer = 0 To c
+		    WriteDirectoryHeader(Stream, Headers(i), Names(i), Comments(i), Extras(i))
+		  Next
+		  
+		  footer.DirectorySize = Stream.Position - footer.Offset
+		  WriteDirectoryFooter(Stream, footer)
+		  Stream.Write(ArchiveComment)
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
