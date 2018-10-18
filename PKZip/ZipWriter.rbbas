@@ -1,6 +1,20 @@
 #tag Class
 Protected Class ZipWriter
 	#tag Method, Flags = &h0
+		Function AppendEntry(Entry As FolderItem, Optional RelativeRoot As FolderItem) As String
+		  Dim path As String = GetRelativePath(RelativeRoot, Entry)
+		  Dim bs As BinaryStream
+		  If Not Entry.Directory Then
+		    bs = BinaryStream.Open(Entry)
+		  Else
+		    path = path + "/"
+		  End If
+		  AppendEntry(path, bs, Entry.Length, Entry.ModificationDate)
+		  Return path
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As Readable, Length As UInt32, ModifyDate As Date = Nil)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
