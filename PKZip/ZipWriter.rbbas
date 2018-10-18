@@ -13,6 +13,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub Commit(WriteTo As BinaryStream, CompressionLevel As Integer = -1)
+		  WriteTo.LittleEndian = True
 		  Dim paths() As String
 		  Dim lengths() As UInt32
 		  Dim sources() As Readable
@@ -23,7 +24,6 @@ Protected Class ZipWriter
 		  CollapseTree(mEntries, paths, lengths, modtimes, sources, comments, extras, dirstatus)
 		  
 		  Dim directory() As ZipDirectoryHeader
-		  
 		  
 		  Dim c As Integer = UBound(paths)
 		  For i As Integer = 0 To c
@@ -46,8 +46,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
-		  mEntries = New Dictionary
-		  Call TraverseTree(mEntries, "/", True)
+		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)', "$a":"")
 		End Sub
 	#tag EndMethod
 
@@ -62,6 +61,20 @@ Protected Class ZipWriter
 		    Dim p As Dictionary = Dictionary(w.Value)
 		    p.Remove(n)
 		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LastError() As Integer
+		  Return mLastError
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SetEntryComment(Path As String, Comment As String)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  d.Value("$c") = Comment
 		End Sub
 	#tag EndMethod
 
