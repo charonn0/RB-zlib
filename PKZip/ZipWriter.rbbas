@@ -59,6 +59,14 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Commit(WriteTo As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = - 1)
+		  If WriteTo = Nil Or WriteTo.Directory Then Return
+		  Dim bs As BinaryStream = BinaryStream.Create(WriteTo, Overwrite)
+		  Commit(bs, CompressionLevel)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor()
 		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)', "$a":"")
 		End Sub
