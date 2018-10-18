@@ -495,6 +495,32 @@ Protected Module PKZip
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		  Dim writer As New ZipWriter
+		  writer.ArchiveComment = "Created with RB-Zip"
+		  Dim c As Integer = UBound(ToArchive)
+		  For i As Integer = 0 To c
+		    Dim p As String = writer.AppendEntry(ToArchive(i), RelativeRoot)
+		    writer.SetEntryComment(p, "This is item number " + Str(i + 1))
+		  Next
+		  writer.Commit(OutputFile, Overwrite, CompressionLevel)
+		  Return writer.LastError = 0
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		  Dim items() As FolderItem
+		  If ToArchive.Directory Then
+		    GetChildren(ToArchive, items)
+		  Else
+		    items.Append(ToArchive)
+		  End If
+		  Return WriteZip(items, OutputFile, ToArchive, Overwrite, CompressionLevel)
+		End Function
+	#tag EndMethod
+
 
 	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"16384", Scope = Private
 	#tag EndConstant
