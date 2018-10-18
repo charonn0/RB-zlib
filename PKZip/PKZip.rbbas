@@ -6,7 +6,7 @@ Protected Module PKZip
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
 		      If item.Lookup("$d", False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, Comments, Extras, DirectoryStatus)
-		      Paths.Append(item.Value("$a"))
+		      Paths.Append(GetTreeParentPath(item))
 		      Lengths.Append(item.Lookup("$s", 0))
 		      ModTimes.Append(item.Value("$t"))
 		      Sources.Append(item.Value("$r"))
@@ -123,6 +123,26 @@ Protected Module PKZip
 		    Item = Item.Parent
 		  Loop Until Item = Nil
 		  If Item = Nil Then Return s.Pop ' not relative
+		  Return Join(s, "/")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function GetTreeParentPath(Child As Dictionary) As String
+		  Dim s() As String
+		  If Child.Value("$d") = True Then 
+		    s.Append("")
+		  End If
+		  Do Until Child = Nil Or Child.Value("$n") = "$ROOT"
+		    s.Insert(0, Child.Value("$n"))
+		    Dim w As WeakRef = Child.Value("$p")
+		    If w = Nil Or w.Value = Nil Then
+		      Child = Nil
+		    Else
+		      Child = Dictionary(w.Value)
+		    End If
+		  Loop
+		  
 		  Return Join(s, "/")
 		End Function
 	#tag EndMethod
@@ -293,7 +313,9 @@ Protected Module PKZip
 		      child.Value("$n") = name
 		      child.Value("$d") = True
 		      child.Value("$p") = New WeakRef(parent)
-		      child.Value("$a") = parent.Value("$a") + name + "/"
+		      'child.Value("$a") = parent.Value("$a") + name + "/"
+		    Else
+		      child.Value("$d") = True
 		    End If
 		    parent.Value(name) = child
 		    parent = child
@@ -304,7 +326,7 @@ Protected Module PKZip
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent), "$a":parent.Value("$a") + name)
+		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent))', "$a":parent.Value("$a") + name)
 		    End If
 		    parent.Value(name) = child
 		    parent = child
