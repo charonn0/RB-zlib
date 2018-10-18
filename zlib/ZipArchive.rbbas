@@ -74,11 +74,12 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(ZipFile As FolderItem, Items() As FolderItem, RootDirectory As FolderItem = Nil, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, ArchiveComment As String = "") As Boolean
-		  Dim directory() As ZipDirectoryHeader
-		  Dim names(), comments() As String
-		  Dim extras() As MemoryBlock
 		  Dim stream As BinaryStream = BinaryStream.Create(ZipFile, Overwrite)
 		  stream.LittleEndian = True
+		  
+		  Dim dir As New MemoryBlock(0)
+		  Dim dirstream As New BinaryStream(dir)
+		  
 		  
 		  Dim c As Integer = UBound(Items)
 		  For i As Integer = 0 To c
@@ -91,13 +92,11 @@ Protected Class ZipArchive
 		    If item.Exists And Not item.Directory Then bs = BinaryStream.Open(item)
 		    Dim dirheader As ZipDirectoryHeader
 		    WriteEntryHeader(stream, name, item.Length, bs, item.ModificationDate, CompressionLevel, dirheader)
-		    directory.Append(dirheader)
-		    names.Append(name)
-		    comments.Append("")
-		    extras.Append(Nil)
+		    WriteDirectoryHeader(dirstream, dirheader, name, "", Nil)
 		  Next
 		  
-		  WriteDirectory(stream, directory, names, comments, extras, ArchiveComment)
+		  dirstream.Close
+		  WriteDirectory(stream, dir, c + 1, ArchiveComment)
 		  
 		  Dim ok As Boolean = stream.IsZipped()
 		  stream.Close
@@ -506,19 +505,15 @@ Protected Class ZipArchive
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Sub WriteDirectory(Stream As BinaryStream, Headers() As ZipDirectoryHeader, Names() As String, Comments() As String, Extras() As MemoryBlock, ArchiveComment As String)
+		Private Shared Sub WriteDirectory(Stream As BinaryStream, Directory As MemoryBlock, Count As UInt32, ArchiveComment As String)
 		  ArchiveComment = ConvertEncoding(ArchiveComment, Encodings.UTF8)
-		  Dim c As Integer = UBound(Headers)
 		  Dim footer As ZipDirectoryFooter
 		  footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE
 		  footer.CommentLength = ArchiveComment.LenB
-		  footer.ThisRecordCount = c + 1
-		  footer.TotalRecordCount = c + 1
+		  footer.ThisRecordCount = Count
+		  footer.TotalRecordCount = Count
 		  footer.Offset = stream.Position
-		  
-		  For i As Integer = 0 To c
-		    WriteDirectoryHeader(Stream, Headers(i), Names(i), Comments(i), Extras(i))
-		  Next
+		  Stream.Write(Directory)
 		  
 		  footer.DirectorySize = Stream.Position - footer.Offset
 		  WriteDirectoryFooter(Stream, footer)
@@ -542,6 +537,10 @@ Protected Class ZipArchive
 
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteDirectoryHeader(Stream As BinaryStream, Header As ZipDirectoryHeader, Name As String, Comment As String, Extra As MemoryBlock)
+		  If Comment.LenB > MAX_COMMENT_SIZE Then Comment = LeftB(Comment, MAX_COMMENT_SIZE)
+		  If Name.LenB > MAX_NAME_SIZE Then Raise New zlibException(ERR_INVALID_NAME)
+		  If Extra <> Nil And Extra.Size > MAX_EXTRA_SIZE Then Extra.Size = MAX_EXTRA_SIZE
+		  
 		  Header.CommentLength = Comment.LenB
 		  Header.FilenameLength = Name.LenB
 		  If Extra <> Nil Then Header.ExtraLength = Extra.Size Else Header.ExtraLength = 0
