@@ -473,7 +473,9 @@ Protected Module PKZip
 		    End If
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
-		      crc = zlib.CRC32(data, crc)
+		      #If USE_ZLIB Then
+		        crc = zlib.CRC32(data, crc)
+		      #endif
 		      z.Write(data)
 		    Loop
 		    #If USE_ZLIB Then
