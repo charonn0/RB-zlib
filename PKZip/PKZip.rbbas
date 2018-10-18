@@ -219,6 +219,30 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function TestZip(ZipFile As FolderItem) As Boolean
+		  ' Extracts a ZIP file to the ExtractTo directory
+		  
+		  Dim zip As ZipReader
+		  Try
+		    zip = New ZipReader(BinaryStream.Open(ZipFile))
+		  Catch Err As ZipException
+		    Return False
+		  End Try
+		  zip.ValidateChecksums = True
+		  Do Until zip.LastError <> 0
+		    Dim tmp As New MemoryBlock(0)
+		    Dim nullstream As New BinaryStream(tmp)
+		    nullstream.Close
+		    Call zip.MoveNext(nullstream)
+		  Loop
+		  zip.Close
+		  If zip.LastError <> ERR_END_ARCHIVE Then Return False
+		  Return True
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function TraverseTree(Root As Dictionary, Path As String, CreateChildren As Boolean) As Dictionary
 		  Dim s() As String = Split(Path, "/")
