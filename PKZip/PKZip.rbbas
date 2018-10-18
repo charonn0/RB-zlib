@@ -189,7 +189,14 @@ Protected Module PKZip
 		  Footer.Offset = Stream.ReadUInt32
 		  Footer.CommentLength = Stream.ReadUInt16
 		  
-		  Return Footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE
+		  If Footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE And _
+		    Stream.Position + Footer.CommentLength = Stream.Length And _
+		    Footer.TotalRecordCount >= Footer.ThisRecordCount And _
+		    Footer.ThisDisk >= Footer.FirstDisk And _
+		    Stream.Position - MIN_ARCHIVE_SIZE - Footer.DirectorySize = Footer.Offset Then 
+		    Return True
+		  End If
+		  
 		  
 		End Function
 	#tag EndMethod
