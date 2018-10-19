@@ -340,7 +340,7 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  If mIndex > -1 Then Return mCurrentEntry.CompressedSize Else Return -1
+			  If mIndex > -1 Then Return mCurrentEntry.CompressedSize Else Return 0
 			End Get
 		#tag EndGetter
 		CurrentSize As UInt32
@@ -349,7 +349,7 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  If mIndex > -1 Then Return mCurrentEntry.UncompressedSize Else Return -1
+			  If mIndex > -1 Then Return mCurrentEntry.UncompressedSize Else Return 0
 			End Get
 		#tag EndGetter
 		CurrentUncompressedSize As UInt32
