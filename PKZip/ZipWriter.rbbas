@@ -181,7 +181,7 @@ Protected Class ZipWriter
 		  DirectoryHeader.VersionNeeded = 10
 		  
 		  If Name.Encoding = Encodings.UTF8 Then
-		    DirectoryHeader.Flag = 2048
+		    DirectoryHeader.Flag = FLAG_NAME_ENCODING
 		  End If
 		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
 		  
