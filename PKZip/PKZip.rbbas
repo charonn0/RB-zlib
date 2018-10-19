@@ -11,7 +11,7 @@ Protected Module PKZip
 		      ModTimes.Append(item.Value("$t"))
 		      Sources.Append(item.Value("$r"))
 		      DirectoryStatus.Append(item.Value("$d"))
-		      Extras.Append(Nil)
+		      Extras.Append(item.Lookup("$e", Nil))
 		      Comments.Append(item.Lookup("$c", ""))
 		    End If
 		  Next
