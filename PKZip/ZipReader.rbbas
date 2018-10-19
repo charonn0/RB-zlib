@@ -334,6 +334,17 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  If mIndex = -1 Then Return Nil
+			  
+			  Return ConvertDate(mCurrentEntry.ModDate, mCurrentEntry.ModTime)
+			End Get
+		#tag EndGetter
+		CurrentModificationDate As Date
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  If mIndex > -1 Then Return mCurrentName
 			End Get
 		#tag EndGetter
