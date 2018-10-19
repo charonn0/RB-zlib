@@ -2,6 +2,7 @@
 Protected Class ZipWriter
 	#tag Method, Flags = &h0
 		Function AppendEntry(Entry As FolderItem, Optional RelativeRoot As FolderItem) As String
+		  If Entry.Length > &hFFFFFFFF Then Raise New ZipException(ERR_TOO_LARGE)
 		  Dim path As String = GetRelativePath(RelativeRoot, Entry)
 		  Dim bs As BinaryStream
 		  If Not Entry.Directory Then
@@ -28,11 +29,10 @@ Protected Class ZipWriter
 	#tag Method, Flags = &h0
 		Sub Commit(WriteTo As BinaryStream, CompressionLevel As Integer = -1)
 		  WriteTo.LittleEndian = True
-		  Dim paths() As String
+		  Dim paths(), comments() As String
 		  Dim lengths() As UInt32
 		  Dim sources() As Readable
 		  Dim modtimes() As Date
-		  Dim comments() As String
 		  Dim extras() As MemoryBlock
 		  Dim dirstatus() As Boolean
 		  CollapseTree(mEntries, paths, lengths, modtimes, sources, comments, extras, dirstatus)
@@ -42,7 +42,6 @@ Protected Class ZipWriter
 		  Dim c As Integer = UBound(paths)
 		  For i As Integer = 0 To c
 		    Dim length As UInt32 = lengths(i)
-		    If Length > &hFFFFFFFF Then Raise New ZipException(ERR_TOO_LARGE)
 		    Dim path As String = paths(i)
 		    path = ConvertEncoding(path, Encodings.UTF8)
 		    Dim source As Readable = sources(i)
@@ -68,7 +67,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
-		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)', "$a":"")
+		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)
 		End Sub
 	#tag EndMethod
 
@@ -248,7 +247,6 @@ Protected Class ZipWriter
 		    #If USE_ZLIB Then
 		      If z IsA zlib.ZStream Then zlib.ZStream(z).Close
 		    #endif
-		    
 		  End If
 		  Dim endoff As UInt64 = Stream.Position
 		  Dim compsz As UInt32 = endoff - dataoff

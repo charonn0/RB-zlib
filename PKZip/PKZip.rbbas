@@ -292,7 +292,6 @@ Protected Module PKZip
 		      child.Value("$n") = name
 		      child.Value("$d") = True
 		      child.Value("$p") = New WeakRef(parent)
-		      'child.Value("$a") = parent.Value("$a") + name + "/"
 		    Else
 		      child.Value("$d") = True
 		    End If
@@ -305,7 +304,7 @@ Protected Module PKZip
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent))', "$a":parent.Value("$a") + name)
+		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent))
 		    End If
 		    parent.Value(name) = child
 		    parent = child
@@ -317,11 +316,9 @@ Protected Module PKZip
 	#tag Method, Flags = &h1
 		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  Dim writer As New ZipWriter
-		  writer.ArchiveComment = "Created with RB-Zip"
 		  Dim c As Integer = UBound(ToArchive)
 		  For i As Integer = 0 To c
 		    Dim p As String = writer.AppendEntry(ToArchive(i), RelativeRoot)
-		    writer.SetEntryComment(p, "This is item number " + Str(i + 1))
 		  Next
 		  writer.Commit(OutputFile, Overwrite, CompressionLevel)
 		  Return writer.LastError = 0
