@@ -355,6 +355,15 @@ Protected Class ZipReader
 		CurrentUncompressedSize As UInt32
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mIndex
+			End Get
+		#tag EndGetter
+		Index As Integer
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h21
 		Private mArchiveComment As String
 	#tag EndProperty
