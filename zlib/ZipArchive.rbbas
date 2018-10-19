@@ -579,8 +579,8 @@ Protected Class ZipArchive
 		  DirectoryHeader.Version = 20
 		  DirectoryHeader.VersionNeeded = 10
 		  
-		  If Name.Encoding = Encodings.UTF8 Then 
-		    DirectoryHeader.Flag = 2048
+		  If Name.Encoding = Encodings.UTF8 Then
+		    DirectoryHeader.Flag = FLAG_NAME_ENCODING
 		  End If
 		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
 		  
