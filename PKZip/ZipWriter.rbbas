@@ -100,6 +100,22 @@ Protected Class ZipWriter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub SetEntryExtraData(Path As String, Extra As MemoryBlock)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  d.Value("$e") = Extra
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SetEntryModificationDate(Path As String, ModDate As Date)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  d.Value("$t") = ModDate
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteDirectory(Stream As BinaryStream, Headers() As ZipDirectoryHeader, Names() As String, Comments() As String, Extras() As MemoryBlock, ArchiveComment As String)
 		  ArchiveComment = ConvertEncoding(ArchiveComment, Encodings.UTF8)
