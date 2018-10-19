@@ -15,6 +15,12 @@ Protected Class ZipReader
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(ZipStream As FolderItem, Force As Boolean = False)
+		  Me.Constructor(BinaryStream.Open(ZipStream), Force)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close
