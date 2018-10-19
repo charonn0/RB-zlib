@@ -234,17 +234,10 @@ Protected Class ZipWriter
 		  
 		  dataoff = Stream.Position
 		  Dim crc As UInt32
+		  Dim z As Writeable
 		  If Source <> Nil And Length > 0 Then
-		    Dim z As Writeable
-		    If CompressionLevel <> 0 Then
-		      #If USE_ZLIB Then
-		        z = zlib.ZStream.Create(Stream, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, zlib.RAW_ENCODING)
-		      #else
-		        Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
-		      #endif
-		    Else
-		      z = Stream
-		    End If
+		    z = GetCompressor(METHOD_DEFLATED, Stream, CompressionLevel)
+		    If z = Nil Then Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
 		      #If USE_ZLIB Then

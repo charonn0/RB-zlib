@@ -130,26 +130,12 @@ Protected Class ZipReader
 		    Return True
 		  End If
 		  
-		  Dim zipstream As Readable
-		  Select Case mCurrentEntry.Method
-		  Case METHOD_DEFLATED
-		    #If USE_ZLIB Then
-		      Dim z As zlib.ZStream = zlib.ZStream.Open(mStream, zlib.RAW_ENCODING)
-		      z.BufferedReading = False
-		      zipstream = z
-		    #else
-		      mLastError = ERR_UNSUPPORTED_COMPRESSION
-		      mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
-		      Return False
-		    #endif
-		    
-		  Case 0 ' store
-		    zipstream = mStream
-		  Else
+		  Dim zipstream As Readable = GetDecompressor(mCurrentEntry.Method, mStream)
+		  If zipstream = Nil Then
 		    mLastError = ERR_UNSUPPORTED_COMPRESSION
 		    mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
 		    Return False
-		  End Select
+		  End If
 		  
 		  ' read the compressed data
 		  Dim p As UInt64 = mStream.Position

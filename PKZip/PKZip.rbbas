@@ -107,6 +107,40 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function GetCompressor(Method As UInt32, Stream As Writeable, CompressionLevel As UInt32) As Writeable
+		  Select Case Method
+		  Case 0 ' store
+		    Return Stream
+		    
+		  Case METHOD_DEFLATED
+		    #If USE_ZLIB Then
+		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, zlib.RAW_ENCODING)
+		    #endif
+		  End Select
+		  
+		  Return Nil
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function GetDecompressor(Method As UInt32, Stream As Readable) As Readable
+		  Select Case Method
+		  Case 0 ' store
+		    Return Stream
+		    
+		  Case METHOD_DEFLATED
+		    #If USE_ZLIB Then
+		      Dim z As zlib.ZStream = zlib.ZStream.Open(Stream, zlib.RAW_ENCODING)
+		      z.BufferedReading = False
+		      Return z
+		    #endif
+		  End Select
+		  
+		  Return Nil
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
 		  If Root = Nil Then Return Item.Name
 		  Dim s() As String
