@@ -240,6 +240,88 @@ Protected Class ZipReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		 Shared Function RepairZip(ZipFile As FolderItem, RecoveryFile As FolderItem, Optional LogFile As FolderItem) As Boolean
+		  Dim root As FolderItem
+		  Dim cleanup As Boolean
+		  Dim ok As Boolean = True
+		  Dim logstream As TextOutputStream
+		  If LogFile <> Nil Then logstream = TextOutputStream.Create(LogFile)
+		  If RecoveryFile.Directory Then
+		    root = RecoveryFile
+		  Else
+		    Static uniq As Integer = Ticks
+		    root = SpecialFolder.Temporary.Child(ZipFile.Name + "_extract" + Hex(uniq))
+		    uniq = uniq + 1
+		    cleanup = True
+		    root.CreateAsFolder
+		  End If
+		  
+		  If logstream <> Nil Then
+		    logstream.WriteLine("Beginning recovery of: " + ZipFile.AbsolutePath)
+		    Dim d As New Date
+		    logstream.WriteLine("Start time: " + d.SQLDateTime)
+		  End If
+		  
+		  If logstream <> Nil Then logstream.WriteLine("Extract to " + root.AbsolutePath)
+		  Dim items() As FolderItem
+		  Try
+		    Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		    Dim zr As ZipReader
+		    Try
+		      zr = New ZipReader(bs, True)
+		    Catch err
+		      If logstream <> Nil Then logstream.WriteLine("  Repair is impossible: " + err.Message)
+		      Return False
+		    End Try
+		    
+		    Dim writer As New ZipWriter
+		    
+		    Do Until zr.LastError = ERR_END_ARCHIVE
+		      If logstream <> Nil Then 
+		        logstream.WriteLine("#### Attempting: " + zr.CurrentName + "####")
+		        logstream.WriteLine("     Index: " + Str(zr.Index))
+		        logstream.WriteLine("     Offset: " + Str(zr.mStream.Position))
+		        logstream.WriteLine("     Name: " + zr.Currentname)
+		      End If
+		      Dim f As FolderItem = CreateTree(root, zr.CurrentName)
+		      Dim out As BinaryStream
+		      If Not f.Directory Then out = BinaryStream.Create(f, True)
+		      Try
+		        Call zr.ReadEntry(out)
+		        If logstream <> Nil Then logstream.WriteLine("     Result: OK.")
+		      Catch err
+		        If logstream <> Nil Then logstream.WriteLine("     Result: " + err.Message)
+		      Finally
+		        If out <> Nil Then out.Close
+		      End Try
+		      If Not RecoveryFile.Directory Then Call writer.AppendEntry(f, root)
+		      If Not (SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) And zr.ReadHeader) Then Exit Do
+		    Loop
+		    If logstream <> Nil Then logstream.WriteLine("#### No further entries to recover.####")
+		    
+		    If Not RecoveryFile.Directory Then 
+		      If logstream <> Nil Then logstream.WriteLine("#### Creating recovery archive.####")
+		      writer.Commit(RecoveryFile, True)
+		      ok = (writer.LastError = 0)
+		    Else
+		      ok = True
+		    End If
+		  Catch Err
+		    ok = False
+		  Finally
+		    If cleanup Then
+		      Do Until UBound(items) = -1
+		        items.Pop.Delete
+		      Loop
+		      root.Delete
+		      If logstream <> Nil Then logstream.Close
+		    End If
+		  End Try
+		  Return ok
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reset(Index As Integer) As Boolean
 		  mIndex = -1
 		  mCurrentExtra = Nil

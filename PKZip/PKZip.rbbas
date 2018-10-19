@@ -229,6 +229,12 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function RepairZip(ZipFile As FolderItem, RecoveryFile As FolderItem, Optional LogFile As FolderItem) As Boolean
+		  Return ZipReader.RepairZip(ZipFile, RecoveryFile, LogFile)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function SeekSignature(Stream As BinaryStream, Signature As UInt32) As Boolean
 		  Dim pos As UInt64 = Stream.Position
@@ -318,7 +324,7 @@ Protected Module PKZip
 		  Dim writer As New ZipWriter
 		  Dim c As Integer = UBound(ToArchive)
 		  For i As Integer = 0 To c
-		    Dim p As String = writer.AppendEntry(ToArchive(i), RelativeRoot)
+		    Call writer.AppendEntry(ToArchive(i), RelativeRoot)
 		  Next
 		  writer.Commit(OutputFile, Overwrite, CompressionLevel)
 		  Return writer.LastError = 0
