@@ -239,9 +239,7 @@ Protected Class ZipWriter
 		    If z = Nil Then Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
-		      #If USE_ZLIB Then
-		        crc = zlib.CRC32(data, crc)
-		      #endif
+		      crc = PKZip.CRC32(data, crc)
 		      z.Write(data)
 		    Loop
 		    #If USE_ZLIB Then
