@@ -91,7 +91,9 @@ Protected Module zlib
 		  ' If NewData.Size is not known (-1) then specify the size as NewDataSize
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.CRC32
 		  
-		  If Not zlib.IsAvailable Or NewData = Nil Then Return 0
+		  Static avail As Boolean
+		  If Not avail Then avail = zlib.IsAvailable
+		  If Not avail Or NewData = Nil Then Return 0
 		  Static CRC_POLYNOMIAL As UInt32
 		  If CRC_POLYNOMIAL = 0 Then CRC_POLYNOMIAL = _crc32(0, Nil, 0)
 		  
