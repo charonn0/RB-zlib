@@ -1,6 +1,19 @@
 #tag Class
 Protected Class ZipWriter
 	#tag Method, Flags = &h0
+		Function AppendDirectory(Entry As FolderItem, Recursive As Boolean = True) As String
+		  If Not Entry.Directory Or Not Recursive Then Return AppendEntry(Entry)
+		  Dim entries() As FolderItem
+		  GetChildren(Entry, entries)
+		  Dim c As Integer = UBound(entries)
+		  For i As Integer = 0 To c
+		    Call AppendEntry(entries(i), entry)
+		  Next
+		  Return Entry.Name + "/"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function AppendEntry(Entry As FolderItem, Optional RelativeRoot As FolderItem) As String
 		  If Entry.Length > &hFFFFFFFF Then Raise New ZipException(ERR_TOO_LARGE)
 		  Dim path As String = GetRelativePath(RelativeRoot, Entry)
