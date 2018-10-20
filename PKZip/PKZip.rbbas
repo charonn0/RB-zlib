@@ -65,6 +65,34 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = -1) As UInt32
+		  #If USE_ZLIB Then
+		    Return zlib.CRC32(Data, LastCRC, DataSize)
+		  #endif
+		  If DataSize = -1 Then DataSize = Data.Size
+		  If DataSize = -1 Then Raise New ZipException(ERR_SIZE_REQUIRED)
+		  
+		  Const CRCpolynomial = &hEDB88320
+		  Dim t as UInt32
+		  
+		  LastCRC = LastCRC XOr &hFFFFFFFF
+		  For i As Integer = 0 To DataSize - 1
+		    t = (LastCRC And &hFF) XOr Data.UInt8Value(i)
+		    For b As Integer = 0 To 7
+		      If (t And &h1) = &h1 Then
+		        t = ShiftRight(t, 1, 32) XOr CRCpolynomial
+		      Else
+		        t = ShiftRight(t, 1, 32)
+		      End If
+		    next
+		    LastCRC = ShiftRight(LastCRC, 8, 32) XOr t
+		  Next
+		  
+		  Return (LastCRC XOr &hFFFFFFFF)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
 		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
