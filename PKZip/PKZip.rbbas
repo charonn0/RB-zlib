@@ -362,6 +362,9 @@ Protected Module PKZip
 	#tag Constant, Name = ERR_NOT_ZIPPED, Type = Double, Dynamic = False, Default = \"-200", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = ERR_SIZE_REQUIRED, Type = Double, Dynamic = False, Default = \"-207", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = ERR_TOO_LARGE, Type = Double, Dynamic = False, Default = \"-206", Scope = Protected
 	#tag EndConstant
 

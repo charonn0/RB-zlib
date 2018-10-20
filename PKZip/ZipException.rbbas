@@ -20,6 +20,8 @@ Inherits RuntimeException
 		    Me.Message = "The archive entry has an illegal file name."
 		  Case ERR_TOO_LARGE
 		    Me.Message = "The file is too large for the zip archive format."
+		  Case ERR_SIZE_REQUIRED
+		    Me.Message = "This operation cannot be perfomed on an unbounded memory block."
 		  Else
 		    Me.Message = "Unknown error"
 		  End Select
