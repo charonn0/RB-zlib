@@ -65,8 +65,8 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = -1) As UInt32
+	#tag Method, Flags = &h21
+		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = -1) As UInt32
 		  #If USE_ZLIB Then
 		    Return zlib.CRC32(Data, LastCRC, DataSize)
 		  #endif
