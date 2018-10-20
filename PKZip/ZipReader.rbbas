@@ -134,7 +134,7 @@ Protected Class ZipReader
 		  If zipstream = Nil Then
 		    mLastError = ERR_UNSUPPORTED_COMPRESSION
 		    mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
-		    Return False
+		    Return False Or mForced
 		  End If
 		  
 		  ' read the compressed data
