@@ -48,7 +48,8 @@ Protected Class ZipWriter
 		    Dim modtime As Date = modtimes(i)
 		    If dirstatus(i) And Right(path, 1) <> "/" Then path = path + "/"
 		    Dim dirheader As ZipDirectoryHeader
-		    WriteEntryHeader(WriteTo, path, length, source, modtime, CompressionLevel, dirheader)
+		    Dim extra As MemoryBlock = extras(i)
+		    WriteEntryHeader(WriteTo, path, length, source, modtime, CompressionLevel, dirheader, extra)
 		    directory.Append(dirheader)
 		  Next
 		  
@@ -184,7 +185,7 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader)
+		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock)
 		  If Not USE_ZLIB Then CompressionLevel = 0
 		  DirectoryHeader.Offset = Stream.Position
 		  Dim crcoff, compszoff, dataoff As UInt64
@@ -225,11 +226,16 @@ Protected Class ZipWriter
 		  DirectoryHeader.FilenameLength = Name.LenB
 		  Stream.WriteUInt16(Name.LenB) ' name length
 		  
-		  DirectoryHeader.ExtraLength = 0
-		  Stream.WriteUInt16(0) ' extra length
+		  If ExtraData = Nil Then
+		    ExtraData = ""
+		  Else
+		    If ExtraData.Size > &hFFFF Then Raise New ZipException(ERR_TOO_LARGE)
+		  End If
+		  DirectoryHeader.ExtraLength = ExtraData.Size
+		  Stream.WriteUInt16(ExtraData.Size) ' extra length
 		  
-		  Stream.Write(name)
-		  //Stream.Write("") ' extra
+		  Stream.Write(Name)
+		  Stream.Write(ExtraData) ' extra
 		  
 		  dataoff = Stream.Position
 		  Dim crc As UInt32
