@@ -64,6 +64,7 @@ Protected Class ZipWriter
 		    Dim extra As MemoryBlock = extras(i)
 		    WriteEntryHeader(WriteTo, path, length, source, modtime, CompressionLevel, dirheader, extra)
 		    directory.Append(dirheader)
+		    If source IsA BinaryStream Then BinaryStream(source).Position = 0 ' be kind, rewind
 		  Next
 		  
 		  WriteDirectory(WriteTo, directory, paths, comments, extras, ArchiveComment)
