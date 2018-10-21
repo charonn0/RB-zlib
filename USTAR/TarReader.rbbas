@@ -104,6 +104,7 @@ Protected Class TarReader
 		  mCurrentLinkName = header.StringValue(157, 100).Trim
 		  
 		  If CurrentName = "" Then mLastError = ERR_INVALID_NAME
+		  If mStream.EOF Then mLastError = ERR_END_ARCHIVE
 		  Return mLastError = 0
 		End Function
 	#tag EndMethod
