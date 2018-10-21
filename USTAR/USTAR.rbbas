@@ -219,7 +219,7 @@ Protected Module USTAR
 	#tag Constant, Name = ERR_INVALID_ENTRY, Type = Double, Dynamic = False, Default = \"-301", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = ERR_INVALID_NAME, Type = Double, Dynamic = False, Default = \"-205", Scope = Protected
+	#tag Constant, Name = ERR_INVALID_NAME, Type = Double, Dynamic = False, Default = \"-305", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_MISALIGNED, Type = Double, Dynamic = False, Default = \"-300", Scope = Protected
