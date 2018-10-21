@@ -109,7 +109,7 @@ Protected Class ZipWriter
 		Sub SetEntryComment(Path As String, Comment As String)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  d.Value("$c") = Comment
+		  d.Value("$c") = ConvertEncoding(Comment, Encodings.UTF8)
 		End Sub
 	#tag EndMethod
 
