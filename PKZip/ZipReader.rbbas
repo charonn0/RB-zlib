@@ -254,11 +254,8 @@ Protected Class ZipReader
 		  
 		  If logstream <> Nil Then
 		    logstream.WriteLine("Beginning recovery of: " + ZipFile.AbsolutePath)
-		    Dim d As New Date
-		    logstream.WriteLine("Start time: " + d.SQLDateTime)
+		    logstream.WriteLine("Extract to " + root.AbsolutePath)
 		  End If
-		  
-		  If logstream <> Nil Then logstream.WriteLine("Extract to " + root.AbsolutePath)
 		  Dim items() As FolderItem
 		  Try
 		    Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
@@ -266,37 +263,29 @@ Protected Class ZipReader
 		    Try
 		      zr = New ZipReader(bs, True)
 		    Catch err
-		      If logstream <> Nil Then logstream.WriteLine("  Repair is impossible: " + err.Message)
+		      If logstream <> Nil Then logstream.WriteLine("Repair is impossible: " + err.Message)
 		      Return False
 		    End Try
 		    
 		    Dim writer As New ZipWriter
 		    
 		    Do Until zr.LastError = ERR_END_ARCHIVE
-		      If logstream <> Nil Then 
-		        logstream.WriteLine("#### Attempting: " + zr.CurrentName + "####")
-		        logstream.WriteLine("     Index: " + Str(zr.Index))
-		        logstream.WriteLine("     Offset: " + Str(zr.mStream.Position))
-		        logstream.WriteLine("     Name: " + zr.Currentname)
-		      End If
+		      If logstream <> Nil Then logstream.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.Index) + "/" + Str(zr.mStream.Position) + ")")
 		      Dim f As FolderItem = CreateTree(root, zr.CurrentName)
 		      Dim out As BinaryStream
 		      If Not f.Directory Then out = BinaryStream.Create(f, True)
 		      Try
 		        Call zr.ReadEntry(out)
-		        If logstream <> Nil Then logstream.WriteLine("     Result: OK.")
 		      Catch err
-		        If logstream <> Nil Then logstream.WriteLine("     Result: " + err.Message)
+		        If logstream <> Nil Then logstream.WriteLine(" Error: " + err.Message)
 		      Finally
 		        If out <> Nil Then out.Close
 		      End Try
 		      If Not RecoveryFile.Directory Then Call writer.AppendEntry(f, root)
 		      If Not (SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) And zr.ReadHeader) Then Exit Do
 		    Loop
-		    If logstream <> Nil Then logstream.WriteLine("#### No further entries to recover.####")
 		    
-		    If Not RecoveryFile.Directory Then 
-		      If logstream <> Nil Then logstream.WriteLine("#### Creating recovery archive.####")
+		    If Not RecoveryFile.Directory Then
 		      writer.Commit(RecoveryFile, True)
 		      ok = (writer.LastError = 0)
 		    Else
