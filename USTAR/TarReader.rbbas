@@ -142,14 +142,34 @@ Protected Class TarReader
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return Val("&o" + mCurrentGroup)
+			End Get
+		#tag EndGetter
 		CurrentGroup As Integer
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Dim mask As Integer = Val("&o" + mCurrentMode)
+			  Dim p As New Permissions(mask)
+			  Return p
+			End Get
+		#tag EndGetter
 		CurrentMode As Permissions
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Dim count As Integer = Val("&o" + mCurrentModTime)
+			  Dim time As New Date(1970, 1, 1, 0, 0, 0, 0.0) 'UNIX epoch
+			  time.TotalSeconds = time.TotalSeconds + count
+			  Return time
+			End Get
+		#tag EndGetter
 		CurrentModificationDate As Date
 	#tag EndComputedProperty
 
@@ -163,6 +183,11 @@ Protected Class TarReader
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return Val("&o" + mCurrentOwner)
+			End Get
+		#tag EndGetter
 		CurrentOwner As Integer
 	#tag EndComputedProperty
 
