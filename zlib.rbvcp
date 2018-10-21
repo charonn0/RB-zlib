@@ -15,6 +15,7 @@ Class=TapeArchive;zlib/TapeArchive.rbbas;&h9F69FFF;&h5A1247FF;false
 FileTypeSet=FileTypes1;FileTypes1.rbbas;&h649F97FF;&h0;false
 Class=ZipArchive;zlib/ZipArchive.rbbas;&h67437FFF;&h5A1247FF;false
 Module=USTAR;USTAR/USTAR.rbbas;&h6D6037FF;&h0;false
+Class=TarWriter;USTAR/TarWriter.rbbas;&h12B7DFFF;&h6D6037FF;false
 Class=TARException;USTAR/TARException.rbbas;&h46032FFF;&h6D6037FF;false
 Class=TarReader;USTAR/TarReader.rbbas;&h66E677FF;&h6D6037FF;false
 MajorVersion=1
