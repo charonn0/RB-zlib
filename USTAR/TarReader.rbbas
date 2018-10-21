@@ -240,10 +240,6 @@ Protected Class TarReader
 	#tag EndProperty
 
 
-	#tag Constant, Name = BLOCK_SIZE, Type = Double, Dynamic = False, Default = \"512", Scope = Private
-	#tag EndConstant
-
-
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="CurrentGroup"
