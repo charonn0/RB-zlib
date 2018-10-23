@@ -38,8 +38,10 @@ Protected Class ZipWriter
 		  d.Value("$t") = ModifyDate
 		  If d.Value("$d") = True Then
 		    d.Value("$l") = 0
+		    d.Value("$m") = 0
 		  Else
 		    d.Value("$l") = CompressionLevel
+		    d.Value("$m") = CompressionMethod
 		  End If
 		End Sub
 	#tag EndMethod
@@ -92,8 +94,13 @@ Protected Class ZipWriter
 		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)
 		  #If USE_ZLIB Then
 		    CompressionLevel = zlib.Z_DEFAULT_COMPRESSION
+		    CompressionMethod = METHOD_DEFLATED
+		  #ElseIf USE_BZIP2 Then
+		    CompressionLevel = BZip2.BZ_DEFAULT_COMPRESSION
+		    CompressionMethod = METHOD_BZIP2
 		  #Else
 		    CompressionLevel = 0
+		    CompressionMethod = 0
 		  #EndIf
 		End Sub
 	#tag EndMethod
@@ -326,6 +333,10 @@ Protected Class ZipWriter
 
 	#tag Property, Flags = &h0
 		CompressionLevel As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		CompressionMethod As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
