@@ -239,6 +239,25 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function ListZip(ZipFile As FolderItem) As String()
+		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
+		  
+		  Dim zip As New ZipReader(ZipFile)
+		  Dim ret() As String
+		  
+		  Do Until zip.LastError <> 0
+		    ret.Append(zip.CurrentName)
+		    Call zip.MoveNext(Nil)
+		  Loop
+		  zip.Close
+		  Return ret
+		  
+		Exception
+		  Return ret
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function NormalizeFilename(Name As String) As String
 		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
