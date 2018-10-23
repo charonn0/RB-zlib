@@ -347,7 +347,7 @@ End
 		  If source = Nil Then Return
 		  Dim destination As FolderItem = GetSaveFolderItem(FileTypes1.ApplicationZip, source.Name + ".zip")
 		  If destination = Nil Then Return
-		  If Not zlib.WriteZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
+		  If Not PKZip.WriteZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -359,7 +359,7 @@ End
 		  Dim destination As FolderItem = SelectFolder()
 		  If destination = Nil Then Return
 		  If destination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
-		  Dim extracted() As FolderItem = zlib.ReadZip(source, destination)
+		  Dim extracted() As FolderItem = PKZip.ReadZip(source, destination)
 		  If UBound(extracted) = -1 And source.Length <> 22 Then
 		    Call MsgBox("Whoops", 16, "Error!")
 		  Else
