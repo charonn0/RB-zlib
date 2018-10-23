@@ -174,6 +174,10 @@ Protected Module PKZip
 		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, zlib.RAW_ENCODING)
 		    #endif
 		    
+		  Case METHOD_BZIP2
+		    #If USE_BZIP2 Then
+		      Return BZip2.BZ2Stream.Create(Stream, CompressionLevel)
+		    #endif
 		  End Select
 		  
 		  Return Nil
@@ -193,6 +197,11 @@ Protected Module PKZip
 		      Return z
 		    #endif
 		    
+		  Case METHOD_BZIP2
+		    #If USE_BZIP2 Then
+		      Dim z As BZip2.BZ2Stream = BZip2.BZ2Stream.Open(Stream)
+		      Return z
+		    #endif
 		  End Select
 		  
 		  Return Nil
@@ -448,10 +457,16 @@ Protected Module PKZip
 	#tag Constant, Name = MAX_NAME_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Private
+	#tag Constant, Name = METHOD_BZIP2, Type = Double, Dynamic = False, Default = \"12", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = USE_BZIP2, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = USE_ZLIB, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
