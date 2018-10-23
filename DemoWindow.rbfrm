@@ -242,6 +242,16 @@ Begin Window DemoWindow
       Visible         =   True
       Width           =   97
    End
+    Begin CheckBox UseBZip2ChkBx
+      AutoDeactivate  =   True
+      Bold            =   ""
+      Caption         =   "Use BZip2"
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+	End
    Begin Timer CompletionTimer
       Height          =   32
       Index           =   -2147483648
