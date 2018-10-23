@@ -167,15 +167,14 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetCompressor(Method As UInt32, Stream As Writeable, CompressionLevel As UInt32) As Writeable
+		  If Method = 0 Then Return Stream
 		  Select Case Method
-		  Case 0 ' store
-		    Return Stream
-		    
 		  Case METHOD_DEFLATED
 		    If CompressionLevel = 0 Then Return Stream
 		    #If USE_ZLIB Then
 		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, zlib.RAW_ENCODING)
 		    #endif
+		    
 		  End Select
 		  
 		  Return Nil
@@ -194,6 +193,7 @@ Protected Module PKZip
 		      z.BufferedReading = False
 		      Return z
 		    #endif
+		    
 		  End Select
 		  
 		  Return Nil
