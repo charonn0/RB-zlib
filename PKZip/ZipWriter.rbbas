@@ -62,7 +62,7 @@ Protected Class ZipWriter
 		    If dirstatus(i) And Right(path, 1) <> "/" Then path = path + "/"
 		    Dim dirheader As ZipDirectoryHeader
 		    Dim extra As MemoryBlock = extras(i)
-		    WriteEntryHeader(WriteTo, path, length, source, modtime, CompressionLevel, dirheader, extra)
+		    WriteEntryHeader(WriteTo, path, length, source, modtime, CompressionLevel, dirheader, extra, CompressionMethod)
 		    directory.Append(dirheader)
 		    If source IsA BinaryStream Then BinaryStream(source).Position = 0 ' be kind, rewind
 		  Next
@@ -199,9 +199,8 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock)
-		  Dim method As UInt32 = METHOD_DEFLATED
-		  If Not USE_ZLIB Then CompressionLevel = 0
+		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock, Method As UInt32)
+		  If Not USE_ZLIB And Not USE_BZIP2 Then CompressionLevel = 0
 		  If Length = 0 Or CompressionLevel = 0 Then method = 0
 		  
 		  DirectoryHeader.Offset = Stream.Position
@@ -218,7 +217,7 @@ Protected Class ZipWriter
 		  End If
 		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
 		  
-		  Stream.WriteUInt16(method) ' method=none
+		  Stream.WriteUInt16(method) ' method
 		  DirectoryHeader.Method = method
 		  Dim modtim As Pair = ConvertDate(ModDate)
 		  Stream.WriteUInt16(modtim.Right) ' modtime
@@ -262,6 +261,9 @@ Protected Class ZipWriter
 		    Loop
 		    #If USE_ZLIB Then
 		      If z IsA zlib.ZStream Then zlib.ZStream(z).Close
+		    #EndIf
+		    #If USE_BZIP2 Then
+		      If z IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(z).Close
 		    #endif
 		  End If
 		  Dim endoff As UInt64 = Stream.Position
@@ -279,6 +281,10 @@ Protected Class ZipWriter
 
 	#tag Property, Flags = &h0
 		ArchiveComment As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		CompressionMethod As UInt32 = PKZip.METHOD_DEFLATED
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
