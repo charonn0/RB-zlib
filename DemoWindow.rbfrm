@@ -287,7 +287,7 @@ End
 		  If source = Nil Then Return
 		  Dim destination As FolderItem = GetSaveFolderItem(FileTypes1.ApplicationXGzip, source.Name + ".gz")
 		  If destination = Nil Then Return
-		  If Not zlib.GZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!")
+		  If Not zlib.GZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -304,7 +304,7 @@ End
 		  Else
 		    encoding = zlib.DEFLATE_ENCODING
 		  End If
-		  If Not zlib.Deflate(source, destination, zlib.Z_DEFAULT_COMPRESSION, False, encoding) Then Call MsgBox("Whoops", 16, "Error!")
+		  If Not zlib.Deflate(source, destination, zlib.Z_DEFAULT_COMPRESSION, False, encoding) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -317,7 +317,7 @@ End
 		  If Right(name, 3) = ".gz" Then name = Left(name, name.Len - 3)
 		  Dim destination As FolderItem = GetSaveFolderItem("", name)
 		  If destination = Nil Then Return
-		  If Not zlib.GUnZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!")
+		  If Not zlib.GUnZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -336,7 +336,7 @@ End
 		  Else
 		    encoding = zlib.DEFLATE_ENCODING
 		  End If
-		  If Not zlib.Inflate(source, destination, False, Nil, encoding) Then Call MsgBox("Whoops", 16, "Error!")
+		  If Not zlib.Inflate(source, destination, False, Nil, encoding) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -347,7 +347,7 @@ End
 		  If source = Nil Then Return
 		  Dim destination As FolderItem = GetSaveFolderItem(FileTypes1.ApplicationZip, source.Name + ".zip")
 		  If destination = Nil Then Return
-		  If Not zlib.WriteZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!")
+		  If Not zlib.WriteZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -358,7 +358,7 @@ End
 		  If source = Nil Then Return
 		  Dim destination As FolderItem = SelectFolder()
 		  If destination = Nil Then Return
-		  If destination.Count <> 0 And MsgBox("Destination is not empty", 4 + 48, "The target directory is not empty. Proceed with extraction?") <> 6 Then Return
+		  If destination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
 		  Dim extracted() As FolderItem = zlib.ReadZip(source, destination)
 		  If UBound(extracted) = -1 And source.Length <> 22 Then
 		    Call MsgBox("Whoops", 16, "Error!")
