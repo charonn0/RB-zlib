@@ -242,7 +242,7 @@ Begin Window DemoWindow
       Visible         =   True
       Width           =   97
    End
-    Begin CheckBox UseBZip2ChkBx
+   Begin CheckBox UseBZip2ChkBx
       AutoDeactivate  =   True
       Bold            =   ""
       Caption         =   "Use BZip2"
@@ -251,7 +251,28 @@ Begin Window DemoWindow
       Enabled         =   True
       Height          =   20
       HelpTag         =   ""
-	End
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   ""
+      Left            =   238
+      LockBottom      =   ""
+      LockedInPosition=   False
+      LockLeft        =   ""
+      LockRight       =   ""
+      LockTop         =   ""
+      Scope           =   0
+      State           =   0
+      TabIndex        =   7
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0
+      TextUnit        =   0
+      Top             =   58
+      Underline       =   ""
+      Visible         =   True
+      Width           =   100
+   End
    Begin Timer CompletionTimer
       Height          =   32
       Index           =   -2147483648
@@ -324,7 +345,11 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = PKZip.WriteZip(mSource, mDestination)
+		  If Not mOption Then
+		    mResult = PKZip.WriteZip(mSource, mDestination)
+		  Else
+		    mResult = PKZip.WriteZip(mSource, mDestination, False, BZip2.BZ_DEFAULT_COMPRESSION, PKZip.METHOD_BZIP2)
+		  End If
 		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
@@ -432,6 +457,7 @@ End
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + ".zip")
 		  If mDestination = Nil Then Return
 		  Self.Title = "zlib Demo - Zipping..."
+		  mOption = UseBZip2ChkBx.Value
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZip
 		  mWorker.Run
@@ -454,6 +480,13 @@ End
 		End Sub
 	#tag EndEvent
 #tag EndEvents
+#tag Events UseBZip2ChkBx
+	#tag Event
+		Sub Open()
+		  Me.Enabled = BZip2.IsAvailable
+		End Sub
+	#tag EndEvent
+#tag EndEvents
 #tag Events CompletionTimer
 	#tag Event
 		Sub Action()
@@ -465,13 +498,6 @@ End
 		  mWorker = Nil
 		  ReDim mUnzipped(-1)
 		  Self.Title = "zlib Demo"
-		End Sub
-	#tag EndEvent
-#tag EndEvents
-#tag Events UseBZip2ChkBx
-	#tag Event
-		Sub Open()
-		  Me.Enabled = BZip2.IsAvailable
 		End Sub
 	#tag EndEvent
 #tag EndEvents
