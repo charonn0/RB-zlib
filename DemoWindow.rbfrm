@@ -258,6 +258,18 @@ End
 #tag EndWindow
 
 #tag WindowCode
+	#tag Event
+		Function CancelClose(appQuitting as Boolean) As Boolean
+		  #pragma Unused appQuitting
+		  If mWorker <> Nil And mWorker.State <> Thread.NotRunning Then
+		    If MsgBox("Would you like to cancel the current operation?", 4 + 32, "Operation incomplete") <> 6 Then Return True
+		    mWorker.Kill
+		    mWorker = Nil
+		  End If
+		End Function
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h21
 		Private Sub RunDeflate(Sender As Thread)
 		  #pragma Unused Sender
@@ -269,6 +281,12 @@ End
 		  End If
 		  mResult = zlib.Deflate(mSource, mDestination, zlib.Z_DEFAULT_COMPRESSION, False, encoding)
 		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
 
@@ -277,6 +295,12 @@ End
 		  #pragma Unused Sender
 		  mResult = zlib.GUnZip(mSource, mDestination)
 		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
 
@@ -284,6 +308,12 @@ End
 		Private Sub RunGZip(Sender As Thread)
 		  #pragma Unused Sender
 		  mResult = zlib.GZip(mSource, mDestination)
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
 		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
@@ -299,6 +329,12 @@ End
 		  End If
 		  mResult = zlib.Inflate(mSource, mDestination, False, Nil, encoding)
 		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
 
@@ -308,6 +344,12 @@ End
 		  mUnzipped = PKZip.ReadZip(mSource, mDestination)
 		  mResult = UBound(mUnzipped) > -1 Or mSource.Length = 22
 		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
 
@@ -316,12 +358,26 @@ End
 		  #pragma Unused Sender
 		  mResult = PKZip.WriteZip(mSource, mDestination)
 		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h21
 		Private mDestination As FolderItem
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mErrorCode As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mErrorMsg As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -448,13 +504,16 @@ End
 	#tag Event
 		Sub Action()
 		  If UBound(mUnzipped) = -1 Then
-		    If Not mResult Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
+		    If Not mResult Then Call MsgBox("Error number " + Str(mErrorCode) + ": " + mErrorMsg, 16, "Error") Else MsgBox("Success!")
+		    
 		  Else
 		    MsgBox("Extracted " + Format(UBound(mUnzipped) + 1, "###,##0") + " items to " + mDestination.AbsolutePath)
 		  End If
 		  mWorker = Nil
 		  ReDim mUnzipped(-1)
 		  Self.Title = "zlib Demo"
+		  mErrorCode = 0
+		  mErrorMsg = ""
 		End Sub
 	#tag EndEvent
 #tag EndEvents
