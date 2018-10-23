@@ -274,6 +274,38 @@ Begin Window DemoWindow
       Visible         =   True
       Width           =   97
    End
+   Begin CheckBox UseBZip2ChkBx
+      AutoDeactivate  =   True
+      Bold            =   ""
+      Caption         =   "Use BZip2"
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   ""
+      Left            =   238
+      LockBottom      =   ""
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   ""
+      LockTop         =   True
+      Scope           =   0
+      State           =   0
+      TabIndex        =   8
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0
+      TextUnit        =   0
+      Top             =   58
+      Underline       =   ""
+      Value           =   False
+      Visible         =   True
+      Width           =   100
+   End
 End
 #tag EndWindow
 
@@ -347,7 +379,9 @@ End
 		  If source = Nil Then Return
 		  Dim destination As FolderItem = GetSaveFolderItem(FileTypes1.ApplicationZip, source.Name + ".zip")
 		  If destination = Nil Then Return
-		  If Not PKZip.WriteZip(source, destination) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
+		  Dim encoding As UInt32 = PKZip.METHOD_DEFLATED
+		  If UseBZip2ChkBx.Value Then encoding = PKZip.METHOD_BZIP2
+		  If Not PKZip.WriteZip(source, destination, False, zlib.Z_DEFAULT_COMPRESSION, encoding) Then Call MsgBox("Whoops", 16, "Error!") Else MsgBox("Success!")
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -366,6 +400,13 @@ End
 		    MsgBox("Extracted " + Format(UBound(extracted) + 1, "###,##0") + " items to " + destination.AbsolutePath)
 		  End If
 		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UseBZip2ChkBx
+	#tag Event
+		Sub Open()
+		  Me.Enabled = BZip2.IsAvailable
 		End Sub
 	#tag EndEvent
 #tag EndEvents
