@@ -401,7 +401,7 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZipRepair(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = zlib.ZipArchive.Repair(mSource, mDestination, SpecialFolder.Desktop.Child(mSource.Name + "_repair_log.txt"))
+		  mResult = PKZip.RepairZip(mSource, mDestination, SpecialFolder.Desktop.Child(mSource.Name + "_repair_log.txt"))
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
