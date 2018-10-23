@@ -200,7 +200,10 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock)
+		  Dim method As UInt32 = METHOD_DEFLATED
 		  If Not USE_ZLIB Then CompressionLevel = 0
+		  If Length = 0 Or CompressionLevel = 0 Then method = 0
+		  
 		  DirectoryHeader.Offset = Stream.Position
 		  Dim crcoff, compszoff, dataoff As UInt64
 		  Stream.WriteUInt32(ZIP_ENTRY_HEADER_SIGNATURE)
@@ -215,13 +218,8 @@ Protected Class ZipWriter
 		  End If
 		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
 		  
-		  If Length = 0 Or CompressionLevel = 0 Then
-		    Stream.WriteUInt16(0) ' method=none
-		    DirectoryHeader.Method = 0
-		  Else
-		    Stream.WriteUInt16(METHOD_DEFLATED) ' method=deflate
-		    DirectoryHeader.Method = METHOD_DEFLATED
-		  End If
+		  Stream.WriteUInt16(method) ' method=none
+		  DirectoryHeader.Method = method
 		  Dim modtim As Pair = ConvertDate(ModDate)
 		  Stream.WriteUInt16(modtim.Right) ' modtime
 		  Stream.WriteUInt16(modtim.Left) ' moddate
@@ -255,7 +253,7 @@ Protected Class ZipWriter
 		  Dim crc As UInt32
 		  Dim z As Writeable
 		  If Source <> Nil And Length > 0 Then
-		    z = GetCompressor(METHOD_DEFLATED, Stream, CompressionLevel)
+		    z = GetCompressor(method, Stream, CompressionLevel)
 		    If z = Nil Then Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
