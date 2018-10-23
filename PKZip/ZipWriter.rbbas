@@ -36,19 +36,24 @@ Protected Class ZipWriter
 		  d.Value("$s") = Length
 		  If ModifyDate = Nil Then ModifyDate = New Date
 		  d.Value("$t") = ModifyDate
+		  If d.Value("$d") = True Then
+		    d.Value("$l") = 0
+		  Else
+		    d.Value("$l") = CompressionLevel
+		  End If
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Commit(WriteTo As BinaryStream, CompressionLevel As Integer = -1)
+		Sub Commit(WriteTo As BinaryStream)
 		  WriteTo.LittleEndian = True
 		  Dim paths(), comments() As String
-		  Dim lengths() As UInt32
+		  Dim lengths(), levels(), methods() As UInt32
 		  Dim sources() As Readable
 		  Dim modtimes() As Date
 		  Dim extras() As MemoryBlock
 		  Dim dirstatus() As Boolean
-		  CollapseTree(mEntries, paths, lengths, modtimes, sources, comments, extras, dirstatus)
+		  CollapseTree(mEntries, paths, lengths, modtimes, sources, comments, extras, dirstatus, levels, methods)
 		  
 		  Dim directory() As ZipDirectoryHeader
 		  
@@ -62,7 +67,9 @@ Protected Class ZipWriter
 		    If dirstatus(i) And Right(path, 1) <> "/" Then path = path + "/"
 		    Dim dirheader As ZipDirectoryHeader
 		    Dim extra As MemoryBlock = extras(i)
-		    WriteEntryHeader(WriteTo, path, length, source, modtime, CompressionLevel, dirheader, extra, CompressionMethod)
+		    Dim level As UInt32 = levels(i)
+		    Dim method As UInt32 = methods(i)
+		    WriteEntryHeader(WriteTo, path, length, source, modtime, dirheader, extra, level, method)
 		    directory.Append(dirheader)
 		    If source IsA BinaryStream Then BinaryStream(source).Position = 0 ' be kind, rewind
 		  Next
@@ -73,16 +80,21 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Commit(WriteTo As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = - 1)
+		Sub Commit(WriteTo As FolderItem, Overwrite As Boolean = False)
 		  If WriteTo = Nil Or WriteTo.Directory Then Return
 		  Dim bs As BinaryStream = BinaryStream.Create(WriteTo, Overwrite)
-		  Commit(bs, CompressionLevel)
+		  Commit(bs)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
 		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)
+		  #If USE_ZLIB Then
+		    CompressionLevel = zlib.Z_DEFAULT_COMPRESSION
+		  #Else
+		    CompressionLevel = 0
+		  #EndIf
 		End Sub
 	#tag EndMethod
 
@@ -111,6 +123,35 @@ Protected Class ZipWriter
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
 		  d.Value("$c") = ConvertEncoding(Comment, Encodings.UTF8)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SetEntryCompressionLevel(Path As String, CompressionLevel As Integer)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  If d.HasKey("$l") Then d.Remove("$l")
+		  If CompressionLevel >= 0 And CompressionLevel <= 9 Then
+		    d.Value("$l") = CompressionLevel
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SetEntryCompressionMethod(Path As String, CompressionMethod As Integer)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  If d.HasKey("$m") Then d.Remove("$m")
+		  Select Case CompressionMethod
+		  Case METHOD_DEFLATED
+		    #If USE_ZLIB Then
+		      d.Value("$m") = CompressionMethod
+		    #endif
+		  Case 0
+		    d.Value("$m") = CompressionMethod
+		  Else
+		    Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
+		  End Select
 		End Sub
 	#tag EndMethod
 
@@ -199,9 +240,9 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, CompressionLevel As Integer, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock, Method As UInt32)
-		  If Not USE_ZLIB And Not USE_BZIP2 Then CompressionLevel = 0
-		  If Length = 0 Or CompressionLevel = 0 Then method = 0
+		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock, Level As UInt32, Method As UInt32)
+		  If Not USE_ZLIB Then Level = 0
+		  If Length = 0 Or Level = 0 Then method = 0
 		  
 		  DirectoryHeader.Offset = Stream.Position
 		  Dim crcoff, compszoff, dataoff As UInt64
@@ -252,7 +293,7 @@ Protected Class ZipWriter
 		  Dim crc As UInt32
 		  Dim z As Writeable
 		  If Source <> Nil And Length > 0 Then
-		    z = GetCompressor(method, Stream, CompressionLevel)
+		    z = GetCompressor(Method, Stream, Level)
 		    If z = Nil Then Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
@@ -284,7 +325,7 @@ Protected Class ZipWriter
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		CompressionMethod As UInt32 = PKZip.METHOD_DEFLATED
+		CompressionLevel As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

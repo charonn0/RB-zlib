@@ -1,11 +1,11 @@
 #tag Module
 Protected Module PKZip
 	#tag Method, Flags = &h21
-		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Readable, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean)
+		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Readable, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean, ByRef Levels() As UInt32, ByRef Methods() As UInt32)
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
-		      If item.Lookup("$d", False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, Comments, Extras, DirectoryStatus)
+		      If item.Lookup("$d", False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, Comments, Extras, DirectoryStatus, Levels, Methods)
 		      Paths.Append(GetTreeParentPath(item))
 		      Lengths.Append(item.Lookup("$s", 0))
 		      ModTimes.Append(item.Value("$t"))
@@ -13,6 +13,12 @@ Protected Module PKZip
 		      DirectoryStatus.Append(item.Value("$d"))
 		      Extras.Append(item.Lookup("$e", Nil))
 		      Comments.Append(item.Lookup("$c", ""))
+		      Levels.Append(item.Lookup("$l", 6))
+		      If USE_ZLIB Then
+		        Methods.Append(item.Lookup("$m", METHOD_DEFLATED))
+		      Else
+		        Methods.Append(item.Lookup("$m", 0))
+		      End If
 		    End If
 		  Next
 		End Sub
@@ -389,11 +395,12 @@ Protected Module PKZip
 	#tag Method, Flags = &h1
 		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  Dim writer As New ZipWriter
+		  writer.CompressionLevel = CompressionLevel
 		  Dim c As Integer = UBound(ToArchive)
 		  For i As Integer = 0 To c
 		    Call writer.AppendEntry(ToArchive(i), RelativeRoot)
 		  Next
-		  writer.Commit(OutputFile, Overwrite, CompressionLevel)
+		  writer.Commit(OutputFile, Overwrite)
 		  Return writer.LastError = 0
 		End Function
 	#tag EndMethod
