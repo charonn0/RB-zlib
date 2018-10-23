@@ -305,7 +305,7 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunUnZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mUnzipped = zlib.ReadZip(mSource, mDestination)
+		  mUnzipped = PKZip.ReadZip(mSource, mDestination)
 		  mResult = UBound(mUnzipped) > -1 Or mSource.Length = 22
 		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
@@ -314,7 +314,7 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = zlib.WriteZip(mSource, mDestination)
+		  mResult = PKZip.WriteZip(mSource, mDestination)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
