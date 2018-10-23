@@ -285,6 +285,37 @@ Begin Window DemoWindow
       Top             =   -14
       Width           =   32
    End
+   Begin PushButton ZipRepairBtn
+      AutoDeactivate  =   True
+      Bold            =   ""
+      ButtonStyle     =   0
+      Cancel          =   ""
+      Caption         =   "Repair zip"
+      Default         =   ""
+      Enabled         =   True
+      Height          =   22
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   ""
+      Left            =   129
+      LockBottom      =   ""
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   ""
+      LockTop         =   True
+      Scope           =   0
+      TabIndex        =   7
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0
+      TextUnit        =   0
+      Top             =   59
+      Underline       =   ""
+      Visible         =   True
+      Width           =   97
+   End
 End
 #tag EndWindow
 
@@ -407,6 +438,20 @@ End
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As BZip2.BZip2Exception
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub RunZipRepair(Sender As Thread)
+		  #pragma Unused Sender
+		  mResult = PKZip.RepairZip(mSource, mDestination, SpecialFolder.Desktop.Child(mSource.Name + "_repair_log.txt"))
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
@@ -569,6 +614,21 @@ End
 		  Self.Title = "zlib Demo"
 		  mErrorCode = 0
 		  mErrorMsg = ""
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events ZipRepairBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  mSource = GetOpenFolderItem(FileTypes1.ApplicationZip)
+		  If mSource = Nil Then Return
+		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + "_repared.zip")
+		  If mDestination = Nil Then Return
+		  Self.Title = "zlib Demo - Repairing..."
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunZipRepair
+		  mWorker.Run
 		End Sub
 	#tag EndEvent
 #tag EndEvents
