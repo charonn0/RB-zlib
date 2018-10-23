@@ -151,11 +151,22 @@ Protected Class ZipWriter
 		  If d.HasKey("$m") Then d.Remove("$m")
 		  Select Case CompressionMethod
 		  Case METHOD_DEFLATED
-		    #If USE_ZLIB Then
+		    If USE_ZLIB Then
 		      d.Value("$m") = CompressionMethod
-		    #endif
+		    Else
+		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
+		    End If
+		    
+		  Case METHOD_BZIP2
+		    If USE_BZIP2 Then
+		      d.Value("$m") = CompressionMethod
+		    Else
+		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
+		    End If
+		    
 		  Case 0
 		    d.Value("$m") = CompressionMethod
+		    
 		  Else
 		    Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		  End Select
