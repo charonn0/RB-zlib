@@ -381,6 +381,12 @@ End
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
 		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As BZip2.BZip2Exception
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
 
@@ -395,6 +401,12 @@ End
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As BZip2.BZip2Exception
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
