@@ -267,7 +267,8 @@ Protected Class ZipReader
 		      Return False
 		    End Try
 		    
-		    Dim writer As New ZipWriter
+		    Dim writer As ZipWriter
+		    If Not RecoveryFile.Directory Then writer = New ZipWriter
 		    
 		    Do Until zr.LastError = ERR_END_ARCHIVE
 		      If logstream <> Nil Then logstream.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.Index) + "/" + Str(zr.mStream.Position) + ")")
@@ -281,11 +282,11 @@ Protected Class ZipReader
 		      Finally
 		        If out <> Nil Then out.Close
 		      End Try
-		      If Not RecoveryFile.Directory Then Call writer.AppendEntry(f, root)
+		      If writer <> Nil Then Call writer.AppendEntry(f, root)
 		      If Not (SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) And zr.ReadHeader) Then Exit Do
 		    Loop
 		    
-		    If Not RecoveryFile.Directory Then
+		    If writer <> Nil Then
 		      writer.Commit(RecoveryFile, True)
 		      ok = (writer.LastError = 0)
 		    Else
