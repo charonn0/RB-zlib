@@ -60,9 +60,6 @@ Inherits bz2Engine
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
-		  ' Z_BUF_ERROR is non-fatal to the decompression process; you can keep
-		  ' providing input to the decompressor in search of a valid deflate block.
-		  
 		  Return mLastError = BZ_OK Or mLastError = BZ_STREAM_END
 		  
 		End Function
