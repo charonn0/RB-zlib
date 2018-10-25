@@ -1,5 +1,5 @@
 #tag Class
- Attributes ( deprecated ) Protected Class ZipArchive
+Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Sub Close()
 		  If mArchiveStream <> Nil Then mArchiveStream.Close
