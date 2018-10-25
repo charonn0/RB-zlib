@@ -381,6 +381,12 @@ End
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
 		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As PKZip.ZipException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
 		End Sub
 	#tag EndMethod
 
