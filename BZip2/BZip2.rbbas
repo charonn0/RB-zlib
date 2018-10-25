@@ -114,10 +114,10 @@ Protected Module BZip2
 	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"16384", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = libbzip2, Type = String, Dynamic = False, Default = \"libbzip2.so.1", Scope = Private
+	#tag Constant, Name = libbzip2, Type = String, Dynamic = False, Default = \"libbz2.so.1", Scope = Private
 		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"bzip2.dll"
-		#Tag Instance, Platform = Mac OS, Language = Default, Definition  = \"/usr/lib/libbzip2.dylib"
-		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"libbzip2.so.1"
+		#Tag Instance, Platform = Mac OS, Language = Default, Definition  = \"/usr/lib/libbz2.dylib"
+		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"libbz2.so.1"
 	#tag EndConstant
 
 
