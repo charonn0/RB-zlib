@@ -17,8 +17,8 @@ Protected Module USTAR
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function CreateTree(Root As FolderItem, Path As String) As FolderItem
+	#tag Method, Flags = &h21
+		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
 		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
 		  
 		  If Root = Nil Or Not Root.Directory Then Return Nil
