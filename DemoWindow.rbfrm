@@ -23,7 +23,7 @@ Begin Window DemoWindow
    Resizeable      =   True
    Title           =   "zlib Demo"
    Visible         =   True
-   Width           =   3.55e+2
+   Width           =   4.64e+2
    Begin PushButton GZipFileBtn
       AutoDeactivate  =   True
       Bold            =   ""
@@ -285,6 +285,100 @@ Begin Window DemoWindow
       Visible         =   True
       Width           =   97
    End
+   Begin PushButton TARDirBtn
+      AutoDeactivate  =   True
+      Bold            =   ""
+      ButtonStyle     =   0
+      Cancel          =   ""
+      Caption         =   "TAR a folder"
+      Default         =   ""
+      Enabled         =   True
+      Height          =   22
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   ""
+      Left            =   347
+      LockBottom      =   ""
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   ""
+      LockTop         =   True
+      Scope           =   0
+      TabIndex        =   8
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0
+      TextUnit        =   0
+      Top             =   37
+      Underline       =   ""
+      Visible         =   True
+      Width           =   97
+   End
+   Begin PushButton UnTarFileBtn
+      AutoDeactivate  =   True
+      Bold            =   ""
+      ButtonStyle     =   0
+      Cancel          =   ""
+      Caption         =   "UnTAR a file"
+      Default         =   ""
+      Enabled         =   True
+      Height          =   22
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   ""
+      Left            =   347
+      LockBottom      =   ""
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   ""
+      LockTop         =   True
+      Scope           =   0
+      TabIndex        =   9
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0
+      TextUnit        =   0
+      Top             =   14
+      Underline       =   ""
+      Visible         =   True
+      Width           =   97
+   End
+   Begin CheckBox UseGZipChkBx
+      AutoDeactivate  =   True
+      Bold            =   ""
+      Caption         =   "Use GZip"
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   ""
+      Left            =   347
+      LockBottom      =   ""
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   ""
+      LockTop         =   True
+      Scope           =   0
+      State           =   0
+      TabIndex        =   10
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0
+      TextUnit        =   0
+      Top             =   58
+      Underline       =   ""
+      Value           =   False
+      Visible         =   True
+      Width           =   100
+   End
 End
 #tag EndWindow
 
@@ -359,6 +453,37 @@ End
 		    encoding = zlib.DEFLATE_ENCODING
 		  End If
 		  mResult = zlib.Inflate(mSource, mDestination, False, Nil, encoding)
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub RunTAR(Sender As Thread)
+		  #pragma Unused Sender
+		  Dim compressionlevel As Integer
+		  If UseGZipChkBx.Value Then compressionlevel = 6
+		  mResult = USTAR.WriteTar(mSource, mDestination, compressionlevel)
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub RunUnTAR(Sender As Thread)
+		  #pragma Unused Sender
+		  mUnzipped = USTAR.ReadTar(mSource, mDestination)
+		  mResult = UBound(mUnzipped) > -1
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
@@ -573,6 +698,41 @@ End
 		  Self.Title = "zlib Demo - Repairing..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZipRepair
+		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events TARDirBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  mSource = SelectFolder()
+		  If mSource = Nil Then Return
+		  If UseGZipChkBx.Value Then
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXGzip, mSource.Name + ".tgz")
+		  Else
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar")
+		  End If
+		  If mDestination = Nil Then Return
+		  Self.Title = "zlib Demo - Tarring (no feathers)..."
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunTAR
+		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UnTarFileBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  mSource = GetOpenFolderItem(FileTypes1.ApplicationXGzip + ";" + FileTypes1.ApplicationXTar)
+		  If mSource = Nil Then Return
+		  mDestination = SelectFolder()
+		  If mDestination = Nil Then Return
+		  If mDestination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
+		  Self.Title = "zlib Demo - Untarring..."
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunUnTAR
 		  mWorker.Run
 		End Sub
 	#tag EndEvent
