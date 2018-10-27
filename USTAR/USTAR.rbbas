@@ -161,6 +161,33 @@ Protected Module USTAR
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
+		  ' Extracts a TAR file to the ExtractTo directory
+		  Dim ts As Readable
+		  If TarFile.IsGZipped Then
+		    ts = zlib.ZStream.Open(TarFile, zlib.GZIP_ENCODING)
+		  Else
+		    ts = BinaryStream.Open(TarFile)
+		  End If
+		  Dim tar As New TarReader(ts)
+		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
+		  Dim bs As BinaryStream
+		  Dim fs() As FolderItem
+		  Do
+		    If bs <> Nil Then bs.Close
+		    bs = Nil
+		    Dim g As FolderItem = CreateTree(ExtractTo, tar.CurrentName)
+		    If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
+		    fs.Append(g)
+		  Loop Until Not tar.MoveNext(bs)
+		  If bs <> Nil Then bs.Close
+		  If ts IsA BinaryStream Then BinaryStream(ts).Close
+		  If ts IsA zlib.ZStream Then zlib.ZStream(ts).Close
+		  Return fs
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function TraverseTree(Root As Dictionary, Path As String, CreateChildren As Boolean) As Dictionary
 		  Dim s() As String = Split(Path, "/")
@@ -194,6 +221,40 @@ Protected Module USTAR
 		    parent = child
 		  End If
 		  Return parent
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem, Optional RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer) As Boolean
+		  ' Creates/appends a TAR file with the ToArchive FolderItems
+		  Dim tar As New TARWriter
+		  For i As Integer = 0 To UBound(ToArchive)
+		    Call tar.AppendEntry(ToArchive(i), RelativeRoot)
+		  Next
+		  Dim t As Writeable
+		  Dim b As Boolean
+		  If CompressionLevel > 0 And CompressionLevel < 10 Then
+		    t = zlib.ZStream.Create(OutputFile, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, Overwrite, zlib.GZIP_ENCODING)
+		  Else
+		    t = BinaryStream.Create(OutputFile, False)
+		    b = True
+		  End If
+		  tar.Commit(t)
+		  If b Then BinaryStream(t).Close Else zlib.ZStream(t).Close
+		  Return True
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function WriteTar(RootDirectory As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer) As Boolean
+		  ' Creates/appends a TAR file with the ToArchive FolderItems
+		  Dim items() As FolderItem
+		  GetChildren(RootDirectory, items)
+		  Return WriteTar(items, OutputFile, RootDirectory, Overwrite, CompressionLevel)
+		  
+		  
 		End Function
 	#tag EndMethod
 
