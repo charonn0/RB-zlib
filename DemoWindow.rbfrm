@@ -673,6 +673,7 @@ End
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + ".zip")
 		  If mDestination = Nil Then Return
 		  Self.Title = "zlib Demo - Zipping..."
+		  mOption = UseBZip2ChkBx.Value
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZip
 		  mWorker.Run
