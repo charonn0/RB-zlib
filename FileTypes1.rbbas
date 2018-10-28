@@ -33,6 +33,7 @@
 		MacCreator=SITx
 		MacType=ZIP 
 		Name=application/zip
+		UTI=com.pkware.zip-archive
 	#tag EndFileType
 
 #tag EndFileTypeSet
