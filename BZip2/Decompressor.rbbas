@@ -55,7 +55,7 @@ Inherits bz2Engine
 		        If have <> outbuff.Size Then outbuff.Size = have
 		        WriteTo.Write(outbuff)
 		      End If
-		      ' keep going until zlib doesn't use all the output space or an error
+		      ' keep going until bzip2 doesn't use all the output space or an error
 		    Loop Until mLastError <> BZ_OK Or bzstruct.avail_out <> 0
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF

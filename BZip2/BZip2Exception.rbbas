@@ -6,8 +6,6 @@ Inherits RuntimeException
 		  Me.ErrorNumber = ErrorCode
 		  
 		  Select Case ErrorCode
-		    
-		    ' archive-related errors (non-zlib)
 		  Case BZ_CONFIG_ERROR
 		    Me.Message = "The BZip2 library was not compiled for the currect CPU architecture."
 		  Case BZ_SEQUENCE_ERROR
