@@ -1,17 +1,5 @@
 #tag Class
 Private Class bz2Engine
-	#tag Method, Flags = &h0
-		Function Avail_In() As UInt32
-		  Return bzstruct.avail_in
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Avail_Out() As UInt32
-		  Return bzstruct.avail_out
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1
 		Protected Sub Constructor()
 		  If Not BZip2.IsAvailable Then Raise New PlatformNotSupportedException
@@ -32,18 +20,24 @@ Private Class bz2Engine
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Total_In() As UInt32
-		  Return BitOr(ShiftLeft(bzstruct.Total_In_High, 32, 64), bzstruct.Total_In_Low)
-		End Function
-	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Total_Out() As UInt32
-		  Return BitOr(ShiftLeft(bzstruct.Total_Out_High, 32, 64), bzstruct.Total_Out_Low)
-		End Function
-	#tag EndMethod
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return bzstruct.avail_in
+			End Get
+		#tag EndGetter
+		Avail_In As UInt32
+	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return bzstruct.avail_out
+			End Get
+		#tag EndGetter
+		Avail_Out As UInt32
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
 		Protected bzstruct As bz_stream
@@ -65,6 +59,24 @@ Private Class bz2Engine
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return BitOr(ShiftLeft(bzstruct.Total_In_High, 32, 64), bzstruct.Total_In_Low)
+			End Get
+		#tag EndGetter
+		Total_In As UInt64
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return BitOr(ShiftLeft(bzstruct.Total_Out_High, 32, 64), bzstruct.Total_Out_Low)
+			End Get
+		#tag EndGetter
+		Total_Out As UInt64
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior

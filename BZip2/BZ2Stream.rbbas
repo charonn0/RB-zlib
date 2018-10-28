@@ -239,7 +239,7 @@ Implements Readable,Writeable
 			  End If
 			End Get
 		#tag EndGetter
-		TotalIn As UInt32
+		TotalIn As UInt64
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -252,7 +252,7 @@ Implements Readable,Writeable
 			  End If
 			End Get
 		#tag EndGetter
-		TotalOut As UInt32
+		TotalOut As UInt64
 	#tag EndComputedProperty
 
 
