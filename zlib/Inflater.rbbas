@@ -12,10 +12,19 @@ Inherits FlateEngine
 		  Super.Constructor()
 		  
 		  If Encoding = DEFLATE_ENCODING Then
-		    mLastError = inflateInit_(zstruct, "1.2.8" + Chr(0), zstruct.Size)
+		    #If Target32Bit Then
+		      mLastError = inflateInit_(zstruct, "1.2.8" + Chr(0), zstruct.Size)
+		    #Else
+		      mLastError = inflateInit_(zstruct64, "1.2.8" + Chr(0), zstruct64.Size)
+		    #endif
 		  Else
-		    mLastError = inflateInit2_(zstruct, Encoding, "1.2.8" + Chr(0), zstruct.Size)
-		    If mLastError = Z_OK And Encoding >= GZIP_ENCODING Then mLastError = inflateGetHeader(zstruct, mGZHeader)
+		    #If Target32Bit Then
+		      mLastError = inflateInit2_(zstruct, Encoding, "1.2.8" + Chr(0), zstruct.Size)
+		      If mLastError = Z_OK And Encoding >= GZIP_ENCODING Then mLastError = inflateGetHeader(zstruct, mGZHeader)
+		    #Else
+		      mLastError = inflateInit2_(zstruct64, Encoding, "1.2.8" + Chr(0), zstruct64.Size)
+		      If mLastError = Z_OK And Encoding >= GZIP_ENCODING Then mLastError = inflateGetHeader(zstruct64, mGZHeader)
+		    #endif
 		  End If
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mEncoding = Encoding
@@ -33,7 +42,11 @@ Inherits FlateEngine
 		  // Constructor() -- From zlib.FlateEngine
 		  Super.Constructor()
 		  
-		  mLastError = inflateCopy(zstruct, CopyStream.zstruct)
+		  #If Target32Bit Then
+		    mLastError = inflateCopy(zstruct, CopyStream.zstruct)
+		  #Else
+		    mLastError = inflateCopy(zstruct64, CopyStream.zstruct64)
+		  #endif
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 		  mDictionary = CopyStream.mDictionary
 		  mEncoding = CopyStream.Encoding
@@ -42,7 +55,11 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  If IsOpen Then mLastError = inflateEnd(zstruct)
+		  #If Target32Bit Then
+		    If IsOpen Then mLastError = inflateEnd(zstruct)
+		  #Else
+		    If IsOpen Then mLastError = inflateEnd(zstruct64)
+		  #endif
 		End Sub
 	#tag EndMethod
 
@@ -85,29 +102,35 @@ Inherits FlateEngine
 		    Dim sz As Integer
 		    If ReadCount > -1 Then sz = Min(ReadCount - count, CHUNK_SIZE) Else sz = CHUNK_SIZE
 		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
-		    zstruct.avail_in = chunk.Size
-		    zstruct.next_in = chunk
+		    Me.Avail_In = chunk.Size
+		    Me.Next_In = chunk
 		    count = count + chunk.Size
 		    Do
 		      ' provide more output space
-		      zstruct.next_out = outbuff
-		      zstruct.avail_out = outbuff.Size
-		      mLastError = inflate(zstruct, Z_NO_FLUSH)
+		      Me.Next_Out = outbuff
+		      Me.Avail_Out = outbuff.Size
+		      #If Target32Bit Then
+		        mLastError = inflate(zstruct, Z_NO_FLUSH)
+		      #Else
+		        mLastError = inflate(zstruct64, Z_NO_FLUSH)
+		      #endif
 		      ' consume any output
-		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
+		      Dim have As UInt32 = CHUNK_SIZE - Me.Avail_Out
 		      If have > 0 Then
 		        If have <> outbuff.Size Then outbuff.Size = have
 		        WriteTo.Write(outbuff)
 		      End If
 		      ' keep going until zlib doesn't use all the output space or an error
-		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
+		    Loop Until mLastError <> Z_OK Or Me.Avail_Out <> 0
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
 		  ' Z_BUF_ERROR is non-fatal to the decompression process; you can keep 
 		  ' providing input to the decompressor in search of a valid deflate block.
 		  
-		  Return mLastError = Z_OK Or mLastError = Z_STREAM_END Or mLastError = Z_BUF_ERROR Or (mLastError = Z_DATA_ERROR And IgnoreChecksums)
+		  If (mLastError = Z_OK Or mLastError = Z_STREAM_END Or mLastError = Z_BUF_ERROR Or (mLastError = Z_DATA_ERROR And IgnoreChecksums)) Then Return True
+		  Break
+		  
 		  
 		End Function
 	#tag EndMethod
@@ -122,7 +145,11 @@ Inherits FlateEngine
 		  ' bytes already emitted for that code.
 		  
 		  If Not IsOpen Then Return 0
-		  Return inflateMark(zstruct)
+		  #If Target32Bit Then
+		    Return inflateMark(zstruct)
+		  #else
+		    Return inflateMark(zstruct64)
+		  #endif
 		End Function
 	#tag EndMethod
 
@@ -134,9 +161,17 @@ Inherits FlateEngine
 		  If Not IsOpen Then Return
 		  If mGZHeader.Done = 1 Then mGZHeader.Done = 0
 		  If Encoding = 0 Then
-		    mLastError = inflateReset(zstruct)
+		    #If Target32Bit Then
+		      mLastError = inflateReset(zstruct)
+		    #Else
+		      mLastError = inflateReset(zstruct64)
+		    #Endif
 		  Else
-		    mLastError = inflateReset2(zstruct, Encoding)
+		    #If Target32Bit Then
+		      mLastError = inflateReset2(zstruct, Encoding)
+		    #Else
+		      mLastError = inflateReset2(zstruct64, Encoding)
+		    #Endif
 		  End If
 		End Sub
 	#tag EndMethod
@@ -149,8 +184,8 @@ Inherits FlateEngine
 		  
 		  If Not IsOpen Then Return False
 		  
-		  zstruct.next_out = Nil
-		  zstruct.avail_out = 0
+		  Me.Next_Out = Nil
+		  Me.Avail_Out = 0
 		  
 		  Dim count As Integer
 		  Do
@@ -158,10 +193,15 @@ Inherits FlateEngine
 		    If MaxCount > -1 Then sz = Min(MaxCount - count, CHUNK_SIZE) Else sz = CHUNK_SIZE
 		    Dim chunk As MemoryBlock = ReadFrom.Read(sz)
 		    If chunk.Size <= 0 Then Return False
-		    zstruct.avail_in = chunk.Size
-		    zstruct.next_in = chunk
+		    Me.Avail_In = chunk.Size
+		    Me.Next_In = chunk
 		    count = count + chunk.Size
-		    mLastError = inflateSync(zstruct)
+		    #If Target32Bit Then
+		      mLastError = inflateSync(zstruct)
+		    #Else
+		      mLastError = inflateSync(zstruct64)
+		    #Endif
+		    
 		  Loop Until mLastError <> Z_DATA_ERROR Or ReadFrom.EOF Or (MaxCount > -1 And count >= MaxCount)
 		  
 		  Return mLastError = Z_OK
@@ -173,7 +213,12 @@ Inherits FlateEngine
 		#tag Getter
 			Get
 			  ' Returns the decoding state
-			  Return zstruct.data_type
+			  #If Target32Bit Then
+			    Return zstruct.data_type
+			  #Else
+			    Return zstruct64.data_type
+			  #Endif
+			  
 			End Get
 		#tag EndGetter
 		DataType As UInt32
@@ -187,7 +232,12 @@ Inherits FlateEngine
 			  If Not IsOpen Then Return Nil
 			  Dim sz As UInt32 = 32768
 			  Dim mb As New MemoryBlock(sz)
-			  mLastError = inflateGetDictionary(zstruct, mb, sz)
+			  #If Target32Bit Then
+			    mLastError = inflateGetDictionary(zstruct, mb, sz)
+			  #Else
+			    mLastError = inflateGetDictionary(zstruct64, mb, sz)
+			  #Endif
+			  
 			  If mLastError <> Z_OK Then Return Nil
 			  mb.Size = sz
 			  Return mb
@@ -200,7 +250,12 @@ Inherits FlateEngine
 			  ' use exactly the same dictionary (see Deflater.Dictionary).
 			  
 			  If value = Nil Or Not IsOpen Then Return
-			  mLastError = inflateSetDictionary(zstruct, value, value.Size)
+			  #If Target32Bit Then
+			    mLastError = inflateSetDictionary(zstruct, value, value.Size)
+			  #Else
+			    mLastError = inflateSetDictionary(zstruct64, value, value.Size)
+			  #Endif
+			  
 			  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
 			End Set
 		#tag EndSetter

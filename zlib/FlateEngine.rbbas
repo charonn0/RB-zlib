@@ -177,14 +177,14 @@ Private Class FlateEngine
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mLastError As Integer
+		Protected mLastError As Int32
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected zstruct As z_stream
 	#tag EndProperty
 
-	#tag Property, Flags = &h1, CompatibilityFlags =  (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Property, Flags = &h1, CompatibilityFlags =    (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Protected zstruct64 As z_stream64
 	#tag EndProperty
 

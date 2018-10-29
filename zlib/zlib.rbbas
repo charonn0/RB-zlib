@@ -645,6 +645,10 @@ Protected Module zlib
 		Private Soft Declare Function inflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflate Lib zlib1 (ByRef Stream As z_stream64, Flush As Integer) As Integer
+	#tag EndExternalMethod
+
 	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As FolderItem, Destination As FolderItem, Overwrite As Boolean = False, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Decompress the Source file and write the output to the Destination file. Reverses the Deflate method
@@ -804,44 +808,88 @@ Protected Module zlib
 		Private Soft Declare Function inflateCopy Lib zlib1 (ByRef Dst As z_stream, Src As z_stream) As Integer
 	#tag EndExternalMethod
 
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateCopy Lib zlib1 (ByRef Dst As z_stream64, Src As z_stream64) As Integer
+	#tag EndExternalMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateEnd Lib zlib1 (ByRef Stream As z_stream) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateEnd Lib zlib1 (ByRef Stream As z_stream64) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateGetDictionary Lib zlib1 (ByRef Stream As z_stream, Dictionary As Ptr, ByRef DictLength As UInt32) As Integer
 	#tag EndExternalMethod
 
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateGetDictionary Lib zlib1 (ByRef Stream As z_stream64, Dictionary As Ptr, ByRef DictLength As UInt32) As Integer
+	#tag EndExternalMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateGetHeader Lib zlib1 (ByRef Stream As z_stream, ByRef Header As gz_headerp) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateGetHeader Lib zlib1 (ByRef Stream As z_stream64, ByRef Header As gz_headerp) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateInit2_ Lib zlib1 (ByRef Stream As z_stream, Encoding As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateInit2_ Lib zlib1 (ByRef Stream As z_stream64, Encoding As Integer, Version As CString, StreamSz As Integer) As Integer
+	#tag EndExternalMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateInit_ Lib zlib1 (ByRef Stream As z_stream, Version As CString, StreamSz As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateInit_ Lib zlib1 (ByRef Stream As z_stream64, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateMark Lib zlib1 (ByRef Stream As z_stream) As UInt32
 	#tag EndExternalMethod
 
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateMark Lib zlib1 (ByRef Stream As z_stream64) As UInt32
+	#tag EndExternalMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateReset Lib zlib1 (ByRef Stream As z_stream) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateReset Lib zlib1 (ByRef Stream As z_stream64) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateReset2 Lib zlib1 (ByRef Stream As z_stream, Encoding As Integer) As Integer
 	#tag EndExternalMethod
 
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateReset2 Lib zlib1 (ByRef Stream As z_stream64, Encoding As Integer) As Integer
+	#tag EndExternalMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateSetDictionary Lib zlib1 (ByRef Stream As z_stream, Dictionary As Ptr, DictLength As UInt32) As Integer
 	#tag EndExternalMethod
 
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateSetDictionary Lib zlib1 (ByRef Stream As z_stream64, Dictionary As Ptr, DictLength As UInt32) As Integer
+	#tag EndExternalMethod
+
 	#tag ExternalMethod, Flags = &h21
 		Private Soft Declare Function inflateSync Lib zlib1 (ByRef Dst As z_stream) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Private Soft Declare Function inflateSync Lib zlib1 (ByRef Dst As z_stream64) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
