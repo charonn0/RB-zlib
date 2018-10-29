@@ -91,7 +91,9 @@ Protected Module zlib
 		  ' If NewData.Size is not known (-1) then specify the size as NewDataSize
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.CRC32
 		  
-		  If Not zlib.IsAvailable Or NewData = Nil Then Return 0
+		  Static avail As Boolean
+		  If Not avail Then avail = zlib.IsAvailable
+		  If Not avail Or NewData = Nil Then Return 0
 		  Static CRC_POLYNOMIAL As UInt32
 		  If CRC_POLYNOMIAL = 0 Then CRC_POLYNOMIAL = _crc32(0, Nil, 0)
 		  
@@ -942,15 +944,21 @@ Protected Module zlib
 		Protected Function ListZip(ZipFile As FolderItem) As String()
 		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
 		  
-		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
-		  zip.ValidateChecksums = False
 		  Dim ret() As String
 		  
-		  Do Until zip.LastError <> 0
-		    ret.Append(zip.CurrentName)
-		    Call zip.MoveNext(Nil)
-		  Loop
-		  zip.Close
+		  #If USE_PKZIP Then
+		    ret = PKZip.ListZip(ZipFile)
+		    
+		  #Else
+		    Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
+		    zip.ValidateChecksums = False
+		    
+		    Do Until zip.LastError <> 0
+		      ret.Append(zip.CurrentName)
+		      Call zip.MoveNext(Nil)
+		    Loop
+		    zip.Close
+		  #endif
 		  Return ret
 		  
 		Exception
@@ -1013,22 +1021,30 @@ Protected Module zlib
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False, VerifyCRC As Boolean = True) As FolderItem()
 		  ' Extracts a ZIP file to the ExtractTo directory
 		  
-		  Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
-		  zip.ValidateChecksums = VerifyCRC
 		  Dim ret() As FolderItem
-		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
 		  
-		  Do Until zip.LastError <> 0
-		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
-		    If f = Nil Then Raise New zlibException(ERR_INVALID_NAME)
-		    Dim outstream As BinaryStream
-		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
-		    Call zip.MoveNext(outstream)
-		    If outstream <> Nil Then outstream.Close
-		    ret.Append(f)
-		  Loop
-		  If zip.LastError <> ERR_END_ARCHIVE Then Raise New zlibException(zip.LastError)
-		  zip.Close
+		  #If USE_PKZIP Then
+		    ret = PKZip.ReadZip(ZipFile, ExtractTo, Overwrite, VerifyCRC)
+		    
+		  #Else
+		    Dim zip As ZipArchive = ZipArchive.Open(ZipFile)
+		    zip.ValidateChecksums = VerifyCRC
+		    
+		    If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
+		    
+		    Do Until zip.LastError <> 0
+		      Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
+		      If f = Nil Then Raise New zlibException(ERR_INVALID_NAME)
+		      Dim outstream As BinaryStream
+		      If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
+		      Call zip.MoveNext(outstream)
+		      If outstream <> Nil Then outstream.Close
+		      ret.Append(f)
+		    Loop
+		    If zip.LastError <> ERR_END_ARCHIVE Then Raise New zlibException(zip.LastError)
+		    zip.Close
+		  #endif
+		  
 		  Return ret
 		  
 		End Function
@@ -1092,14 +1108,23 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  ' Creates a ZIP file with the ToArchive FolderItems
-		  Return zlib.ZipArchive.Create(OutputFile, ToArchive, Nil, Overwrite, CompressionLevel)
+		  
+		  #If USE_PKZIP Then
+		    Return PKZip.WriteZip(ToArchive, OutputFile, Nil, Overwrite, CompressionLevel)
+		  #Else
+		    Return zlib.ZipArchive.Create(OutputFile, ToArchive, Nil, Overwrite, CompressionLevel)
+		  #endif
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
 		  ' Creates a ZIP file with the ToArchive FolderItems
-		  Return zlib.ZipArchive.Create(OutputFile, ToArchive, Overwrite, CompressionLevel)
+		  #If USE_PKZIP Then
+		    Return PKZip.WriteZip(ToArchive, OutputFile, Overwrite, CompressionLevel)
+		  #Else
+		    Return zlib.ZipArchive.Create(OutputFile, ToArchive, Overwrite, CompressionLevel)
+		  #endif
 		End Function
 	#tag EndMethod
 
@@ -1205,6 +1230,9 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = RAW_ENCODING, Type = Double, Dynamic = False, Default = \"-15", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = USE_PKZIP, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = zlib1, Type = String, Dynamic = False, Default = \"libz.so.1", Scope = Private

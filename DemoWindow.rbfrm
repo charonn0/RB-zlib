@@ -528,11 +528,17 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunUnZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mUnzipped = zlib.ReadZip(mSource, mDestination)
+		  mUnzipped = PKZip.ReadZip(mSource, mDestination)
 		  mResult = UBound(mUnzipped) > -1 Or mSource.Length = 22
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As PKZip.ZipException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
@@ -543,10 +549,16 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = zlib.WriteZip(mSource, mDestination)
+		  mResult = PKZip.WriteZip(mSource, mDestination)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As PKZip.ZipException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
@@ -557,10 +569,16 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZipRepair(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = zlib.ZipArchive.Repair(mSource, mDestination, SpecialFolder.Desktop.Child(mSource.Name + "_repair_log.txt"))
+		  mResult = PKZip.RepairZip(mSource, mDestination, SpecialFolder.Desktop.Child(mSource.Name + "_repair_log.txt"))
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As PKZip.ZipException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
