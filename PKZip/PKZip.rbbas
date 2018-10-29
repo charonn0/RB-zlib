@@ -383,6 +383,8 @@ Protected Module PKZip
 		      child.Value("$n") = name
 		      child.Value("$d") = True
 		      child.Value("$p") = New WeakRef(parent)
+		      child.Value("$t") = New Date
+		      child.Value("$r") = Nil
 		    Else
 		      child.Value("$d") = True
 		    End If
@@ -395,7 +397,7 @@ Protected Module PKZip
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent))
+		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent), "$t":New Date, "$r":Nil)
 		    End If
 		    parent.Value(name) = child
 		    parent = child
