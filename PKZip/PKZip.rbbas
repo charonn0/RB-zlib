@@ -346,7 +346,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h1
 		Protected Function TestZip(ZipFile As FolderItem) As Boolean
-		  ' Extracts a ZIP file to the ExtractTo directory
+		  ' Tests a ZIP file 
 		  
 		  Dim zip As ZipReader
 		  Try
