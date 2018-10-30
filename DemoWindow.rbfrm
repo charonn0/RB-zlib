@@ -61,7 +61,7 @@ Begin Window DemoWindow
       TextFont        =   "System"
       TextSize        =   0
       TextUnit        =   0
-      Top             =   0
+      Top             =   -1
       Underline       =   ""
       Value           =   2
       Visible         =   True
@@ -92,7 +92,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -123,7 +123,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   85
+         Top             =   76
          Underline       =   ""
          Value           =   False
          Visible         =   True
@@ -155,7 +155,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -186,7 +186,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -217,7 +217,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -248,7 +248,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   87
+         Top             =   78
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -279,7 +279,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -310,7 +310,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
          Underline       =   ""
          Visible         =   True
          Width           =   97
