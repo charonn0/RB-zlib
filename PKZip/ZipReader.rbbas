@@ -271,7 +271,7 @@ Protected Class ZipReader
 		    If Not RecoveryFile.Directory Then writer = New ZipWriter
 		    
 		    Do Until zr.LastError = ERR_END_ARCHIVE
-		      If logstream <> Nil Then logstream.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.Index) + "/" + Str(zr.mStream.Position) + ")")
+		      If logstream <> Nil Then logstream.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.CurrentIndex) + "/" + Str(zr.mStream.Position) + ")")
 		      Dim f As FolderItem = CreateTree(root, zr.CurrentName)
 		      Dim out As BinaryStream
 		      If Not f.Directory Then out = BinaryStream.Create(f, True)
@@ -421,15 +421,6 @@ Protected Class ZipReader
 			End Get
 		#tag EndGetter
 		CurrentUncompressedSize As UInt32
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  return mIndex
-			End Get
-		#tag EndGetter
-		Index As Integer
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21

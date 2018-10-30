@@ -248,7 +248,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   81
+         Top             =   87
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -279,7 +279,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   35
+         Top             =   41
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -310,7 +310,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   58
+         Top             =   64
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -480,6 +480,7 @@ End
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
 		  CompletionTimer.Mode = Timer.ModeSingle
+		  
 		Exception err As PKZip.ZipException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber

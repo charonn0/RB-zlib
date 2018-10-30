@@ -1,5 +1,5 @@
 #tag Class
- Attributes ( deprecated ) Protected Class ZipArchive
+ Attributes ( deprecated, hidden = true ) Protected Class ZipArchive
 	#tag Method, Flags = &h0
 		Sub Close()
 		  If mArchiveStream <> Nil Then mArchiveStream.Close
@@ -199,7 +199,12 @@
 
 	#tag Method, Flags = &h0
 		 Shared Function Open(ZipFile As FolderItem) As zlib.ZipArchive
-		  Return New ZipArchive(BinaryStream.Open(ZipFile))
+		  #If Not USE_PKZIP Then
+		    Return New ZipArchive(BinaryStream.Open(ZipFile))
+		  #Else
+		    #pragma Unused ZipFile
+		    Raise New RuntimeException
+		  #endif
 		End Function
 	#tag EndMethod
 
@@ -370,62 +375,70 @@
 
 	#tag Method, Flags = &h0
 		 Shared Function Repair(ZipFile As FolderItem, RecoveryFile As FolderItem, Optional LogFile As FolderItem) As Boolean
-		  Dim root As FolderItem
-		  Dim cleanup As Boolean
-		  Dim ok As Boolean = True
-		  Dim logstream As TextOutputStream
-		  If LogFile <> Nil Then logstream = TextOutputStream.Create(LogFile)
-		  If RecoveryFile.Directory Then
-		    root = RecoveryFile
-		  Else
-		    Static uniq As Integer = Ticks
-		    root = SpecialFolder.Temporary.Child(ZipFile.Name + "_extract" + Hex(uniq))
-		    uniq = uniq + 1
-		    cleanup = True
-		    root.CreateAsFolder
-		  End If
-		  If logstream <> Nil Then logstream.WriteLine("Extracting to " + root.AbsolutePath)
-		  Dim items() As FolderItem
-		  Try
-		    Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
-		    Dim z As ZipArchive
-		    Try
-		      z = New ZipArchive(bs, True)
-		    Catch err
-		      If logstream <> Nil Then logstream.WriteLine("  Repair is impossible: " + err.Message)
-		      Return False
-		    End Try
-		    
-		    Do Until z.LastError = ERR_END_ARCHIVE
-		      If logstream <> Nil Then logstream.WriteLine("  Attempting: " + z.CurrentName)
-		      Dim f As FolderItem = CreateTree(root, z.CurrentName)
-		      Dim out As BinaryStream
-		      If Not f.Directory Then out = BinaryStream.Create(f, True)
-		      Try
-		        Call z.ReadEntry(out)
-		        If logstream <> Nil Then logstream.WriteLine("  OK.")
-		      Catch err
-		        If logstream <> Nil Then logstream.WriteLine("  Failed: " + err.Message)
-		      Finally
-		        If out <> Nil Then out.Close
-		      End Try
-		      items.Append(f)
-		      If Not (SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) And z.ReadHeader) Then Exit Do
-		    Loop
-		    If logstream <> Nil Then logstream.WriteLine("  No further entries to recover. Creating recovery archive.")
-		    If Not RecoveryFile.Directory Then ok = ZipArchive.Create(RecoveryFile, items, root, True)
-		  Catch Err
-		    ok = False
-		  Finally
-		    If cleanup Then
-		      Do Until UBound(items) = -1
-		        items.Pop.Delete
-		      Loop
-		      root.Delete
-		      If logstream <> Nil Then logstream.Close
+		  #If Not USE_PKZIP Then
+		    Dim root As FolderItem
+		    Dim cleanup As Boolean
+		    Dim ok As Boolean = True
+		    Dim logstream As TextOutputStream
+		    If LogFile <> Nil Then logstream = TextOutputStream.Create(LogFile)
+		    If RecoveryFile.Directory Then
+		      root = RecoveryFile
+		    Else
+		      Static uniq As Integer = Ticks
+		      root = SpecialFolder.Temporary.Child(ZipFile.Name + "_extract" + Hex(uniq))
+		      uniq = uniq + 1
+		      cleanup = True
+		      root.CreateAsFolder
 		    End If
-		  End Try
-		  Return ok
+		    If logstream <> Nil Then logstream.WriteLine("Extracting to " + root.AbsolutePath)
+		    Dim items() As FolderItem
+		    Try
+		      Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
+		      Dim z As ZipArchive
+		      Try
+		        z = New ZipArchive(bs, True)
+		      Catch err
+		        If logstream <> Nil Then logstream.WriteLine("  Repair is impossible: " + err.Message)
+		        Return False
+		      End Try
+		      
+		      Do Until z.LastError = ERR_END_ARCHIVE
+		        If logstream <> Nil Then logstream.WriteLine("  Attempting: " + z.CurrentName)
+		        Dim f As FolderItem = CreateTree(root, z.CurrentName)
+		        Dim out As BinaryStream
+		        If Not f.Directory Then out = BinaryStream.Create(f, True)
+		        Try
+		          Call z.ReadEntry(out)
+		          If logstream <> Nil Then logstream.WriteLine("  OK.")
+		        Catch err
+		          If logstream <> Nil Then logstream.WriteLine("  Failed: " + err.Message)
+		        Finally
+		          If out <> Nil Then out.Close
+		        End Try
+		        items.Append(f)
+		        If Not (SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) And z.ReadHeader) Then Exit Do
+		      Loop
+		      If logstream <> Nil Then logstream.WriteLine("  No further entries to recover. Creating recovery archive.")
+		      If Not RecoveryFile.Directory Then ok = ZipArchive.Create(RecoveryFile, items, root, True)
+		    Catch Err
+		      ok = False
+		    Finally
+		      If cleanup Then
+		        Do Until UBound(items) = -1
+		          items.Pop.Delete
+		        Loop
+		        root.Delete
+		        If logstream <> Nil Then logstream.Close
+		      End If
+		    End Try
+		    Return ok
+		    
+		  #Else
+		    #pragma Unused ZipFile
+		    #pragma Unused RecoveryFile
+		    #pragma Unused LogFile
+		    Raise New RuntimeException
+		  #endif
 		End Function
 	#tag EndMethod
 
