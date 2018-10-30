@@ -29,6 +29,16 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub AppendEntry(Path As String, Data As MemoryBlock, ModifyDate As Date = Nil)
+		  Dim bs As New BinaryStream(Data)
+		  AppendEntry(Path, bs, bs.Length, ModifyDate)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
+		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
+		  d.Value("$rr") = Data
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As Readable, Length As UInt32, ModifyDate As Date = Nil)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
