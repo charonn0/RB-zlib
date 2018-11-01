@@ -1,8 +1,8 @@
 #tag Class
 Protected Class ZipWriter
 	#tag Method, Flags = &h0
-		Function AppendDirectory(Entry As FolderItem, Recursive As Boolean = True, RelativeRoot As FolderItem = Nil) As String
-		  If Not Entry.Directory Or Not Recursive Then Return AppendEntry(Entry)
+		Function AppendDirectory(Entry As FolderItem, RelativeRoot As FolderItem = Nil) As String
+		  If Not Entry.Directory Then Return AppendEntry(Entry)
 		  If RelativeRoot = Nil Then RelativeRoot = Entry
 		  Dim entries() As FolderItem
 		  GetChildren(Entry, entries)
