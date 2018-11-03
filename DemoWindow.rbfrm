@@ -845,7 +845,7 @@ End
 	#tag Event
 		Sub Action()
 		  If mWorker <> Nil Then Return
-		  mSource = GetOpenFolderItem(FileTypes1.ApplicationXGzip + ";" + FileTypes1.ApplicationXTar)
+		  mSource = GetOpenFolderItem(FileTypes1.ApplicationXGzip + ";" + FileTypes1.ApplicationXTar + ";" + FileTypes1.ApplicationXBzip2)
 		  If mSource = Nil Then Return
 		  mDestination = SelectFolder()
 		  If mDestination = Nil Then Return
