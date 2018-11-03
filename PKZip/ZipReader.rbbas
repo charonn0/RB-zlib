@@ -3,6 +3,7 @@ Protected Class ZipReader
 	#tag Method, Flags = &h0
 		Sub Close()
 		  If mStream <> Nil Then mStream.Close
+		  mStream = Nil
 		End Sub
 	#tag EndMethod
 

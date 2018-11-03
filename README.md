@@ -5,7 +5,7 @@
 
 ## Hilights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
-* Read and write [zip archives](https://github.com/charonn0/RB-zlib/wiki/zlib.ZipArchive) (.zip)
+* Read and write [zip archives](https://github.com/charonn0/RB-zlib/wiki/PKZip) (.zip)
 * Read and write [gzip](https://github.com/charonn0/RB-zlib/wiki/zlib.GZStream) (.gz) files with seek/rewind
 * Read and write [tape archive](https://github.com/charonn0/RB-zlib/wiki/zlib.TapeArchive) (.tar) files (Experimental)
 * Supports gzip, deflate, and raw deflate compressed streams
@@ -152,7 +152,7 @@ This example performs a hand-rolled HTTP request using a TCPSocket, and demonstr
 ### Import the `zlib` module
 1. Download the RB-zlib project either in [ZIP archive format](https://github.com/charonn0/RB-zlib/archive/master.zip) or by cloning the repository with your Git client.
 2. Open the RB-zlib project in REALstudio or Xojo. Open your project in a separate window.
-3. Copy the `zlib` module into your project and save.
+3. Copy the `zlib` module and the `PKZip` module into your project and save.
 
 ### Ensure the zlib shared library is installed
 zlib is installed by default on most Unix-like operating systems, including OS X and most Linux distributions. 
