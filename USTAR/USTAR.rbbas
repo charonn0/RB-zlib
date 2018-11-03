@@ -111,6 +111,143 @@ Protected Module USTAR
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function HeaderChecksum(Extends mb As MemoryBlock) As UInt32
+		  Return Val("&o" + mb.StringValue(148, 8))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderChecksum(Extends mb As MemoryBlock, Assigns NewChecksum As UInt32)
+		  mb.StringValue(148, 8) = OctPad(NewChecksum, 8)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderFilesize(Extends mb As MemoryBlock) As UInt32
+		  Return Val("&o" + mb.StringValue(124, 12))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderFilesize(Extends mb As MemoryBlock, Assigns NewSize As UInt32)
+		  mb.StringValue(124, 12) = OctPad(NewSize, 12)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderGroup(Extends mb As MemoryBlock) As UInt32
+		  Return Val("&o" + mb.StringValue(116, 8))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderGroup(Extends mb As MemoryBlock, Assigns NewGroup As UInt32)
+		  mb.StringValue(116, 8) = OctPad(NewGroup, 8)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderLinkIndicator(Extends mb As MemoryBlock) As String
+		  Return mb.StringValue(156, 1)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderLinkIndicator(Extends mb As MemoryBlock, Assigns NewLinkIndicator As String)
+		  mb.StringValue(156, 1) = LeftB(NewLinkIndicator, 1)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderLinkName(Extends mb As MemoryBlock) As String
+		  Return ReplaceAllB(mb.StringValue(157, 100), Chr(0), "")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderLinkName(Extends mb As MemoryBlock, Assigns NewLinkName As String)
+		  mb.StringValue(157, 100) = LeftB(NewLinkName, 100)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderModDate(Extends mb As MemoryBlock) As Date
+		  Dim count As Integer = Val("&o" + mb.StringValue(136, 12))
+		  Dim time As New Date(1970, 1, 1, 0, 0, 0, 0.0) 'UNIX epoch
+		  time.TotalSeconds = time.TotalSeconds + count
+		  Return time
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderModDate(Extends mb As MemoryBlock, Assigns NewDate As Date)
+		  Const epoch = 2082844800 ' Unix epoch expressed as Date.TotalSeconds
+		  mb.StringValue(136, 12) = OctPad(NewDate.TotalSeconds - epoch, 12)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderMode(Extends mb As MemoryBlock) As Permissions
+		  Dim mask As Integer = Val("&o" + mb.StringValue(100, 8))
+		  Return New Permissions(mask)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderMode(Extends mb As MemoryBlock, Assigns NewMode As Permissions)
+		  mb.StringValue(100, 8) = PermissionsToMode(NewMode)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderName(Extends mb As MemoryBlock) As String
+		  Return ReplaceAllB(mb.StringValue(0, 100), Chr(0), "")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderName(Extends mb As MemoryBlock, Assigns NewName As String)
+		  mb.StringValue(0, 100) = LeftB(NewName, 100)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderOwner(Extends mb As MemoryBlock) As UInt32
+		  Return Val("&o" + mb.StringValue(108, 8))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderOwner(Extends mb As MemoryBlock, Assigns NewOwner As UInt32)
+		  mb.StringValue(108, 8) = OctPad(NewOwner, 8)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderSignature(Extends mb As MemoryBlock) As String
+		  Return mb.StringValue(257, 6).Trim
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderSignature(Extends mb As MemoryBlock, Assigns NewSig As String)
+		  mb.StringValue(257, 6) = LeftB(NewSig, 5) + Chr(0)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderType(Extends mb As MemoryBlock) As String
+		  Return mb.StringValue(156, 1)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub HeaderType(Extends mb As MemoryBlock, Assigns NewType As String)
+		  mb.StringValue(156, 1) = Left(NewType, 1)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function IsTarred(Extends TargetFile As FolderItem) As Boolean
 		  //Returns True if the TargetFile is likely a tape archive
@@ -212,6 +349,13 @@ Protected Module USTAR
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function OctPad(Value As Integer, Width As Integer) As String
+		  Const zeros = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+		  Return Right(zeros + Oct(Value), Width)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Function PermissionsToMode(p As Permissions) As String
 		  Dim mask As Integer
 		  If p.GroupExecute Then mask = mask Or TGEXEC
@@ -226,7 +370,7 @@ Protected Module USTAR
 		  If p.OthersRead Then mask = mask Or TOREAD
 		  If p.OthersWrite Then mask = mask Or TOWRITE
 		  
-		  Return Oct(mask)
+		  Return OctPad(mask, 8)
 		End Function
 	#tag EndMethod
 
