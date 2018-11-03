@@ -347,6 +347,100 @@ Begin Window DemoWindow
          Visible         =   True
          Width           =   100
       End
+      Begin CheckBox UseGZipChkBx
+         AutoDeactivate  =   True
+         Bold            =   ""
+         Caption         =   "Use GZip"
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   60
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   ""
+         LockTop         =   True
+         Scope           =   0
+         State           =   0
+         TabIndex        =   0
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   85
+         Underline       =   ""
+         Value           =   False
+         Visible         =   True
+         Width           =   100
+      End
+      Begin PushButton TARDirBtn
+         AutoDeactivate  =   True
+         Bold            =   ""
+         ButtonStyle     =   0
+         Cancel          =   ""
+         Caption         =   "TAR a folder"
+         Default         =   ""
+         Enabled         =   True
+         Height          =   22
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   60
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   ""
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   1
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   64
+         Underline       =   ""
+         Visible         =   True
+         Width           =   97
+      End
+      Begin PushButton UnTarFileBtn
+         AutoDeactivate  =   True
+         Bold            =   ""
+         ButtonStyle     =   0
+         Cancel          =   ""
+         Caption         =   "UnTAR a file"
+         Default         =   ""
+         Enabled         =   True
+         Height          =   22
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   60
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   ""
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   2
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   41
+         Underline       =   ""
+         Visible         =   True
+         Width           =   97
+      End
    End
 End
 #tag EndWindow
@@ -716,6 +810,50 @@ End
 	#tag Event
 		Sub Open()
 		  Me.Enabled = BZip2.IsAvailable
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UseGZipChkBx
+	#tag Event
+		Sub Open()
+		  Me.Enabled = zlib.IsAvailable
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events TARDirBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  mSource = SelectFolder()
+		  If mSource = Nil Then Return
+		  If UseGZipChkBx.Value Then
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXGzip, mSource.Name + ".tgz")
+		    mOption = True
+		  Else
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar")
+		    mOption = False
+		  End If
+		  If mDestination = Nil Then Return
+		  Self.Title = "Tarring (no feathers)..."
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunTAR
+		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UnTarFileBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  mSource = GetOpenFolderItem(FileTypes1.ApplicationXGzip + ";" + FileTypes1.ApplicationXTar)
+		  If mSource = Nil Then Return
+		  mDestination = SelectFolder()
+		  If mDestination = Nil Then Return
+		  If mDestination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
+		  Self.Title = "Untarring..."
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunUnTAR
+		  mWorker.Run
 		End Sub
 	#tag EndEvent
 #tag EndEvents
