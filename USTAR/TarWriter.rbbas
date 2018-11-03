@@ -70,7 +70,7 @@ Protected Class TarWriter
 		    WriteEntry(WriteTo, path, source, length, 0, 0, mode, modtime)
 		  Next
 		  
-		  Dim eof As New MemoryBlock(BLOCK_SIZE)
+		  Dim eof As New MemoryBlock(BLOCK_SIZE * 2)
 		  WriteBlocks(WriteTo, eof)
 		  
 		End Sub
@@ -138,28 +138,28 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h1
 		Protected Shared Sub WriteEntry(WriteTo As Writeable, Path As String, Data As Readable, DataLength As UInt64, Owner As Integer, Group As Integer, Mode As Permissions, ModTime As Date)
-		  Dim header As New MemoryBlock(BLOCK_SIZE)
-		  If Path.Len > 100 Then
-		    header.StringValue(156, 1) = "L" ' long name
-		    header.StringValue(124, 12) = Oct(DataLength)
-		    header.StringValue(0, 100) = "././@LongLink"
+		  Dim header As MemoryBlock
+		  If Path.LenB > 100 Then
+		    header = New MemoryBlock(BLOCK_SIZE)
+		    header.HeaderType = "L" ' long name
+		    header.HeaderSignature = "USTAR"
+		    header.HeaderFilesize = Path.LenB
+		    header.HeaderName = "././@LongLink"
+		    header.HeaderChecksum = GetChecksum(header)
 		    WriteBlocks(WriteTo, header)
 		    WriteBlocks(WriteTo, Path)
-		    header = New MemoryBlock(BLOCK_SIZE)
-		    header.StringValue(0, 100) = Left(Path, 100)
-		  Else
-		    header.StringValue(0, 100) = Path
 		  End If
-		  header.StringValue(100, 8) = PermissionsToMode(Mode)
-		  header.StringValue(108, 8) = Oct(Owner)
-		  header.StringValue(116, 8) = Oct(Group)
-		  header.StringValue(124, 12) = Oct(DataLength)
-		  'header.StringValue(136, 12) = ModTime
-		  
-		  
-		  header.StringValue(156, 1) = "0"
+		  header = New MemoryBlock(BLOCK_SIZE)
+		  header.HeaderSignature = "USTAR"
+		  header.HeaderType = "0" ' normal
+		  header.HeaderName = LeftB(Path, 100)
+		  header.HeaderMode = Mode
+		  header.HeaderOwner = Owner
+		  header.HeaderGroup = Group
+		  header.HeaderFilesize = DataLength
+		  header.HeaderModDate = ModTime
 		  'header.StringValue(157, 100) = LinkName
-		  header.StringValue(148, 8) = Oct(GetChecksum(header))
+		  header.HeaderChecksum = GetChecksum(header)
 		  
 		  WriteBlocks(WriteTo, header)
 		  If Data <> Nil Then WriteBlocks(WriteTo, Data)
