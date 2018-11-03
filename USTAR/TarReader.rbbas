@@ -7,25 +7,6 @@ Protected Class TarReader
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Shared Function GetCheckSum(TarHeader As MemoryBlock) As UInt32
-		  Dim chksum As UInt32
-		  For i as Integer = 0 To 499
-		    Try
-		      If i = 148 Then
-		        i = 156
-		        chksum = chksum + UInt32(32 * 8) ' 8 spaces
-		      End If
-		      Dim b As UInt8 = TarHeader.UInt8Value(i)
-		      chksum = chksum + b
-		    Catch Err As OutOfBoundsException
-		      Exit For
-		    End Try
-		  Next
-		  Return chksum
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Function LastError() As Integer
 		  Return mLastError
