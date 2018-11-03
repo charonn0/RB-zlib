@@ -166,10 +166,53 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
+		  ' This method reads from the compressed stream.
+		  ' If BufferedReading is True (the default) then this method will read as many compressed bytes
+		  ' as are necessary to produce exactly Count decompressed bytes (or until EOF if there are fewer
+		  ' than Count decompressed bytes remaining in the stream).
+		  ' If BufferedReading is False then exactly Count compressed bytes are read and fed into the
+		  ' decompressor. Any decompressed output is returned: depending on the size of the read request
+		  ' and the state of the decompressor this method might return zero bytes. A zero-length return
+		  ' value does not indicate an error or the end of the stream; continue to Read from the stream
+		  ' until EOF=True.
+		  
+		  If mDecompressor = Nil Then Raise New IOException
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
-		  If Not mDecompressor.Decompress(mSource, ret, Count) Then Raise New BZip2Exception(mDecompressor.LastError)
-		  ret.Close
+		  Dim readsz As Integer = Count
+		  If BufferedReading Then
+		    If Count <= mReadBuffer.LenB Then
+		      ' the buffer has enough bytes already
+		      ret.Write(LeftB(mReadBuffer, Count))
+		      Dim sz As Integer = mReadBuffer.LenB - Count
+		      mReadBuffer = RightB(mReadBuffer, sz)
+		      ret.Close
+		      readsz = 0
+		    Else
+		      ' not enough bytes in the buffer
+		      If mReadBuffer.LenB > 0 Then
+		        ret.Write(mReadBuffer)
+		        mReadBuffer = ""
+		      End If
+		      readsz = Max(Count, CHUNK_SIZE) ' read this many more compressed bytes
+		    End If
+		  End If
+		  If readsz > 0 Then
+		    If Not mDecompressor.Decompress(mSource, ret, readsz) Then Raise New BZip2Exception(mDecompressor.LastError)
+		    ret.Close
+		    If BufferedReading Then
+		      If data.Size >= Count Then
+		        ' buffer any leftovers
+		        mReadBuffer = RightB(data, data.Size - Count)
+		        data = LeftB(data, Count)
+		      ElseIf Not Me.EOF Then
+		        ' still need even more bytes!
+		        mReadBuffer = data
+		        Return Me.Read(Count, encoding)
+		      End If
+		    End If
+		  End If
+		  
 		  If data <> Nil Then Return DefineEncoding(data, encoding)
 		End Function
 	#tag EndMethod
@@ -203,11 +246,30 @@ Implements Readable,Writeable
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  return mBufferedReading
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  If Not value Then mReadBuffer = ""
+			  mBufferedReading = value
+			End Set
+		#tag EndSetter
+		BufferedReading As Boolean
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  If mCompressor <> Nil Then Return mCompressor.Level
 			End Get
 		#tag EndGetter
 		Level As Integer
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private mBufferedReading As Boolean = True
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mCompressor As BZip2.Compressor
@@ -219,6 +281,10 @@ Implements Readable,Writeable
 
 	#tag Property, Flags = &h21
 		Private mDestination As Writeable
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mReadBuffer As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
