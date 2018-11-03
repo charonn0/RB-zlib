@@ -52,8 +52,10 @@ Protected Class ZipWriter
 		  d.Value("$t") = ModifyDate
 		  If d.Value("$d") = True Then
 		    d.Value("$l") = 0
+		    d.Value("$m") = 0
 		  Else
 		    d.Value("$l") = CompressionLevel
+		    d.Value("$m") = CompressionMethod
 		  End If
 		End Sub
 	#tag EndMethod
@@ -101,8 +103,13 @@ Protected Class ZipWriter
 		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)
 		  #If USE_ZLIB Then
 		    CompressionLevel = zlib.Z_DEFAULT_COMPRESSION
+		    CompressionMethod = METHOD_DEFLATED
+		  #ElseIf USE_BZIP2 Then
+		    CompressionLevel = BZip2.BZ_DEFAULT_COMPRESSION
+		    CompressionMethod = METHOD_BZIP2
 		  #Else
 		    CompressionLevel = 0
+		    CompressionMethod = 0
 		  #EndIf
 		End Sub
 	#tag EndMethod
@@ -153,11 +160,22 @@ Protected Class ZipWriter
 		  If d.HasKey("$m") Then d.Remove("$m")
 		  Select Case CompressionMethod
 		  Case METHOD_DEFLATED
-		    #If USE_ZLIB Then
+		    If USE_ZLIB Then
 		      d.Value("$m") = CompressionMethod
-		    #endif
+		    Else
+		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
+		    End If
+		    
+		  Case METHOD_BZIP2
+		    If USE_BZIP2 Then
+		      d.Value("$m") = CompressionMethod
+		    Else
+		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
+		    End If
+		    
 		  Case 0
 		    d.Value("$m") = CompressionMethod
+		    
 		  Else
 		    Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		  End Select
@@ -267,7 +285,7 @@ Protected Class ZipWriter
 		  End If
 		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
 		  
-		  Stream.WriteUInt16(method) ' method=none
+		  Stream.WriteUInt16(method) ' method
 		  DirectoryHeader.Method = method
 		  Dim modtim As Pair = ConvertDate(ModDate)
 		  Stream.WriteUInt16(modtim.Right) ' modtime
@@ -310,6 +328,9 @@ Protected Class ZipWriter
 		    Loop
 		    #If USE_ZLIB Then
 		      If z IsA zlib.ZStream Then zlib.ZStream(z).Close
+		    #EndIf
+		    #If USE_BZIP2 Then
+		      If z IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(z).Close
 		    #endif
 		  End If
 		  Dim endoff As UInt64 = Stream.Position
@@ -331,6 +352,10 @@ Protected Class ZipWriter
 
 	#tag Property, Flags = &h0
 		CompressionLevel As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		CompressionMethod As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

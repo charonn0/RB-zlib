@@ -176,11 +176,14 @@ Protected Module PKZip
 		  If Method = 0 Then Return Stream
 		  Select Case Method
 		  Case METHOD_DEFLATED
-		    If CompressionLevel = 0 Then Return Stream
 		    #If USE_ZLIB Then
 		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, zlib.RAW_ENCODING)
 		    #endif
 		    
+		  Case METHOD_BZIP2
+		    #If USE_BZIP2 Then
+		      Return BZip2.BZ2Stream.Create(Stream, CompressionLevel)
+		    #endif
 		  End Select
 		  
 		  Return Nil
@@ -200,6 +203,11 @@ Protected Module PKZip
 		      Return z
 		    #endif
 		    
+		  Case METHOD_BZIP2
+		    #If USE_BZIP2 Then
+		      Dim z As BZip2.BZ2Stream = BZip2.BZ2Stream.Open(Stream)
+		      Return z
+		    #endif
 		  End Select
 		  
 		  Return Nil
@@ -407,9 +415,10 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionMethod As UInt32 = PKZip.METHOD_DEFLATED) As Boolean
 		  Dim writer As New ZipWriter
 		  writer.CompressionLevel = CompressionLevel
+		  writer.CompressionMethod = CompressionMethod
 		  Dim c As Integer = UBound(ToArchive)
 		  For i As Integer = 0 To c
 		    Call writer.AppendEntry(ToArchive(i), RelativeRoot)
@@ -420,16 +429,39 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionMethod As UInt32 = PKZip.METHOD_DEFLATED) As Boolean
 		  Dim items() As FolderItem
 		  If ToArchive.Directory Then
 		    GetChildren(ToArchive, items)
 		  Else
 		    items.Append(ToArchive)
 		  End If
-		  Return WriteZip(items, OutputFile, ToArchive, Overwrite, CompressionLevel)
+		  Return WriteZip(items, OutputFile, ToArchive, Overwrite, CompressionLevel, CompressionMethod)
 		End Function
 	#tag EndMethod
+
+
+	#tag Note, Name = Copying
+		RB-PKZip (https://github.com/charonn0/RB-zlib)
+		
+		Copyright (c)2018 Andrew Lambert, all rights reserved.
+		
+		 Permission to use, copy, modify, and distribute this software for any purpose
+		 with or without fee is hereby granted, provided that the above copyright
+		 notice and this permission notice appear in all copies.
+		 
+		    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN
+		    NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+		    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+		    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+		    OR OTHER DEALINGS IN THE SOFTWARE.
+		 
+		 Except as contained in this notice, the name of a copyright holder shall not
+		 be used in advertising or otherwise to promote the sale, use or other dealings
+		 in this Software without prior written authorization of the copyright holder.
+	#tag EndNote
 
 
 	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"16384", Scope = Private
@@ -477,10 +509,16 @@ Protected Module PKZip
 	#tag Constant, Name = MAX_NAME_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Private
+	#tag Constant, Name = METHOD_BZIP2, Type = Double, Dynamic = False, Default = \"12", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = USE_BZIP2, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = USE_ZLIB, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private

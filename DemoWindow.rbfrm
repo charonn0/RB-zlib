@@ -61,7 +61,7 @@ Begin Window DemoWindow
       TextFont        =   "System"
       TextSize        =   0
       TextUnit        =   0
-      Top             =   0
+      Top             =   -1
       Underline       =   ""
       Value           =   3
       Visible         =   True
@@ -92,7 +92,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -123,7 +123,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   85
+         Top             =   76
          Underline       =   ""
          Value           =   False
          Visible         =   True
@@ -155,7 +155,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -186,7 +186,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -217,7 +217,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -248,7 +248,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   87
+         Top             =   78
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -279,7 +279,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -310,15 +310,15 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
          Underline       =   ""
          Visible         =   True
          Width           =   97
       End
-      Begin CheckBox UseGZipChkBx
+      Begin CheckBox UseBZip2ChkBx
          AutoDeactivate  =   True
          Bold            =   ""
-         Caption         =   "Use GZip"
+         Caption         =   "Use BZip2"
          DataField       =   ""
          DataSource      =   ""
          Enabled         =   True
@@ -327,87 +327,25 @@ Begin Window DemoWindow
          Index           =   -2147483648
          InitialParent   =   "TabPanel1"
          Italic          =   ""
-         Left            =   60
+         Left            =   62
          LockBottom      =   ""
          LockedInPosition=   False
-         LockLeft        =   True
+         LockLeft        =   ""
          LockRight       =   ""
-         LockTop         =   True
+         LockTop         =   ""
          Scope           =   0
          State           =   0
-         TabIndex        =   0
-         TabPanelIndex   =   4
+         TabIndex        =   3
+         TabPanelIndex   =   3
          TabStop         =   True
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   85
+         Top             =   102
          Underline       =   ""
          Value           =   False
          Visible         =   True
          Width           =   100
-      End
-      Begin PushButton UnTarFileBtn
-         AutoDeactivate  =   True
-         Bold            =   ""
-         ButtonStyle     =   0
-         Cancel          =   ""
-         Caption         =   "UnTAR a file"
-         Default         =   ""
-         Enabled         =   True
-         Height          =   22
-         HelpTag         =   ""
-         Index           =   -2147483648
-         InitialParent   =   "TabPanel1"
-         Italic          =   ""
-         Left            =   60
-         LockBottom      =   ""
-         LockedInPosition=   False
-         LockLeft        =   True
-         LockRight       =   ""
-         LockTop         =   True
-         Scope           =   0
-         TabIndex        =   1
-         TabPanelIndex   =   4
-         TabStop         =   True
-         TextFont        =   "System"
-         TextSize        =   0
-         TextUnit        =   0
-         Top             =   41
-         Underline       =   ""
-         Visible         =   True
-         Width           =   97
-      End
-      Begin PushButton TARDirBtn
-         AutoDeactivate  =   True
-         Bold            =   ""
-         ButtonStyle     =   0
-         Cancel          =   ""
-         Caption         =   "TAR a folder"
-         Default         =   ""
-         Enabled         =   True
-         Height          =   22
-         HelpTag         =   ""
-         Index           =   -2147483648
-         InitialParent   =   "TabPanel1"
-         Italic          =   ""
-         Left            =   60
-         LockBottom      =   ""
-         LockedInPosition=   False
-         LockLeft        =   True
-         LockRight       =   ""
-         LockTop         =   True
-         Scope           =   0
-         TabIndex        =   2
-         TabPanelIndex   =   4
-         TabStop         =   True
-         TextFont        =   "System"
-         TextSize        =   0
-         TextUnit        =   0
-         Top             =   64
-         Underline       =   ""
-         Visible         =   True
-         Width           =   97
       End
    End
 End
@@ -538,6 +476,12 @@ End
 		  mErrorMsg = err.Message
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
+		Exception err As BZip2.BZip2Exception
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
 		Exception err As PKZip.ZipException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
@@ -549,10 +493,20 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = PKZip.WriteZip(mSource, mDestination)
+		  If Not mOption Then
+		    mResult = PKZip.WriteZip(mSource, mDestination)
+		  Else
+		    mResult = PKZip.WriteZip(mSource, mDestination, False, BZip2.BZ_DEFAULT_COMPRESSION, PKZip.METHOD_BZIP2)
+		  End If
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As BZip2.BZip2Exception
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
@@ -573,6 +527,12 @@ End
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As BZip2.BZip2Exception
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
@@ -744,54 +704,18 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + ".zip")
 		  If mDestination = Nil Then Return
-		  Self.Title = "Zipping..."
+		  Self.Title = "zlib Demo - Zipping..."
+		  mOption = UseBZip2ChkBx.Value
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZip
 		  mWorker.Run
 		End Sub
 	#tag EndEvent
 #tag EndEvents
-#tag Events UseGZipChkBx
+#tag Events UseBZip2ChkBx
 	#tag Event
 		Sub Open()
-		  Me.Enabled = zlib.IsAvailable
-		End Sub
-	#tag EndEvent
-#tag EndEvents
-#tag Events UnTarFileBtn
-	#tag Event
-		Sub Action()
-		  If mWorker <> Nil Then Return
-		  mSource = GetOpenFolderItem(FileTypes1.ApplicationXGzip + ";" + FileTypes1.ApplicationXTar)
-		  If mSource = Nil Then Return
-		  mDestination = SelectFolder()
-		  If mDestination = Nil Then Return
-		  If mDestination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
-		  Self.Title = "Untarring..."
-		  mWorker = New Thread
-		  AddHandler mWorker.Run, WeakAddressOf RunUnTAR
-		  mWorker.Run
-		End Sub
-	#tag EndEvent
-#tag EndEvents
-#tag Events TARDirBtn
-	#tag Event
-		Sub Action()
-		  If mWorker <> Nil Then Return
-		  mSource = SelectFolder()
-		  If mSource = Nil Then Return
-		  If UseGZipChkBx.Value Then
-		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXGzip, mSource.Name + ".tgz")
-		    mOption = True
-		  Else
-		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar")
-		    mOption = False
-		  End If
-		  If mDestination = Nil Then Return
-		  Self.Title = "Tarring (no feathers)..."
-		  mWorker = New Thread
-		  AddHandler mWorker.Run, WeakAddressOf RunTAR
-		  mWorker.Run
+		  Me.Enabled = BZip2.IsAvailable
 		End Sub
 	#tag EndEvent
 #tag EndEvents
