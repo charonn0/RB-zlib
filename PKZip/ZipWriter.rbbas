@@ -73,17 +73,12 @@ Protected Class ZipWriter
 		  
 		  Dim c As Integer = UBound(paths)
 		  For i As Integer = 0 To c
-		    Dim length As UInt32 = lengths(i)
 		    Dim path As String = paths(i)
-		    path = ConvertEncoding(path, Encodings.UTF8)
 		    Dim source As Readable = sources(i)
-		    Dim modtime As Date = modtimes(i)
+		    path = ConvertEncoding(path, Encodings.UTF8)
 		    If dirstatus(i) And Right(path, 1) <> "/" Then path = path + "/"
 		    Dim dirheader As ZipDirectoryHeader
-		    Dim extra As MemoryBlock = extras(i)
-		    Dim level As UInt32 = levels(i)
-		    Dim method As UInt32 = methods(i)
-		    WriteEntryHeader(WriteTo, path, length, source, modtime, dirheader, extra, level, method)
+		    WriteEntryHeader(WriteTo, path, lengths(i), source, modtimes(i), dirheader, extras(i), levels(i), methods(i))
 		    directory.Append(dirheader)
 		    If source IsA BinaryStream Then BinaryStream(source).Position = 0 ' be kind, rewind
 		  Next
@@ -305,9 +300,8 @@ Protected Class ZipWriter
 		  
 		  dataoff = Stream.Position
 		  Dim crc As UInt32
-		  Dim z As Writeable
 		  If Source <> Nil And Length > 0 Then
-		    z = GetCompressor(Method, Stream, Level)
+		    Dim z As Writeable = GetCompressor(Method, Stream, Level)
 		    If z = Nil Then Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
