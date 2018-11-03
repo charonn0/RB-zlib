@@ -68,21 +68,20 @@ Protected Class TarReader
 		Protected Function ReadHeader() As Boolean
 		  mLastError = 0
 		  Dim header As MemoryBlock = ReadBlock()
-		  If header.StringValue(156, 1) = "L" Then ' long name
-		    Dim nmsz As Integer = Val("&o" + header.StringValue(124, 12).Trim)
-		    mCurrentName = ReadLongName(nmsz)
+		  If header.HeaderType = "L" Then ' long name
+		    mCurrentName = ReadLongName(header.HeaderFilesize)
 		    header = ReadBlock()
 		  Else
-		    mCurrentName = header.StringValue(0, 100)
+		    mCurrentName = header.HeaderName
 		  End If
-		  mCurrentMode = header.StringValue(100, 8)
-		  mCurrentOwner = header.StringValue(108, 8)
-		  mCurrentGroup = header.StringValue(116, 8)
-		  mCurrentSize = header.StringValue(124, 12)
-		  mCurrentModTime = header.StringValue(136, 12)
-		  mCurrentChecksum = header.StringValue(148, 8)
-		  mCurrentLinkIndicator = header.StringValue(156, 1)
-		  mCurrentLinkName = header.StringValue(157, 100).Trim
+		  mCurrentMode = header.HeaderMode
+		  mCurrentOwner = header.HeaderOwner
+		  mCurrentGroup = header.HeaderGroup
+		  mCurrentSize = header.HeaderFilesize
+		  mCurrentModTime = header.HeaderModDate
+		  mCurrentChecksum = header.HeaderChecksum
+		  'mCurrentLinkIndicator = header.HeaderLinkIndicator
+		  mCurrentLinkName = header.HeaderLinkName
 		  
 		  If CurrentName = "" Then mLastError = ERR_INVALID_NAME
 		  If mStream.EOF Then mLastError = ERR_END_ARCHIVE
@@ -107,7 +106,7 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return Val("&o" + mCurrentChecksum.Trim)
+			  Return mCurrentChecksum
 			End Get
 		#tag EndGetter
 		CurrentChecksum As UInt32
@@ -116,7 +115,7 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return Val("&o" + mCurrentSize.Trim)
+			  Return mCurrentSize
 			End Get
 		#tag EndGetter
 		CurrentFileSize As UInt64
@@ -125,7 +124,7 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return Val("&o" + mCurrentGroup)
+			  Return mCurrentGroup
 			End Get
 		#tag EndGetter
 		CurrentGroup As Integer
@@ -134,9 +133,7 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Dim mask As Integer = Val("&o" + mCurrentMode)
-			  Dim p As New Permissions(mask)
-			  Return p
+			  Return mCurrentMode
 			End Get
 		#tag EndGetter
 		CurrentMode As Permissions
@@ -145,10 +142,7 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Dim count As Integer = Val("&o" + mCurrentModTime)
-			  Dim time As New Date(1970, 1, 1, 0, 0, 0, 0.0) 'UNIX epoch
-			  time.TotalSeconds = time.TotalSeconds + count
-			  Return time
+			  Return mCurrentModTime
 			End Get
 		#tag EndGetter
 		CurrentModificationDate As Date
@@ -157,7 +151,7 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  return ReplaceAllB(mCurrentName, Chr(0), "")
+			  return mCurrentName
 			End Get
 		#tag EndGetter
 		CurrentName As String
@@ -166,22 +160,22 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return Val("&o" + mCurrentOwner)
+			  Return mCurrentOwner
 			End Get
 		#tag EndGetter
 		CurrentOwner As Integer
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentChecksum As String
+		Private mCurrentChecksum As UInt32
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentGroup As String
+		Private mCurrentGroup As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentLinkIndicator As String
+		Private mCurrentLinkIndicator As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -189,11 +183,11 @@ Protected Class TarReader
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentMode As String
+		Private mCurrentMode As Permissions
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentModTime As String
+		Private mCurrentModTime As Date
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -201,11 +195,11 @@ Protected Class TarReader
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentOwner As String
+		Private mCurrentOwner As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentSize As String
+		Private mCurrentSize As UInt32
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
