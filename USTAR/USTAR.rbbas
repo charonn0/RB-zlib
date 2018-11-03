@@ -111,6 +111,75 @@ Protected Module USTAR
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function IsTarred(Extends TargetFile As FolderItem) As Boolean
+		  //Returns True if the TargetFile is likely a tape archive
+		  
+		  If Not TargetFile.Exists Then Return False
+		  If TargetFile.Directory Then Return False
+		  Dim bs As Readable
+		  Dim IsTAR As Boolean
+		  Try
+		    If TargetFile.IsGZipped Then
+		      bs = zlib.ZStream.Open(TargetFile, zlib.GZIP_ENCODING)
+		    ElseIf TargetFile.IsBZipped Then
+		      bs = BZip2.BZ2Stream.Open(TargetFile)
+		    Else
+		      bs = BinaryStream.Open(TargetFile)
+		    End If
+		    IsTAR = bs.IsTarred
+		    
+		  Catch
+		    IsTAR = False
+		  Finally
+		    If bs <> Nil Then
+		      If bs IsA BinaryStream Then BinaryStream(bs).Close
+		      If bs IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(bs).Close
+		      If bs IsA zlib.ZStream Then zlib.ZStream(bs).Close
+		    End If
+		  End Try
+		  Return IsTAR
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsTarred(Extends Target As MemoryBlock) As Boolean
+		  //CReturns True if the Target is likely a tape archive
+		  
+		  If Target.Size = -1 Then Return False
+		  Dim bs As Readable
+		  Dim IsTAR As Boolean
+		  Try
+		    If Target.IsGZipped Then
+		      bs = New zlib.ZStream(Target)
+		    ElseIf Target.IsBZipped Then
+		      bs = New BZip2.BZ2Stream(Target)
+		    Else
+		      bs = New BinaryStream(Target)
+		    End If
+		    IsTAR = bs.IsTarred()
+		  Catch
+		    IsTAR = False
+		  Finally
+		    If bs <> Nil Then 
+		      If bs IsA BinaryStream Then BinaryStream(bs).Close
+		      If bs IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(bs).Close
+		      If bs IsA zlib.ZStream Then zlib.ZStream(bs).Close
+		    End If
+		  End Try
+		  Return IsTAR
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function IsTarred(Extends Target As Readable) As Boolean
+		  //Returns True if the Target is likely a tape archive
+		  
+		  Dim header As MemoryBlock = Target.Read(BLOCK_SIZE)
+		  Return Val("&o" + header.StringValue(148, 8)) = GetChecksum(header)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function NormalizeFilename(Name As String) As String
 		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
@@ -235,18 +304,20 @@ Protected Module USTAR
 		    Call tar.AppendEntry(ToArchive(i), RelativeRoot)
 		  Next
 		  Dim t As Writeable
-		  Dim b As Boolean
 		  If CompressionLevel > 0 And CompressionLevel < 10 Then
-		    t = zlib.ZStream.Create(OutputFile, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, Overwrite, zlib.GZIP_ENCODING)
+		    If NthField(OutputFile.Name, ".", CountFields(OutputFile.Name, ".")) = "bz2" Then
+		      t = BZip2.BZ2Stream.Create(OutputFile, CompressionLevel)
+		    Else
+		      t = zlib.ZStream.Create(OutputFile, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, Overwrite, zlib.GZIP_ENCODING)
+		    End If
 		  Else
 		    t = BinaryStream.Create(OutputFile, False)
-		    b = True
 		  End If
 		  tar.Commit(t)
-		  If b Then BinaryStream(t).Close Else zlib.ZStream(t).Close
+		  If t IsA BinaryStream Then BinaryStream(t).Close
+		  If t IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(t).Close
+		  If t IsA zlib.ZStream Then zlib.ZStream(t).Close
 		  Return True
-		  
-		  
 		End Function
 	#tag EndMethod
 
