@@ -167,6 +167,8 @@ Protected Module USTAR
 		  Dim ts As Readable
 		  If TarFile.IsGZipped Then
 		    ts = zlib.ZStream.Open(TarFile, zlib.GZIP_ENCODING)
+		  ElseIf TarFile.IsBZipped Then
+		    ts = BZip2.BZ2Stream.Open(TarFile)
 		  Else
 		    ts = BinaryStream.Open(TarFile)
 		  End If
@@ -184,6 +186,7 @@ Protected Module USTAR
 		  If bs <> Nil Then bs.Close
 		  If ts IsA BinaryStream Then BinaryStream(ts).Close
 		  If ts IsA zlib.ZStream Then zlib.ZStream(ts).Close
+		  If ts IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(ts).Close
 		  Return fs
 		End Function
 	#tag EndMethod
