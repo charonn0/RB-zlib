@@ -33,6 +33,57 @@ Protected Module BZip2
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function IsBZipped(Extends Target As BinaryStream) As Boolean
+		  //Checks the BZ2 magic number. Returns True if the Target is likely a BZ2 stream
+		  
+		  Dim IsBZ2 As Boolean
+		  Dim pos As UInt64 = Target.Position
+		  If Target.Read(3) = "BZh" Then IsBZ2 = True 'maybe
+		  Target.Position = pos
+		  Return IsBZ2
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsBZipped(Extends TargetFile As FolderItem) As Boolean
+		  //Checks the BZ2 magic number. Returns True if the TargetFile is likely a BZ2 stream
+		  
+		  If Not TargetFile.Exists Then Return False
+		  If TargetFile.Directory Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsBZ2 As Boolean
+		  Try
+		    bs = BinaryStream.Open(TargetFile)
+		    IsBZ2 = bs.IsBZipped()
+		  Catch
+		    IsBZ2 = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsBZ2
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsBZipped(Extends Target As MemoryBlock) As Boolean
+		  //Checks the BZ2 magic number. Returns True if the Target is likely a BZ2 stream
+		  
+		  If Target.Size = -1 Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsBZ2 As Boolean
+		  Try
+		    bs = New BinaryStream(Target)
+		    IsBZ2 = bs.IsBZipped()
+		  Catch
+		    IsBZ2 = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsBZ2
+		End Function
+	#tag EndMethod
+
 
 	#tag Note, Name = Copying
 		RB-BZip2 (https://github.com/charonn0/RB-zlib)

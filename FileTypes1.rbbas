@@ -36,4 +36,13 @@
 		UTI=com.pkware.zip-archive
 	#tag EndFileType
 
+	#tag FileType
+		CodeName=ApplicationXBzip2
+		Extension=.bz2
+		Flags=&h0
+		MacCreator=
+		MacType=Bzip
+		Name=application/x-bzip2
+	#tag EndFileType
+
 #tag EndFileTypeSet
