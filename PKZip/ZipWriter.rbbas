@@ -128,6 +128,45 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		 Shared Function Open(ZipStream As BinaryStream) As PKZip.ZipWriter
+		  ZipStream.LittleEndian = True
+		  If Not FindDirectoryFooter(ZipStream) Then Return Nil
+		  Dim eod As UInt64 = ZipStream.Position
+		  Dim footer As ZipDirectoryFooter
+		  If Not ReadDirectoryFooter(ZipStream, footer) Then Return Nil
+		  ZipStream.Position = footer.Offset
+		  Dim entries As New Dictionary(META_PATH:"$ROOT", META_PARENT:Nil, META_DIR:True)
+		  entries.Value(META_STREAM) = ZipStream
+		  Do Until ZipStream.Position >= eod
+		    Dim header As ZipDirectoryHeader
+		    If Not ReadDirectoryHeader(ZipStream, header) Then Exit Do
+		    Dim name As String = ZipStream.Read(header.FilenameLength)
+		    Dim extra As MemoryBlock = ZipStream.Read(header.ExtraLength)
+		    Dim comment As MemoryBlock = ZipStream.Read(header.CommentLength)
+		    Dim d As Dictionary = TraverseTree(entries, name, True)
+		    If d = Nil Then Continue
+		    d.Value(META_COMMENT) = comment
+		    d.Value(META_EXTRA) = extra
+		    d.Value(META_LENGTH) = header.CompressedSize
+		    d.Value(META_MODTIME) = ConvertDate(header.ModDate, header.ModTime)
+		    Dim offset As UInt64 = header.Offset + extra.Size + name.LenB + ZIP_ENTRY_HEADER_SIZE
+		    d.Value(META_OFFSET) = offset
+		    d.Value(META_METHOD) = header.Method
+		    d.Value(META_LEVEL) = 0
+		    If header.CompressedSize > 0 Then
+		      Dim m As New MappedStream(ZipStream, offset, header.CompressedSize)
+		      m.Tag = header.CRC32
+		      d.Value(META_STREAM) = m
+		    End If
+		  Loop
+		  
+		  Dim z As New ZipWriter
+		  z.mEntries = entries
+		  Return z
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SetEntryComment(Path As String, Comment As String)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
@@ -251,7 +290,7 @@ Protected Class ZipWriter
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock, Level As UInt32, Method As UInt32)
 		  If Not USE_ZLIB Then Level = 0
-		  If Length = 0 Or Level = 0 Then method = 0
+		  If Length = 0 Or Level = 0 And Not Source IsA MappedStream Then method = 0
 		  
 		  DirectoryHeader.Offset = Stream.Position
 		  Dim crcoff, compszoff, dataoff As UInt64
@@ -303,9 +342,10 @@ Protected Class ZipWriter
 		  If Source <> Nil And Length > 0 Then
 		    Dim z As Writeable = GetCompressor(Method, Stream, Level)
 		    If z = Nil Then Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
+		    If Source IsA MappedStream Then crc = MappedStream(Source).Tag
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
-		      crc = PKZip.CRC32(data, crc)
+		      If Not Source IsA MappedStream Then crc = PKZip.CRC32(data, crc)
 		      z.Write(data)
 		    Loop
 		    #If USE_ZLIB Then

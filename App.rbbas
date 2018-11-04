@@ -1,6 +1,19 @@
 #tag Class
 Protected Class App
 Inherits Application
+	#tag Event
+		Sub Open()
+		  'Dim f As FolderItem = GetOpenFolderItem(FileTypes1.ApplicationZip)
+		  'Dim bs As BinaryStream = BinaryStream.Open(f)
+		  'Dim zw As PKZip.ZipWriter = PKZip.ZipWriter.Open(bs)
+		  ''zw.DeleteEntry("curl-7.62.0/winbuild/")
+		  'zw.Commit(SpecialFolder.Desktop.Child("test.zip"))
+		  'bs.Close
+		  
+		End Sub
+	#tag EndEvent
+
+
 	#tag Constant, Name = kEditClear, Type = String, Dynamic = False, Default = \"&Delete", Scope = Public
 		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"&Delete"
 		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"&Delete"
