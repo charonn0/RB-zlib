@@ -268,6 +268,36 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function GetZipDirectory(ZipStream As BinaryStream) As Dictionary
+		  ZipStream.LittleEndian = True
+		  If Not FindDirectoryFooter(ZipStream) Then Return Nil
+		  Dim eod As UInt64 = ZipStream.Position
+		  Dim footer As ZipDirectoryFooter
+		  If Not ReadDirectoryFooter(ZipStream, footer) Then Return Nil
+		  ZipStream.Position = footer.Offset
+		  Dim entries As New Dictionary
+		  
+		  Do Until ZipStream.Position >= eod
+		    Dim header As ZipDirectoryHeader
+		    If Not ReadDirectoryHeader(ZipStream, header) Then Exit Do
+		    Dim name As String = ZipStream.Read(header.FilenameLength)
+		    Dim extra As MemoryBlock = ZipStream.Read(header.ExtraLength)
+		    Dim comment As MemoryBlock = ZipStream.Read(header.CommentLength)
+		    Dim d As Dictionary = TraverseTree(entries, name, True)
+		    If d = Nil Then Continue
+		    d.Value(META_COMMENT) = comment
+		    d.Value(META_EXTRA) = extra
+		    d.Value(META_LENGTH) = header.CompressedSize
+		    d.Value(META_MODTIME) = ConvertDate(header.ModDate, header.ModTime)
+		    d.Value(META_OFFSET) = header.Offset
+		    d.Value(META_METHOD) = header.Method
+		  Loop
+		  
+		  Return entries
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function ListZip(ZipFile As FolderItem) As String()
 		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
