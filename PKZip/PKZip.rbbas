@@ -5,19 +5,19 @@ Protected Module PKZip
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
-		      If item.Lookup("$d", False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, Comments, Extras, DirectoryStatus, Levels, Methods)
+		      If item.Lookup(META_DIR, False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, Comments, Extras, DirectoryStatus, Levels, Methods)
 		      Paths.Append(GetTreeParentPath(item))
-		      Lengths.Append(item.Lookup("$s", 0))
-		      ModTimes.Append(item.Value("$t"))
-		      Sources.Append(item.Value("$r"))
-		      DirectoryStatus.Append(item.Value("$d"))
-		      Extras.Append(item.Lookup("$e", Nil))
-		      Comments.Append(item.Lookup("$c", ""))
-		      Levels.Append(item.Lookup("$l", 6))
+		      Lengths.Append(item.Lookup(META_LENGTH, 0))
+		      ModTimes.Append(item.Value(META_MODTIME))
+		      Sources.Append(item.Value(META_STREAM))
+		      DirectoryStatus.Append(item.Value(META_DIR))
+		      Extras.Append(item.Lookup(META_EXTRA, Nil))
+		      Comments.Append(item.Lookup(META_COMMENT, ""))
+		      Levels.Append(item.Lookup(META_LEVEL, 6))
 		      If USE_ZLIB Then
-		        Methods.Append(item.Lookup("$m", METHOD_DEFLATED))
+		        Methods.Append(item.Lookup(META_METHOD, METHOD_DEFLATED))
 		      Else
-		        Methods.Append(item.Lookup("$m", 0))
+		        Methods.Append(item.Lookup(META_METHOD, 0))
 		      End If
 		    End If
 		  Next
@@ -222,12 +222,12 @@ Protected Module PKZip
 	#tag Method, Flags = &h21
 		Private Function GetTreeParentPath(Child As Dictionary) As String
 		  Dim s() As String
-		  If Child.Value("$d") = True Then 
+		  If Child.Value(META_DIR) = True Then
 		    s.Append("")
 		  End If
-		  Do Until Child = Nil Or Child.Value("$n") = "$ROOT"
-		    s.Insert(0, Child.Value("$n"))
-		    Dim w As WeakRef = Child.Value("$p")
+		  Do Until Child = Nil Or Child.Value(META_PATH) = "$ROOT"
+		    s.Insert(0, Child.Value(META_PATH))
+		    Dim w As WeakRef = Child.Value(META_PARENT)
 		    If w = Nil Or w.Value = Nil Then
 		      Child = Nil
 		    Else
@@ -380,13 +380,13 @@ Protected Module PKZip
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
 		      child = New Dictionary
-		      child.Value("$n") = name
-		      child.Value("$d") = True
-		      child.Value("$p") = New WeakRef(parent)
-		      child.Value("$t") = New Date
-		      child.Value("$r") = Nil
+		      child.Value(META_PATH) = name
+		      child.Value(META_DIR) = True
+		      child.Value(META_PARENT) = New WeakRef(parent)
+		      child.Value(META_MODTIME) = New Date
+		      child.Value(META_STREAM) = Nil
 		    Else
-		      child.Value("$d") = True
+		      child.Value(META_DIR) = True
 		    End If
 		    parent.Value(name) = child
 		    parent = child
@@ -397,7 +397,7 @@ Protected Module PKZip
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent), "$t":New Date, "$r":Nil)
+		      child = New Dictionary(META_PATH:name, META_DIR:false, META_PARENT:New WeakRef(parent), META_MODTIME:New Date, META_STREAM:Nil)
 		    End If
 		    parent.Value(name) = child
 		    parent = child
@@ -475,6 +475,42 @@ Protected Module PKZip
 	#tag EndConstant
 
 	#tag Constant, Name = MAX_NAME_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_COMMENT, Type = String, Dynamic = False, Default = \"$c", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_DIR, Type = String, Dynamic = False, Default = \"$d", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_EXTRA, Type = String, Dynamic = False, Default = \"$e", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_LENGTH, Type = String, Dynamic = False, Default = \"$s", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_LEVEL, Type = String, Dynamic = False, Default = \"$l", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_MEMORY, Type = String, Dynamic = False, Default = \"$rr", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_METHOD, Type = String, Dynamic = False, Default = \"$m", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_MODTIME, Type = String, Dynamic = False, Default = \"$t", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_OFFSET, Type = String, Dynamic = False, Default = \"$o", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_PARENT, Type = String, Dynamic = False, Default = \"$p", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_PATH, Type = String, Dynamic = False, Default = \"$n", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_STREAM, Type = String, Dynamic = False, Default = \"$r", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Private
