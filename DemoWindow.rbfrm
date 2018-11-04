@@ -373,7 +373,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   85
+         Top             =   81
          Underline       =   ""
          Value           =   False
          Visible         =   True
@@ -405,7 +405,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   57
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -436,10 +436,42 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   34
          Underline       =   ""
          Visible         =   True
          Width           =   97
+      End
+      Begin CheckBox UseBZip2ChkBx1
+         AutoDeactivate  =   True
+         Bold            =   ""
+         Caption         =   "Use BZip2"
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   60
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   ""
+         LockRight       =   ""
+         LockTop         =   ""
+         Scope           =   0
+         State           =   0
+         TabIndex        =   3
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   103
+         Underline       =   ""
+         Value           =   False
+         Visible         =   True
+         Width           =   100
       End
    End
 End
@@ -654,6 +686,10 @@ End
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private mLockUI As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private mOption As Boolean
 	#tag EndProperty
 
@@ -819,6 +855,15 @@ End
 		  Me.Enabled = zlib.IsAvailable
 		End Sub
 	#tag EndEvent
+	#tag Event
+		Sub Action()
+		  If Not mLockUI Then
+		    mLockUI = True
+		    UseBZip2ChkBx1.Value = False
+		    mLockUI = False
+		  End If
+		End Sub
+	#tag EndEvent
 #tag EndEvents
 #tag Events TARDirBtn
 	#tag Event
@@ -828,6 +873,9 @@ End
 		  If mSource = Nil Then Return
 		  If UseGZipChkBx.Value Then
 		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXGzip, mSource.Name + ".tgz")
+		    mOption = True
+		  ElseIf UseBZip2ChkBx1.Value Then
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar.bz2")
 		    mOption = True
 		  Else
 		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar")
@@ -854,6 +902,22 @@ End
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunUnTAR
 		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UseBZip2ChkBx1
+	#tag Event
+		Sub Open()
+		  Me.Enabled = BZip2.IsAvailable
+		End Sub
+	#tag EndEvent
+	#tag Event
+		Sub Action()
+		  If Not mLockUI Then
+		    mLockUI = True
+		    UseGZipChkBx.Value = False
+		    mLockUI = False
+		  End If
 		End Sub
 	#tag EndEvent
 #tag EndEvents
