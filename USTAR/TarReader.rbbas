@@ -2,6 +2,7 @@
 Protected Class TarReader
 	#tag Method, Flags = &h0
 		Sub Constructor(TARStream As Readable)
+		  ' Constructs a TARStream from any Readable object.
 		  mStream = TARStream
 		  If Not ReadHeader() Then Raise New TARException(ERR_MISALIGNED)
 		End Sub
@@ -15,6 +16,8 @@ Protected Class TarReader
 
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable = Nil) As Boolean
+		  ' Extracts the current entry into ExtractTo, and queues the next extry.
+		  
 		  If Not ReadEntry(ExtractTo) Then Return False
 		  Return ReadHeader()
 		End Function
