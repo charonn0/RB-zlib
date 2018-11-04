@@ -133,6 +133,8 @@ Protected Class TarWriter
 		Protected Shared Sub WriteEntry(WriteTo As Writeable, Path As String, Data As Readable, DataLength As UInt64, Owner As Integer, Group As Integer, Mode As Permissions, ModTime As Date)
 		  Dim header As MemoryBlock
 		  If Path.LenB > 100 Then
+		    ' the long-name header indicates the the name is encoded in one or more
+		    ' blocks following the current block, followed by the file data.
 		    header = New MemoryBlock(BLOCK_SIZE)
 		    header.HeaderType = LONGNAMETYPE
 		    header.HeaderSignature = "USTAR"
