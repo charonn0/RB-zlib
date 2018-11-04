@@ -510,6 +510,9 @@ Protected Module USTAR
 	#tag Constant, Name = LNKTYPE, Type = String, Dynamic = False, Default = \"1", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = LONGNAMETYPE, Type = String, Dynamic = False, Default = \"L", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = REGTYPE, Type = String, Dynamic = False, Default = \"0", Scope = Private
 	#tag EndConstant
 

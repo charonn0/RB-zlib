@@ -141,7 +141,7 @@ Protected Class TarWriter
 		  Dim header As MemoryBlock
 		  If Path.LenB > 100 Then
 		    header = New MemoryBlock(BLOCK_SIZE)
-		    header.HeaderType = "L" ' long name
+		    header.HeaderType = LONGNAMETYPE
 		    header.HeaderSignature = "USTAR"
 		    header.HeaderFilesize = Path.LenB
 		    header.HeaderName = "././@LongLink"
@@ -151,7 +151,11 @@ Protected Class TarWriter
 		  End If
 		  header = New MemoryBlock(BLOCK_SIZE)
 		  header.HeaderSignature = "USTAR"
-		  header.HeaderType = "0" ' normal
+		  If Data = Nil Then
+		    header.HeaderType = DIRTYPE
+		  Else
+		    header.HeaderType = REGTYPE
+		  End If
 		  header.HeaderName = LeftB(Path, 100)
 		  header.HeaderMode = Mode
 		  header.HeaderOwner = Owner

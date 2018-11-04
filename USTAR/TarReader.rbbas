@@ -73,11 +73,11 @@ Protected Class TarReader
 		  Dim header As MemoryBlock = ReadBlock()
 		  mCurrentType = header.HeaderType
 		  Select Case mCurrentType
-		  Case "L" ' long name
+		  Case LONGNAMETYPE ' long name
 		    mCurrentName = ReadLongName(header.HeaderFilesize)
 		    header = ReadBlock()
 		    mCurrentType = header.HeaderType
-		  Case "x", "g" ' PAX header, skip
+		  Case XGLTYPE, XHDTYPE ' PAX header, skip
 		    mCurrentSize = header.HeaderFilesize
 		    Return ReadEntry(Nil) And ReadHeader()
 		  Else
