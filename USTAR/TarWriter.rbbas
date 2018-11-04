@@ -113,14 +113,7 @@ Protected Class TarWriter
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteBlocks(WriteTo As Writeable, Data As MemoryBlock)
 		  Dim bs As New BinaryStream(Data)
-		  
-		  Do Until bs.EOF
-		    Dim block As MemoryBlock = bs.Read(BLOCK_SIZE)
-		    If block.Size < BLOCK_SIZE Then block.Size = BLOCK_SIZE
-		    If block.Size > BLOCK_SIZE Then Raise New TARException(ERR_MISALIGNED)
-		    WriteTo.Write(block)
-		  Loop
-		  
+		  WriteBlocks(WriteTo, bs)
 		End Sub
 	#tag EndMethod
 
