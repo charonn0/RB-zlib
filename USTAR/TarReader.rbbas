@@ -68,12 +68,19 @@ Protected Class TarReader
 		Protected Function ReadHeader() As Boolean
 		  mLastError = 0
 		  Dim header As MemoryBlock = ReadBlock()
-		  If header.HeaderType = "L" Then ' long name
+		  mCurrentType = header.HeaderType
+		  Select Case mCurrentType
+		  Case "L" ' long name
 		    mCurrentName = ReadLongName(header.HeaderFilesize)
 		    header = ReadBlock()
+		    mCurrentType = header.HeaderType
+		  Case "x", "g" ' PAX header, skip
+		    mCurrentSize = header.HeaderFilesize
+		    Return ReadEntry(Nil) And ReadHeader()
 		  Else
 		    mCurrentName = header.HeaderName
-		  End If
+		    mCurrentType = header.HeaderType
+		  End Select
 		  mCurrentMode = header.HeaderMode
 		  mCurrentOwner = header.HeaderOwner
 		  mCurrentGroup = header.HeaderGroup
@@ -166,6 +173,20 @@ Protected Class TarReader
 		CurrentOwner As Integer
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mCurrentType
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  mCurrentType = value
+			End Set
+		#tag EndSetter
+		CurrentType As String
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h21
 		Private mCurrentChecksum As UInt32
 	#tag EndProperty
@@ -200,6 +221,10 @@ Protected Class TarReader
 
 	#tag Property, Flags = &h21
 		Private mCurrentSize As UInt32
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mCurrentType As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
