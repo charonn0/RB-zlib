@@ -56,7 +56,7 @@ Protected Class TarReader
 		      data.Size = data.Size - diff
 		    End If
 		    total = total + data.Size
-		    WriteTo.Write(data)
+		    If WriteTo <> Nil Then WriteTo.Write(data)
 		  Loop
 		  
 		  Return mLastError = 0
