@@ -30,34 +30,11 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h21
 		Private Function FindDirectoryFooter() As Boolean
-		  mStream.Position = Max(0, mStream.Length - MAX_COMMENT_SIZE - MIN_ARCHIVE_SIZE)
-		  Dim last As UInt64
-		  ' a zip archive can contain other zip archives, in which case it's possible
-		  ' for there to be more than one Central Directory Footer in the file. We only
-		  ' want the "outermost" directory footer, i.e. the last one.
-		  Do Until mStream.EOF
-		    If Not SeekSignature(mStream, ZIP_DIRECTORY_FOOTER_SIGNATURE) Then
-		      If last = 0 And mStream.Length >= MIN_ARCHIVE_SIZE + MAX_COMMENT_SIZE Then Return False
-		      mStream.Position = last
-		      Exit Do
-		    Else
-		      last = mStream.Position
-		      mStream.Position = mStream.Position + 4
-		    End If
-		  Loop Until mStream.Position + MAX_COMMENT_SIZE + MIN_ARCHIVE_SIZE <= mStream.Length
-		  
+		  If Not FindDirectoryFooter(mStream) Then Return False
 		  If Not ReadDirectoryFooter(mStream, mDirectoryFooter) Then Return False
 		  mArchiveComment = mStream.Read(mDirectoryFooter.CommentLength)
 		  mIsEmpty = (mStream.Length = MIN_ARCHIVE_SIZE + mDirectoryFooter.CommentLength)
 		  Return mDirectoryFooter.Offset > MIN_ARCHIVE_SIZE Or mIsEmpty
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Function FindEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
-		  If Not SeekSignature(Stream, ZIP_ENTRY_FOOTER_SIGNATURE) Then Return False
-		  If Not ReadEntryFooter(Stream, Footer) Then Return False
-		  Return footer.CompressedSize > 0
 		End Function
 	#tag EndMethod
 
@@ -72,54 +49,6 @@ Protected Class ZipReader
 		  ' extract the current item
 		  If Not ReadEntry(ExtractTo) Then Return False
 		  Return ReadHeader()
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Function ReadDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter) As Boolean
-		  Footer.Signature = Stream.ReadUInt32
-		  Footer.ThisDisk = Stream.ReadUInt16
-		  Footer.FirstDisk = Stream.ReadUInt16
-		  Footer.ThisRecordCount = Stream.ReadUInt16
-		  Footer.TotalRecordCount = Stream.ReadUInt16
-		  Footer.DirectorySize = Stream.ReadUInt32
-		  Footer.Offset = Stream.ReadUInt32
-		  Footer.CommentLength = Stream.ReadUInt16
-		  
-		  If Footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE And _
-		    Stream.Position + Footer.CommentLength = Stream.Length And _
-		    Footer.TotalRecordCount >= Footer.ThisRecordCount And _
-		    Footer.ThisDisk >= Footer.FirstDisk And _
-		    Stream.Position - MIN_ARCHIVE_SIZE - Footer.DirectorySize = Footer.Offset Then
-		    Return True
-		  End If
-		  
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Function ReadDirectoryHeader(Stream As BinaryStream, ByRef Header As ZipDirectoryHeader) As Boolean
-		  Header.Signature = Stream.ReadUInt32
-		  Header.Version = Stream.ReadUInt16
-		  Header.VersionNeeded = Stream.ReadUInt16
-		  Header.Flag = Stream.ReadUInt16
-		  Header.Method = Stream.ReadUInt16
-		  Header.ModTime = Stream.ReadUInt16
-		  Header.ModDate = Stream.ReadUInt16
-		  Header.CRC32 = Stream.ReadUInt32
-		  Header.CompressedSize = Stream.ReadUInt32
-		  Header.UncompressedSize = Stream.ReadUInt32
-		  Header.FilenameLength = Stream.ReadUInt16
-		  Header.ExtraLength = Stream.ReadUInt16
-		  Header.CommentLength = Stream.ReadUInt16
-		  Header.DiskNumber = Stream.ReadUInt16
-		  Header.InternalAttributes = Stream.ReadUInt16
-		  Header.ExternalAttributes = Stream.ReadUInt32
-		  Header.Offset = Stream.ReadUInt32
-		  
-		  Return Header.Signature = ZIP_DIRECTORY_HEADER_SIGNATURE
-		  
 		End Function
 	#tag EndMethod
 
@@ -160,36 +89,6 @@ Protected Class ZipReader
 		  End If
 		  
 		  Return True
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Function ReadEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
-		  Footer.Signature = Stream.ReadUInt32
-		  Footer.CRC32 = Stream.ReadUInt32
-		  Footer.CompressedSize = Stream.ReadUInt32
-		  Footer.UncompressedSize = Stream.ReadUInt32
-		  
-		  Return Footer.Signature = ZIP_ENTRY_FOOTER_SIGNATURE
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Function ReadEntryHeader(Stream As BinaryStream, ByRef Header As ZipEntryHeader) As Boolean
-		  Header.Signature = Stream.ReadUInt32
-		  Header.Version = Stream.ReadUInt16
-		  Header.Flag = Stream.ReadUInt16
-		  Header.Method = Stream.ReadUInt16
-		  Header.ModTime = Stream.ReadUInt16
-		  Header.ModDate = Stream.ReadUInt16
-		  Header.CRC32 = Stream.ReadUInt32
-		  Header.CompressedSize = Stream.ReadUInt32
-		  Header.UncompressedSize = Stream.ReadUInt32
-		  Header.FilenameLength = Stream.ReadUInt16
-		  Header.ExtraLength = Stream.ReadUInt16
-		  
-		  Return Header.Signature = ZIP_ENTRY_HEADER_SIGNATURE
 		End Function
 	#tag EndMethod
 
