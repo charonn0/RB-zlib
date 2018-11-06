@@ -175,6 +175,7 @@ Protected Class ZipReader
 		      Dim f As FolderItem = CreateTree(root, zr.CurrentName)
 		      Dim out As BinaryStream
 		      If Not f.Directory Then out = BinaryStream.Create(f, True)
+		      items.Insert(0, f)
 		      Try
 		        Call zr.ReadEntry(out)
 		      Catch err
