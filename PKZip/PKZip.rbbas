@@ -514,7 +514,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6) As Boolean
 		  Dim writer As New ZipWriter
 		  writer.CompressionLevel = CompressionLevel
 		  Dim c As Integer = UBound(ToArchive)
@@ -527,7 +527,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6) As Boolean
 		  Dim items() As FolderItem
 		  If ToArchive.Directory Then
 		    GetChildren(ToArchive, items)
