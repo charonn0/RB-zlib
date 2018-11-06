@@ -137,6 +137,12 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		 Shared Function RepairZip(ZipFile As FolderItem, RecoveryFile As FolderItem, Optional LogFile As FolderItem) As Boolean
+		  ' This method attempts to forcibly extract the contents of the archive specified by ZipFile.
+		  ' Corrupt or damaged files within the archive will be extracted as zero-length files with the
+		  ' appropriate path and name. If the RevoveryFile points to a file then the recovered files
+		  ' will be re-Zipped as a new archive in that file. If the RecoveryFile is a directory then
+		  ' the recovered contents will be extracted to that directory.
+		  
 		  Dim root As FolderItem
 		  Dim cleanup As Boolean
 		  Dim ok As Boolean = True
