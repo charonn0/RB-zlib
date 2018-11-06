@@ -2,6 +2,8 @@
 Protected Class ZipReader
 	#tag Method, Flags = &h0
 		Sub Close()
+		  ' Releases all resources. The ZipReader may not be used after calling this method.
+		  
 		  If mStream <> Nil Then mStream.Close
 		  mStream = Nil
 		  mData = Nil
@@ -10,6 +12,14 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Sub Constructor(ZipStream As BinaryStream, Force As Boolean = False)
+		  ' Construct a ZipReader from the ZipStream. 
+		  ' If Force=True then less strict techniques are used:
+		  '  * The zip data is assumed to start at offset 0
+		  '  * The central directory is ignored
+		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
+		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
+		  ' Forible reading can yield a performance boost on well-formed archives.
+		  
 		  mStream = ZipStream
 		  mStream.LittleEndian = True
 		  mForced = Force
@@ -83,9 +93,12 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable) As Boolean
-		  ' extract the current item
-		  If Not ReadEntry(ExtractTo) Then Return False
-		  Return ReadHeader()
+		  ' Extract the current item. If ExtractTo is Nil then the current item is skipped.
+		  ' Returns True if the item was extracted and the next item is ready. Check LastError
+		  ' for details if this method returns False; in particulur the error ERR_END_ARCHIVE
+		  ' means that extraction was successful but there are no further entries.
+		  
+		  Return ReadEntry(ExtractTo) And ReadHeader()
 		End Function
 	#tag EndMethod
 
