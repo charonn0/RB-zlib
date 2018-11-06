@@ -52,6 +52,29 @@ Protected Class ZipReader
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function FindEntryFooter() As Boolean
+		  ' Read the zip entry footer if it exists
+		  ' The footer is appended if the zip creator was not able to seek backwards in the stream
+		  ' to fill in the compressed size and CRC32 fields of the zip entry header.
+		  
+		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR And mCurrentEntry.CompressedSize = 0 Then ' descriptor follows
+		    Dim datastart As UInt64 = mStream.Position
+		    Dim footer As ZipEntryFooter
+		    If Not FindEntryFooter(mStream, footer) Then
+		      mLastError = ERR_INVALID_ENTRY
+		      Return False
+		    Else
+		      mCurrentEntry.CompressedSize = footer.CompressedSize
+		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
+		      mCurrentEntry.CRC32 = footer.CRC32
+		    End If
+		    mStream.Position = datastart
+		  End If
+		  Return True
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function LastError() As Integer
 		  Return mLastError
@@ -132,20 +155,7 @@ Protected Class ZipReader
 		  End If
 		  mCurrentExtra = mStream.Read(mCurrentEntry.ExtraLength)
 		  
-		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR And mCurrentEntry.CompressedSize = 0 Then ' footer follows
-		    Dim datastart As UInt64 = mStream.Position
-		    Dim footer As ZipEntryFooter
-		    If Not FindEntryFooter(mStream, footer) Then
-		      mLastError = ERR_INVALID_ENTRY
-		      Return False
-		    Else
-		      mCurrentEntry.CompressedSize = footer.CompressedSize
-		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
-		      mCurrentEntry.CRC32 = footer.CRC32
-		    End If
-		    mStream.Position = datastart
-		  End If
-		  Return True
+		  Return FindEntryFooter()
 		End Function
 	#tag EndMethod
 
