@@ -4,6 +4,7 @@ Protected Class ZipReader
 		Sub Close()
 		  If mStream <> Nil Then mStream.Close
 		  mStream = Nil
+		  mData = Nil
 		End Sub
 	#tag EndMethod
 
@@ -22,6 +23,12 @@ Protected Class ZipReader
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(ZipData As MemoryBlock, Force As Boolean = False)
+		  mData = ZipData
+		  Me.Constructor(New BinaryStream(mData), Force)
+		End Sub
+	#tag EndMethod
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close
@@ -351,6 +358,10 @@ Protected Class ZipReader
 
 	#tag Property, Flags = &h21
 		Private mCurrentName As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mData As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
