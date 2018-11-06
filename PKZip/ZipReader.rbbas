@@ -29,6 +29,13 @@ Protected Class ZipReader
 		  Me.Constructor(New BinaryStream(mData), Force)
 		End Sub
 	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Count() As UInt32
+		  Return mDirectoryFooter.ThisRecordCount
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close
