@@ -146,22 +146,22 @@ Protected Class ZipReader
 		  Dim root As FolderItem
 		  Dim cleanup As Boolean
 		  Dim ok As Boolean = True
-		  Dim logstream As TextOutputStream
-		  If LogFile <> Nil Then logstream = TextOutputStream.Create(LogFile)
+		  Dim reccount, errcount As Integer
+		  Dim log As TextOutputStream
+		  If LogFile <> Nil Then log = TextOutputStream.Create(LogFile)
+		  If log <> Nil Then log.WriteLine("Beginning recovery of: " + ZipFile.AbsolutePath)
 		  If RecoveryFile.Directory Then
 		    root = RecoveryFile
+		    If log <> Nil Then log.WriteLine("Extract to " + root.AbsolutePath)
 		  Else
 		    Static uniq As Integer = Ticks
 		    root = SpecialFolder.Temporary.Child(ZipFile.Name + "_extract" + Hex(uniq))
 		    uniq = uniq + 1
 		    cleanup = True
 		    root.CreateAsFolder
+		    If log <> Nil Then log.WriteLine("Recover to " + RecoveryFile.AbsolutePath)
 		  End If
 		  
-		  If logstream <> Nil Then
-		    logstream.WriteLine("Beginning recovery of: " + ZipFile.AbsolutePath)
-		    logstream.WriteLine("Extract to " + root.AbsolutePath)
-		  End If
 		  Dim items() As FolderItem
 		  Try
 		    Dim bs As BinaryStream = BinaryStream.Open(ZipFile)
@@ -169,7 +169,7 @@ Protected Class ZipReader
 		    Try
 		      zr = New ZipReader(bs, True)
 		    Catch err
-		      If logstream <> Nil Then logstream.WriteLine("Repair is impossible: " + err.Message)
+		      If log <> Nil Then log.WriteLine("Repair is impossible: " + err.Message)
 		      Return False
 		    End Try
 		    
@@ -177,21 +177,28 @@ Protected Class ZipReader
 		    If Not RecoveryFile.Directory Then writer = New ZipWriter
 		    
 		    Do Until zr.LastError = ERR_END_ARCHIVE
-		      If logstream <> Nil Then logstream.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.CurrentIndex) + "/" + Str(zr.mStream.Position) + ")")
+		      If log <> Nil Then log.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.CurrentIndex) + "/" + Str(zr.mStream.Position) + ")")
 		      Dim f As FolderItem = CreateTree(root, zr.CurrentName)
 		      Dim out As BinaryStream
 		      If Not f.Directory Then out = BinaryStream.Create(f, True)
 		      items.Insert(0, f)
 		      Try
 		        Call zr.ReadEntry(out)
+		        reccount = reccount + 1
 		      Catch err
-		        If logstream <> Nil Then logstream.WriteLine(" Error: " + err.Message)
+		        If log <> Nil Then log.WriteLine(" Error: " + err.Message)
+		        errcount = errcount + 1
 		      Finally
 		        If out <> Nil Then out.Close
 		      End Try
 		      If writer <> Nil Then Call writer.AppendEntry(f, root)
 		      If Not (SeekSignature(bs, ZIP_ENTRY_HEADER_SIGNATURE) And zr.ReadHeader) Then Exit Do
 		    Loop
+		    
+		    If log <> Nil Then
+		      log.WriteLine("---Completed: " + Format(reccount + errcount, "###,###,##0") + _
+		      " processed(" + Format(reccount, "###,###,##0") + " OK, " + Format(errcount, "###,###,##0") + " errors.)---")
+		    End If
 		    
 		    If writer <> Nil Then
 		      writer.Commit(RecoveryFile, True)
@@ -207,7 +214,7 @@ Protected Class ZipReader
 		        items.Pop.Delete
 		      Loop
 		      root.Delete
-		      If logstream <> Nil Then logstream.Close
+		      If log <> Nil Then log.Close
 		    End If
 		  End Try
 		  Return ok
