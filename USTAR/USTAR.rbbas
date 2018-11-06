@@ -257,13 +257,13 @@ Protected Module USTAR
 		  Dim bs As Readable
 		  Dim IsTAR As Boolean
 		  Try
-		    If TargetFile.IsGZipped Then
-		      bs = zlib.ZStream.Open(TargetFile, zlib.GZIP_ENCODING)
-		    ElseIf TargetFile.IsBZipped Then
-		      bs = BZip2.BZ2Stream.Open(TargetFile)
-		    Else
-		      bs = BinaryStream.Open(TargetFile)
-		    End If
+		    #If USE_ZLIB Then
+		      If TargetFile.IsGZipped Then bs = zlib.ZStream.Open(TargetFile, zlib.GZIP_ENCODING)
+		    #endif
+		    #If USE_BZIP Then
+		      If bs = Nil And TargetFile.IsBZipped Then bs = BZip2.BZ2Stream.Open(TargetFile)
+		    #endif
+		    If bs = Nil Then bs = BinaryStream.Open(TargetFile)
 		    IsTAR = bs.IsTarred
 		    
 		  Catch
@@ -271,8 +271,13 @@ Protected Module USTAR
 		  Finally
 		    If bs <> Nil Then
 		      If bs IsA BinaryStream Then BinaryStream(bs).Close
-		      If bs IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(bs).Close
-		      If bs IsA zlib.ZStream Then zlib.ZStream(bs).Close
+		      #If USE_ZLIB Then
+		        If bs IsA zlib.ZStream Then zlib.ZStream(bs).Close
+		      #endif
+		      #If USE_BZIP Then
+		        If bs IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(bs).Close
+		      #endif
+		      
 		    End If
 		  End Try
 		  Return IsTAR
@@ -287,22 +292,25 @@ Protected Module USTAR
 		  Dim bs As Readable
 		  Dim IsTAR As Boolean
 		  Try
-		    If Target.IsGZipped Then
-		      bs = New zlib.ZStream(Target)
-		    ElseIf Target.IsBZipped Then
-		      bs = New BZip2.BZ2Stream(Target)
-		    Else
-		      bs = New BinaryStream(Target)
-		    End If
+		    #If USE_ZLIB Then
+		      If Target.IsGZipped Then bs = New zlib.ZStream(Target)
+		    #endif
+		    #If USE_BZIP Then
+		      If bs = Nil And Target.IsBZipped Then bs = New BZip2.BZ2Stream(Target)
+		    #endif
+		    If bs = Nil Then bs = New BinaryStream(Target)
 		    IsTAR = bs.IsTarred()
 		  Catch
 		    IsTAR = False
 		  Finally
-		    If bs <> Nil Then 
-		      If bs IsA BinaryStream Then BinaryStream(bs).Close
-		      If bs IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(bs).Close
+		    If bs IsA BinaryStream Then BinaryStream(bs).Close
+		    #If USE_ZLIB Then
 		      If bs IsA zlib.ZStream Then zlib.ZStream(bs).Close
-		    End If
+		    #endif
+		    #If USE_BZIP Then
+		      If bs IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(bs).Close
+		    #endif
+		    
 		  End Try
 		  Return IsTAR
 		End Function
@@ -378,13 +386,13 @@ Protected Module USTAR
 		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a TAR file to the ExtractTo directory
 		  Dim ts As Readable
-		  If TarFile.IsGZipped Then
-		    ts = zlib.ZStream.Open(TarFile, zlib.GZIP_ENCODING)
-		  ElseIf TarFile.IsBZipped Then
-		    ts = BZip2.BZ2Stream.Open(TarFile)
-		  Else
-		    ts = BinaryStream.Open(TarFile)
-		  End If
+		  #If USE_ZLIB Then
+		    If TarFile.IsGZipped Then ts = zlib.ZStream.Open(TarFile, zlib.GZIP_ENCODING)
+		  #endif
+		  #If USE_BZIP Then
+		    If ts = Nil And TarFile.IsBZipped Then ts = BZip2.BZ2Stream.Open(TarFile)
+		  #endif
+		  If ts = Nil Then ts = BinaryStream.Open(TarFile)
 		  Dim tar As New TarReader(ts)
 		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
 		  Dim bs As BinaryStream
@@ -398,8 +406,13 @@ Protected Module USTAR
 		  Loop Until Not tar.MoveNext(bs)
 		  If bs <> Nil Then bs.Close
 		  If ts IsA BinaryStream Then BinaryStream(ts).Close
-		  If ts IsA zlib.ZStream Then zlib.ZStream(ts).Close
-		  If ts IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(ts).Close
+		  #If USE_ZLIB Then
+		    If ts IsA zlib.ZStream Then zlib.ZStream(ts).Close
+		  #endif
+		  #If USE_BZIP Then
+		    If ts IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(ts).Close
+		  #endif
+		  
 		  Return fs
 		End Function
 	#tag EndMethod
@@ -450,17 +463,25 @@ Protected Module USTAR
 		  Dim t As Writeable
 		  If CompressionLevel > 0 And CompressionLevel < 10 Then
 		    If NthField(OutputFile.Name, ".", CountFields(OutputFile.Name, ".")) = "bz2" Then
-		      t = BZip2.BZ2Stream.Create(OutputFile, CompressionLevel)
+		      #If USE_BZIP Then
+		        t = BZip2.BZ2Stream.Create(OutputFile, CompressionLevel)
+		      #endif
 		    Else
-		      t = zlib.ZStream.Create(OutputFile, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, Overwrite, zlib.GZIP_ENCODING)
+		      #If USE_ZLIB Then
+		        t = zlib.ZStream.Create(OutputFile, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, Overwrite, zlib.GZIP_ENCODING)
+		      #endif
 		    End If
-		  Else
-		    t = BinaryStream.Create(OutputFile, False)
 		  End If
+		  If t = Nil Then t = BinaryStream.Create(OutputFile, Overwrite)
 		  tar.Commit(t)
 		  If t IsA BinaryStream Then BinaryStream(t).Close
-		  If t IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(t).Close
-		  If t IsA zlib.ZStream Then zlib.ZStream(t).Close
+		  #If USE_ZLIB Then
+		    If t IsA zlib.ZStream Then zlib.ZStream(t).Close
+		  #endif
+		  #If USE_BZIP Then
+		    If t IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(t).Close
+		  #endif
+		  
 		  Return True
 		End Function
 	#tag EndMethod
@@ -553,6 +574,12 @@ Protected Module USTAR
 	#tag EndConstant
 
 	#tag Constant, Name = TUWRITE, Type = Double, Dynamic = False, Default = \"&o00200", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = USE_BZIP, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = USE_ZLIB, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = XGLTYPE, Type = String, Dynamic = False, Default = \"g", Scope = Private
