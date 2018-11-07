@@ -174,7 +174,11 @@ Protected Class TapeArchive
 		    Try
 		      If i = 148 Then
 		        i = 156
-		        chksum = chksum + UInt32(32 * 8) ' 8 spaces
+		        #If Target32Bit Then
+		          chksum = chksum + UInt32(32 * 8) ' 8 spaces
+		        #Else
+		          chksum = chksum + (32 * 8) ' 8 spaces ' FIXME
+		        #endif
 		      End If
 		      Dim b As UInt8 = tmpmb.UInt8Value(i)
 		      chksum = chksum + b
