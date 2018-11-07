@@ -38,7 +38,7 @@ Protected Class ZipWriter
 		  AppendEntry(Path, bs, bs.Length, ModifyDate)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
-		  d.Value("$rr") = Data
+		  d.Value(META_MEMORY) = Data
 		End Sub
 	#tag EndMethod
 
@@ -46,14 +46,14 @@ Protected Class ZipWriter
 		Sub AppendEntry(Path As String, Data As Readable, Length As UInt32, ModifyDate As Date = Nil)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
-		  d.Value("$r") = Data
-		  d.Value("$s") = Length
+		  d.Value(META_STREAM) = Data
+		  d.Value(META_LENGTH) = Length
 		  If ModifyDate = Nil Then ModifyDate = New Date
-		  d.Value("$t") = ModifyDate
-		  If d.Value("$d") = True Then
-		    d.Value("$l") = 0
+		  d.Value(META_MODTIME) = ModifyDate
+		  If d.Value(META_DIR) = True Then
+		    d.Value(META_LEVEL) = 0
 		  Else
-		    d.Value("$l") = CompressionLevel
+		    d.Value(META_LEVEL) = CompressionLevel
 		  End If
 		End Sub
 	#tag EndMethod
@@ -73,17 +73,12 @@ Protected Class ZipWriter
 		  
 		  Dim c As Integer = UBound(paths)
 		  For i As Integer = 0 To c
-		    Dim length As UInt32 = lengths(i)
 		    Dim path As String = paths(i)
-		    path = ConvertEncoding(path, Encodings.UTF8)
 		    Dim source As Readable = sources(i)
-		    Dim modtime As Date = modtimes(i)
+		    path = ConvertEncoding(path, Encodings.UTF8)
 		    If dirstatus(i) And Right(path, 1) <> "/" Then path = path + "/"
 		    Dim dirheader As ZipDirectoryHeader
-		    Dim extra As MemoryBlock = extras(i)
-		    Dim level As UInt32 = levels(i)
-		    Dim method As UInt32 = methods(i)
-		    WriteEntryHeader(WriteTo, path, length, source, modtime, dirheader, extra, level, method)
+		    WriteEntryHeader(WriteTo, path, lengths(i), source, modtimes(i), dirheader, extras(i), levels(i), methods(i))
 		    directory.Append(dirheader)
 		    If source IsA BinaryStream Then BinaryStream(source).Position = 0 ' be kind, rewind
 		  Next
@@ -103,7 +98,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
-		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)
+		  mEntries = New Dictionary(META_PATH:"$ROOT", META_PARENT:Nil, META_DIR:True)
 		  #If USE_ZLIB Then
 		    CompressionLevel = zlib.Z_DEFAULT_COMPRESSION
 		  #Else
@@ -116,9 +111,9 @@ Protected Class ZipWriter
 		Sub DeleteEntry(Path As String)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  Dim n As String = d.Lookup("$n", "$INVALID")
+		  Dim n As String = d.Lookup(META_PATH, "$INVALID")
 		  If n = "$INVALID" Then Return
-		  Dim w As WeakRef = d.Lookup("$p", Nil)
+		  Dim w As WeakRef = d.Lookup(META_PARENT, Nil)
 		  If w.Value IsA Dictionary Then
 		    Dim p As Dictionary = Dictionary(w.Value)
 		    p.Remove(n)
@@ -136,7 +131,7 @@ Protected Class ZipWriter
 		Sub SetEntryComment(Path As String, Comment As String)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  d.Value("$c") = ConvertEncoding(Comment, Encodings.UTF8)
+		  d.Value(META_COMMENT) = ConvertEncoding(Comment, Encodings.UTF8)
 		End Sub
 	#tag EndMethod
 
@@ -144,9 +139,9 @@ Protected Class ZipWriter
 		Sub SetEntryCompressionLevel(Path As String, CompressionLevel As Integer)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  If d.HasKey("$l") Then d.Remove("$l")
+		  If d.HasKey(META_LEVEL) Then d.Remove(META_LEVEL)
 		  If CompressionLevel >= 0 And CompressionLevel <= 9 Then
-		    d.Value("$l") = CompressionLevel
+		    d.Value(META_LEVEL) = CompressionLevel
 		  End If
 		End Sub
 	#tag EndMethod
@@ -155,14 +150,14 @@ Protected Class ZipWriter
 		Sub SetEntryCompressionMethod(Path As String, CompressionMethod As Integer)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  If d.HasKey("$m") Then d.Remove("$m")
+		  If d.HasKey(META_METHOD) Then d.Remove(META_METHOD)
 		  Select Case CompressionMethod
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
-		      d.Value("$m") = CompressionMethod
+		      d.Value(META_METHOD) = CompressionMethod
 		    #endif
 		  Case 0
-		    d.Value("$m") = CompressionMethod
+		    d.Value(META_METHOD) = CompressionMethod
 		  Else
 		    Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		  End Select
@@ -173,7 +168,7 @@ Protected Class ZipWriter
 		Sub SetEntryExtraData(Path As String, Extra As MemoryBlock)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  d.Value("$e") = Extra
+		  d.Value(META_EXTRA) = Extra
 		End Sub
 	#tag EndMethod
 
@@ -181,7 +176,7 @@ Protected Class ZipWriter
 		Sub SetEntryModificationDate(Path As String, ModDate As Date)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  d.Value("$t") = ModDate
+		  d.Value(META_MODTIME) = ModDate
 		End Sub
 	#tag EndMethod
 
@@ -305,9 +300,8 @@ Protected Class ZipWriter
 		  
 		  dataoff = Stream.Position
 		  Dim crc As UInt32
-		  Dim z As Writeable
 		  If Source <> Nil And Length > 0 Then
-		    z = GetCompressor(Method, Stream, Level)
+		    Dim z As Writeable = GetCompressor(Method, Stream, Level)
 		    If z = Nil Then Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)

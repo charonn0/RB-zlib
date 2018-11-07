@@ -5,19 +5,19 @@ Protected Module PKZip
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
-		      If item.Lookup("$d", False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, Comments, Extras, DirectoryStatus, Levels, Methods)
+		      If item.Lookup(META_DIR, False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, Comments, Extras, DirectoryStatus, Levels, Methods)
 		      Paths.Append(GetTreeParentPath(item))
-		      Lengths.Append(item.Lookup("$s", 0))
-		      ModTimes.Append(item.Value("$t"))
-		      Sources.Append(item.Value("$r"))
-		      DirectoryStatus.Append(item.Value("$d"))
-		      Extras.Append(item.Lookup("$e", Nil))
-		      Comments.Append(item.Lookup("$c", ""))
-		      Levels.Append(item.Lookup("$l", 6))
+		      Lengths.Append(item.Lookup(META_LENGTH, 0))
+		      ModTimes.Append(item.Value(META_MODTIME))
+		      Sources.Append(item.Value(META_STREAM))
+		      DirectoryStatus.Append(item.Value(META_DIR))
+		      Extras.Append(item.Lookup(META_EXTRA, Nil))
+		      Comments.Append(item.Lookup(META_COMMENT, ""))
+		      Levels.Append(item.Lookup(META_LEVEL, 6))
 		      If USE_ZLIB Then
-		        Methods.Append(item.Lookup("$m", METHOD_DEFLATED))
+		        Methods.Append(item.Lookup(META_METHOD, METHOD_DEFLATED))
 		      Else
-		        Methods.Append(item.Lookup("$m", 0))
+		        Methods.Append(item.Lookup(META_METHOD, 0))
 		      End If
 		    End If
 		  Next
@@ -161,6 +161,35 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function FindDirectoryFooter(Stream As BinaryStream) As Boolean
+		  Stream.Position = Max(0, Stream.Length - MAX_COMMENT_SIZE - MIN_ARCHIVE_SIZE)
+		  Dim last As UInt64
+		  ' a zip archive can contain other zip archives, in which case it's possible
+		  ' for there to be more than one Central Directory Footer in the file. We only
+		  ' want the "outermost" directory footer, i.e. the last one.
+		  Do Until Stream.EOF
+		    If Not SeekSignature(Stream, ZIP_DIRECTORY_FOOTER_SIGNATURE) Then
+		      If last = 0 And Stream.Length >= MIN_ARCHIVE_SIZE + MAX_COMMENT_SIZE Then Return False
+		      Stream.Position = last
+		      Return True
+		    Else
+		      last = Stream.Position
+		      Stream.Position = Stream.Position + 4
+		    End If
+		  Loop Until Stream.Position + MAX_COMMENT_SIZE + MIN_ARCHIVE_SIZE <= Stream.Length
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function FindEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
+		  If Not SeekSignature(Stream, ZIP_ENTRY_FOOTER_SIGNATURE) Then Return False
+		  If Not ReadEntryFooter(Stream, Footer) Then Return False
+		  Return footer.CompressedSize > 0
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub GetChildren(Root As FolderItem, ByRef Results() As FolderItem)
 		  Dim c As Integer = Root.Count
 		  For i As Integer = 1 To c
@@ -222,12 +251,12 @@ Protected Module PKZip
 	#tag Method, Flags = &h21
 		Private Function GetTreeParentPath(Child As Dictionary) As String
 		  Dim s() As String
-		  If Child.Value("$d") = True Then 
+		  If Child.Value(META_DIR) = True Then
 		    s.Append("")
 		  End If
-		  Do Until Child = Nil Or Child.Value("$n") = "$ROOT"
-		    s.Insert(0, Child.Value("$n"))
-		    Dim w As WeakRef = Child.Value("$p")
+		  Do Until Child = Nil Or Child.Value(META_PATH) = "$ROOT"
+		    s.Insert(0, Child.Value(META_PATH))
+		    Dim w As WeakRef = Child.Value(META_PARENT)
 		    If w = Nil Or w.Value = Nil Then
 		      Child = Nil
 		    Else
@@ -286,6 +315,84 @@ Protected Module PKZip
 		  #endif
 		  
 		  Return name
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ReadDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter) As Boolean
+		  Footer.Signature = Stream.ReadUInt32
+		  Footer.ThisDisk = Stream.ReadUInt16
+		  Footer.FirstDisk = Stream.ReadUInt16
+		  Footer.ThisRecordCount = Stream.ReadUInt16
+		  Footer.TotalRecordCount = Stream.ReadUInt16
+		  Footer.DirectorySize = Stream.ReadUInt32
+		  Footer.Offset = Stream.ReadUInt32
+		  Footer.CommentLength = Stream.ReadUInt16
+		  
+		  If Footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE And _
+		    Stream.Position + Footer.CommentLength = Stream.Length And _
+		    Footer.TotalRecordCount >= Footer.ThisRecordCount And _
+		    Footer.ThisDisk >= Footer.FirstDisk And _
+		    Stream.Position - MIN_ARCHIVE_SIZE - Footer.DirectorySize = Footer.Offset Then
+		    Return True
+		  End If
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ReadDirectoryHeader(Stream As BinaryStream, ByRef Header As ZipDirectoryHeader) As Boolean
+		  Header.Signature = Stream.ReadUInt32
+		  Header.Version = Stream.ReadUInt16
+		  Header.VersionNeeded = Stream.ReadUInt16
+		  Header.Flag = Stream.ReadUInt16
+		  Header.Method = Stream.ReadUInt16
+		  Header.ModTime = Stream.ReadUInt16
+		  Header.ModDate = Stream.ReadUInt16
+		  Header.CRC32 = Stream.ReadUInt32
+		  Header.CompressedSize = Stream.ReadUInt32
+		  Header.UncompressedSize = Stream.ReadUInt32
+		  Header.FilenameLength = Stream.ReadUInt16
+		  Header.ExtraLength = Stream.ReadUInt16
+		  Header.CommentLength = Stream.ReadUInt16
+		  Header.DiskNumber = Stream.ReadUInt16
+		  Header.InternalAttributes = Stream.ReadUInt16
+		  Header.ExternalAttributes = Stream.ReadUInt32
+		  Header.Offset = Stream.ReadUInt32
+		  
+		  Return Header.Signature = ZIP_DIRECTORY_HEADER_SIGNATURE
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ReadEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
+		  Footer.Signature = Stream.ReadUInt32
+		  Footer.CRC32 = Stream.ReadUInt32
+		  Footer.CompressedSize = Stream.ReadUInt32
+		  Footer.UncompressedSize = Stream.ReadUInt32
+		  
+		  Return Footer.Signature = ZIP_ENTRY_FOOTER_SIGNATURE
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ReadEntryHeader(Stream As BinaryStream, ByRef Header As ZipEntryHeader) As Boolean
+		  Header.Signature = Stream.ReadUInt32
+		  Header.Version = Stream.ReadUInt16
+		  Header.Flag = Stream.ReadUInt16
+		  Header.Method = Stream.ReadUInt16
+		  Header.ModTime = Stream.ReadUInt16
+		  Header.ModDate = Stream.ReadUInt16
+		  Header.CRC32 = Stream.ReadUInt32
+		  Header.CompressedSize = Stream.ReadUInt32
+		  Header.UncompressedSize = Stream.ReadUInt32
+		  Header.FilenameLength = Stream.ReadUInt16
+		  Header.ExtraLength = Stream.ReadUInt16
+		  
+		  Return Header.Signature = ZIP_ENTRY_HEADER_SIGNATURE
 		End Function
 	#tag EndMethod
 
@@ -380,13 +487,13 @@ Protected Module PKZip
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
 		      child = New Dictionary
-		      child.Value("$n") = name
-		      child.Value("$d") = True
-		      child.Value("$p") = New WeakRef(parent)
-		      child.Value("$t") = New Date
-		      child.Value("$r") = Nil
+		      child.Value(META_PATH) = name
+		      child.Value(META_DIR) = True
+		      child.Value(META_PARENT) = New WeakRef(parent)
+		      child.Value(META_MODTIME) = New Date
+		      child.Value(META_STREAM) = Nil
 		    Else
-		      child.Value("$d") = True
+		      child.Value(META_DIR) = True
 		    End If
 		    parent.Value(name) = child
 		    parent = child
@@ -397,7 +504,7 @@ Protected Module PKZip
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent), "$t":New Date, "$r":Nil)
+		      child = New Dictionary(META_PATH:name, META_DIR:false, META_PARENT:New WeakRef(parent), META_MODTIME:New Date, META_STREAM:Nil)
 		    End If
 		    parent.Value(name) = child
 		    parent = child
@@ -407,7 +514,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6) As Boolean
 		  Dim writer As New ZipWriter
 		  writer.CompressionLevel = CompressionLevel
 		  Dim c As Integer = UBound(ToArchive)
@@ -420,7 +527,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6) As Boolean
 		  Dim items() As FolderItem
 		  If ToArchive.Directory Then
 		    GetChildren(ToArchive, items)
@@ -475,6 +582,42 @@ Protected Module PKZip
 	#tag EndConstant
 
 	#tag Constant, Name = MAX_NAME_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_COMMENT, Type = String, Dynamic = False, Default = \"$c", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_DIR, Type = String, Dynamic = False, Default = \"$d", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_EXTRA, Type = String, Dynamic = False, Default = \"$e", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_LENGTH, Type = String, Dynamic = False, Default = \"$s", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_LEVEL, Type = String, Dynamic = False, Default = \"$l", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_MEMORY, Type = String, Dynamic = False, Default = \"$rr", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_METHOD, Type = String, Dynamic = False, Default = \"$m", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_MODTIME, Type = String, Dynamic = False, Default = \"$t", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_OFFSET, Type = String, Dynamic = False, Default = \"$o", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_PARENT, Type = String, Dynamic = False, Default = \"$p", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_PATH, Type = String, Dynamic = False, Default = \"$n", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_STREAM, Type = String, Dynamic = False, Default = \"$r", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Private
