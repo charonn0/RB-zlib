@@ -872,10 +872,10 @@ End
 		  mSource = SelectFolder()
 		  If mSource = Nil Then Return
 		  If UseGZipChkBx.Value Then
-		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXGzip, mSource.Name + ".tgz")
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationTarGzip, mSource.Name + ".tgz")
 		    mOption = True
 		  ElseIf UseBZip2ChkBx1.Value Then
-		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar.bz2")
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationTarBzip2, mSource.Name + ".tar.bz2")
 		    mOption = True
 		  Else
 		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar")
@@ -893,7 +893,10 @@ End
 	#tag Event
 		Sub Action()
 		  If mWorker <> Nil Then Return
-		  mSource = GetOpenFolderItem(FileTypes1.ApplicationXGzip + ";" + FileTypes1.ApplicationXTar + ";" + FileTypes1.ApplicationXBzip2)
+		  Dim types As String = FileTypes1.ApplicationXTar
+		  If zlib.IsAvailable Then types = types + ";" + FileTypes1.ApplicationTarGzip
+		  If BZip2.IsAvailable Then types = types + ";" + FileTypes1.ApplicationTarBzip2
+		  mSource = GetOpenFolderItem(types)
 		  If mSource = Nil Then Return
 		  mDestination = SelectFolder()
 		  If mDestination = Nil Then Return

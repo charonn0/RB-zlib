@@ -54,4 +54,13 @@
 		Name=application/tar+gzip
 	#tag EndFileType
 
+	#tag FileType
+		CodeName=ApplicationTarBzip2
+		Extension=.tar.bz2;.tbz2
+		Flags=&h0
+		MacCreator=
+		MacType=Bzip
+		Name=application/tar+bzip2
+	#tag EndFileType
+
 #tag EndFileTypeSet
