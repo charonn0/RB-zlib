@@ -44,7 +44,7 @@
 		MacType=Bzip
 		Name=application/x-bzip2
 	#tag EndFileType
-	
+
 	#tag FileType
 		CodeName=ApplicationTarGzip
 		Extension=.tar.gz;.tgz

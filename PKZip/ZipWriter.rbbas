@@ -52,7 +52,7 @@ Protected Class ZipWriter
 		  d.Value(META_MODTIME) = ModifyDate
 		  If d.Value(META_DIR) = True Then
 		    d.Value(META_LEVEL) = 0
-			d.Value(META_METHOD) = 0
+		    d.Value(META_METHOD) = 0
 		  Else
 		    d.Value(META_LEVEL) = CompressionLevel
 		    d.Value(META_METHOD) = CompressionMethod
@@ -169,7 +169,7 @@ Protected Class ZipWriter
 		      d.Value(META_METHOD) = CompressionMethod
 		    #endif
 		  Case 0
-			d.Value(META_METHOD) = CompressionMethod
+		    d.Value(META_METHOD) = CompressionMethod
 		  Else
 		    Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		  End Select
