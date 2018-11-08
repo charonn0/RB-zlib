@@ -235,6 +235,7 @@ Protected Module PKZip
 		  Case METHOD_BZIP2
 		    #If USE_BZIP2 Then
 		      Dim z As BZip2.BZ2Stream = BZip2.BZ2Stream.Open(Stream)
+		      z.BufferedReading = False
 		      Return z
 		    #endif
 		  End Select
