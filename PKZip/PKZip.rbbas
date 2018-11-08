@@ -522,9 +522,18 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = -1) As Boolean
 		  Dim writer As New ZipWriter
 		  writer.CompressionLevel = CompressionLevel
+		  If CompressionMethod = -1 Then
+		    #If USE_ZLIB Then
+		      CompressionMethod = METHOD_DEFLATED
+		    #ElseIf USE_BZIP2 Then
+		      CompressionMethod = METHOD_BZIP2
+		    #Else
+		      CompressionMethod = 0
+		    #endif
+		  End If
 		  writer.CompressionMethod = CompressionMethod
 		  Dim c As Integer = UBound(ToArchive)
 		  For i As Integer = 0 To c
@@ -536,7 +545,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = -1) As Boolean
 		  Dim items() As FolderItem
 		  If ToArchive.Directory Then
 		    GetChildren(ToArchive, items)
@@ -616,12 +625,6 @@ Protected Module PKZip
 	#tag Constant, Name = MAX_NAME_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = METHOD_BZIP2, Type = Double, Dynamic = False, Default = \"12", Scope = Protected
-	#tag EndConstant
-
-	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Protected
-	#tag EndConstant
-	
 	#tag Constant, Name = META_COMMENT, Type = String, Dynamic = False, Default = \"$c", Scope = Private
 	#tag EndConstant
 
@@ -658,7 +661,10 @@ Protected Module PKZip
 	#tag Constant, Name = META_STREAM, Type = String, Dynamic = False, Default = \"$r", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Private
+	#tag Constant, Name = METHOD_BZIP2, Type = Double, Dynamic = False, Default = \"12", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
