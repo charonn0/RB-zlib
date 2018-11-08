@@ -682,6 +682,11 @@ End
 		  ZipDirBtn.Enabled = Not ZipDirBtn.Enabled
 		  ZipRepairBtn.Enabled = Not ZipRepairBtn.Enabled
 		  UseRawChkBx.Enabled = Not UseRawChkBx.Enabled
+		  UseBZip2ChkBx.Enabled = Not UseBZip2ChkBx.Enabled
+		  UseBZip2ChkBx1.Enabled = Not UseBZip2ChkBx1.Enabled
+		  UseGZipChkBx.Enabled = Not UseGZipChkBx.Enabled
+		  TARDirBtn.Enabled = Not TARDirBtn.Enabled
+		  UnTarFileBtn.Enabled = Not UnTarFileBtn.Enabled
 		End Sub
 	#tag EndMethod
 
@@ -905,6 +910,7 @@ End
 		    mOption = False
 		  End If
 		  If mDestination = Nil Then Return
+		  ToggleLockUI()
 		  Self.Title = "Tarring (no feathers)..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunTAR
@@ -924,6 +930,7 @@ End
 		  mDestination = SelectFolder()
 		  If mDestination = Nil Then Return
 		  If mDestination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
+		  ToggleLockUI()
 		  Self.Title = "Untarring..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunUnTAR
