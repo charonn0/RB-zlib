@@ -672,6 +672,19 @@ End
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub ToggleLockUI()
+		  DeflateFileBtn.Enabled = Not DeflateFileBtn.Enabled
+		  GUnZipFileBtn.Enabled = Not GUnZipFileBtn.Enabled
+		  GZipFileBtn.Enabled = Not GZipFileBtn.Enabled
+		  InflateFileBtn.Enabled = Not InflateFileBtn.Enabled
+		  UnzipFileBtn.Enabled = Not UnzipFileBtn.Enabled
+		  ZipDirBtn.Enabled = Not ZipDirBtn.Enabled
+		  ZipRepairBtn.Enabled = Not ZipRepairBtn.Enabled
+		  UseRawChkBx.Enabled = Not UseRawChkBx.Enabled
+		End Sub
+	#tag EndMethod
+
 
 	#tag Property, Flags = &h21
 		Private mDestination As FolderItem
@@ -726,6 +739,7 @@ End
 		  Self.Title = "zlib Demo"
 		  mErrorCode = 0
 		  mErrorMsg = ""
+		  ToggleLockUI()
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -739,6 +753,7 @@ End
 		  If Right(name, 2) = ".z" Then name = Left(name, name.Len - 2)
 		  mDestination = GetSaveFolderItem("", name)
 		  If mDestination = Nil Then Return
+		  ToggleLockUI()
 		  mOption = UseRawChkBx.Value
 		  Self.Title = "Inflating..."
 		  mWorker = New Thread
@@ -755,6 +770,7 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationXCompress, mSource.Name + ".z")
 		  If mDestination = Nil Then Return
+		  ToggleLockUI()
 		  mOption = UseRawChkBx.Value
 		  Self.Title = "Deflating..."
 		  mWorker = New Thread
@@ -774,6 +790,7 @@ End
 		  mDestination = GetSaveFolderItem("", name)
 		  If mDestination = Nil Then Return
 		  Self.Title = "GUnZipping..."
+		  ToggleLockUI()
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunGUnZip
 		  mWorker.Run
@@ -789,6 +806,8 @@ End
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationXGzip, mSource.Name + ".gz")
 		  If mDestination = Nil Then Return
 		  Self.Title = "GZipping..."
+		  ToggleLockUI()
+		  Self.Title = "zlib Demo - GZipping..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunGZip
 		  mWorker.Run
@@ -804,6 +823,7 @@ End
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + "_repared.zip")
 		  If mDestination = Nil Then Return
 		  Self.Title = "Repairing..."
+		  ToggleLockUI()
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZipRepair
 		  mWorker.Run
@@ -820,6 +840,8 @@ End
 		  If mDestination = Nil Then Return
 		  If mDestination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
 		  Self.Title = "Unzipping..."
+		  ToggleLockUI()
+		  Self.Title = "zlib Demo - Unzipping..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunUnzip
 		  mWorker.Run
@@ -834,6 +856,7 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + ".zip")
 		  If mDestination = Nil Then Return
+		  ToggleLockUI()
 		  Self.Title = "zlib Demo - Zipping..."
 		  mOption = UseBZip2ChkBx.Value
 		  mWorker = New Thread
