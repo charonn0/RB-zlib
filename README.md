@@ -5,9 +5,9 @@
 
 ## Hilights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
-* [Read](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader) and [write](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipWriter) zip archives (.zip)
+* Read and write [zip archives](https://github.com/charonn0/RB-zlib/wiki/PKZip) (.zip)
 * Read and write [gzip](https://github.com/charonn0/RB-zlib/wiki/zlib.GZStream) (.gz) files with seek/rewind
-* [Read](https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader) and [write](https://github.com/charonn0/RB-zlib/wiki/USTAR.TarWriter) tape archive (.tar) files, with or without gzip compression.
+* Read and write [tape archive](https://github.com/charonn0/RB-zlib/wiki/zlib.TapeArchive) (.tar) files (Experimental)
 * Supports gzip, deflate, and raw deflate compressed streams
 
 ## Getting started
@@ -110,7 +110,7 @@ This example extracts a zip archive into a directory:
   Dim src As FolderItem = GetOpenFolderItem("") ' a zip file to extract
   Dim dst As FolderItem = SelectFolder() ' the destination directory
   Dim extracted() As FolderItem ' the list of extracted files/folders
-  extracted = PKZip.ReadZip(src, dst)
+  extracted = zlib.ReadZip(src, dst)
 ```
 
 This example performs an HTTP request that asks for compression, and decompresses the response:
@@ -160,5 +160,3 @@ zlib is installed by default on most Unix-like operating systems, including OS X
 Windows does not have it installed by default, you will need to ship the DLL with your application. You can use pre-built DLL available [here](http://zlib.net/zlib128-dll.zip) (Win32x86), or you can [build them yourself from source](http://zlib.net/zlib-1.2.8.tar.gz). 
 
 RB-zlib will raise a PlatformNotSupportedException when used if all required DLLs/SOs/DyLibs are not available at runtime. 
-
-The PKZip and USTAR modules may be used independently of the zlib module for reading and writing uncompressed archives. To do so set the `PKZip.USE_ZLIB` and/or `USTAR.USE_ZLIB` constants to `False`.
