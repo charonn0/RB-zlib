@@ -1000,20 +1000,25 @@ Protected Module zlib
 	#tag Method, Flags = &h1
 		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
 		  ' Extracts a TAR file to the ExtractTo directory
-		  Dim tar As TapeArchive = TapeArchive.Open(TarFile)
-		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
-		  Dim bs As BinaryStream
-		  Dim fs() As FolderItem
-		  Do
-		    If bs <> Nil Then bs.Close
-		    bs = Nil
-		    Dim g As FolderItem = CreateTree(ExtractTo, tar.CurrentName)
-		    If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
-		    fs.Append(g)
-		  Loop Until Not tar.MoveNext(bs)
-		  bs.Close
-		  tar.Close
-		  Return fs
+		  #If Not USE_USTAR Then
+		    Dim tar As TapeArchive = TapeArchive.Open(TarFile)
+		    If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
+		    Dim bs As BinaryStream
+		    Dim fs() As FolderItem
+		    Do
+		      If bs <> Nil Then bs.Close
+		      bs = Nil
+		      Dim g As FolderItem = CreateTree(ExtractTo, tar.CurrentName)
+		      If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
+		      fs.Append(g)
+		    Loop Until Not tar.MoveNext(bs)
+		    bs.Close
+		    tar.Close
+		    Return fs
+		    
+		  #Else
+		    Return USTAR.ReadTar(TarFile, ExtractTo, Overwrite)
+		  #endif
 		End Function
 	#tag EndMethod
 
@@ -1087,21 +1092,26 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem) As Boolean
+		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem, Optional RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer) As Boolean
 		  ' Creates/appends a TAR file with the ToArchive FolderItems
-		  Dim tar As TapeArchive
-		  If OutputFile.Exists Then
-		    tar = TapeArchive.Open(OutputFile)
-		  Else
-		    tar = TapeArchive.Create(OutputFile)
-		  End If
-		  For i As Integer = 0 To UBound(ToArchive)
-		    If Not tar.AppendFile(ToArchive(i)) Then Return False
-		  Next
-		  tar.Close
-		  Return True
-		  
-		  
+		  #If Not USE_USTAR Then
+		    #pragma Unused RelativeRoot
+		    #pragma Unused Overwrite
+		    #pragma Unused CompressionLevel
+		    Dim tar As TapeArchive
+		    If OutputFile.Exists Then
+		      tar = TapeArchive.Open(OutputFile)
+		    Else
+		      tar = TapeArchive.Create(OutputFile)
+		    End If
+		    For i As Integer = 0 To UBound(ToArchive)
+		      If Not tar.AppendFile(ToArchive(i)) Then Return False
+		    Next
+		    tar.Close
+		    Return True
+		  #Else
+		    Return USTAR.WriteTar(ToArchive, OutputFile, RelativeRoot, Overwrite, CompressionLevel)
+		  #endif
 		End Function
 	#tag EndMethod
 
@@ -1233,6 +1243,9 @@ Protected Module zlib
 	#tag EndConstant
 
 	#tag Constant, Name = USE_PKZIP, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = USE_USTAR, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = zlib1, Type = String, Dynamic = False, Default = \"libz.so.1", Scope = Private
