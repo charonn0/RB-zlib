@@ -1,6 +1,12 @@
 #tag Class
 Protected Class TarReader
 	#tag Method, Flags = &h0
+		Sub Close()
+		  If mStream <> Nil Then mStream = Nil
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(TARStream As Readable)
 		  ' Constructs a TARStream from any Readable object.
 		  mStream = TARStream
@@ -18,8 +24,7 @@ Protected Class TarReader
 		Function MoveNext(ExtractTo As Writeable = Nil) As Boolean
 		  ' Extracts the current entry into ExtractTo, and queues the next extry.
 		  
-		  If Not ReadEntry(ExtractTo) Then Return False
-		  Return ReadHeader()
+		  Return ReadEntry(ExtractTo) And ReadHeader()
 		End Function
 	#tag EndMethod
 

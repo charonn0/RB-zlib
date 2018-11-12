@@ -55,7 +55,7 @@ Protected Module USTAR
 		    Try
 		      If i = 148 Then
 		        i = 156
-		        chksum = chksum + UInt32(32 * 8) ' 8 spaces
+		        chksum = chksum + (32 * 8) ' 8 spaces
 		      End If
 		      Dim b As UInt8 = TarHeader.UInt8Value(i)
 		      chksum = chksum + b
