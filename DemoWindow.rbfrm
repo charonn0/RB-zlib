@@ -32,7 +32,9 @@ Begin Window DemoWindow
       Mode            =   0
       Period          =   1
       Scope           =   0
+      TabIndex        =   0
       TabPanelIndex   =   0
+      TabStop         =   True
       Top             =   -14
       Width           =   32
    End
@@ -63,7 +65,7 @@ Begin Window DemoWindow
       TextUnit        =   0
       Top             =   -1
       Underline       =   ""
-      Value           =   1
+      Value           =   3
       Visible         =   True
       Width           =   221
       Begin PushButton InflateFileBtn
@@ -315,6 +317,38 @@ Begin Window DemoWindow
          Visible         =   True
          Width           =   97
       End
+      Begin CheckBox UseBZip2ChkBx
+         AutoDeactivate  =   True
+         Bold            =   ""
+         Caption         =   "Use BZip2"
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   62
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   ""
+         LockRight       =   ""
+         LockTop         =   ""
+         Scope           =   0
+         State           =   0
+         TabIndex        =   3
+         TabPanelIndex   =   3
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   102
+         Underline       =   ""
+         Value           =   False
+         Visible         =   True
+         Width           =   100
+      End
       Begin CheckBox UseGZipChkBx
          AutoDeactivate  =   True
          Bold            =   ""
@@ -408,6 +442,38 @@ Begin Window DemoWindow
          Underline       =   ""
          Visible         =   True
          Width           =   97
+      End
+      Begin CheckBox UseBZip2ChkBx1
+         AutoDeactivate  =   True
+         Bold            =   ""
+         Caption         =   "Use BZip2"
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   60
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   ""
+         LockRight       =   ""
+         LockTop         =   ""
+         Scope           =   0
+         State           =   0
+         TabIndex        =   3
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   103
+         Underline       =   ""
+         Value           =   False
+         Visible         =   True
+         Width           =   100
       End
    End
 End
@@ -538,6 +604,12 @@ End
 		  mErrorMsg = err.Message
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
+		Exception err As BZip2.BZip2Exception
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
 		Exception err As PKZip.ZipException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
@@ -549,10 +621,20 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = PKZip.WriteZip(mSource, mDestination)
+		  If Not mOption Then
+		    mResult = PKZip.WriteZip(mSource, mDestination)
+		  Else
+		    mResult = PKZip.WriteZip(mSource, mDestination, False, BZip2.BZ_DEFAULT_COMPRESSION, PKZip.METHOD_BZIP2)
+		  End If
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As BZip2.BZip2Exception
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
@@ -578,6 +660,12 @@ End
 		  mErrorMsg = err.Message
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
+		Exception err As BZip2.BZip2Exception
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
 		Exception err As PKZip.ZipException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
@@ -596,6 +684,8 @@ End
 		  ZipDirBtn.Enabled = Not ZipDirBtn.Enabled
 		  ZipRepairBtn.Enabled = Not ZipRepairBtn.Enabled
 		  UseRawChkBx.Enabled = Not UseRawChkBx.Enabled
+		  UseBZip2ChkBx.Enabled = Not UseBZip2ChkBx.Enabled
+		  UseBZip2ChkBx1.Enabled = Not UseBZip2ChkBx1.Enabled
 		  UseGZipChkBx.Enabled = Not UseGZipChkBx.Enabled
 		  TARDirBtn.Enabled = Not TARDirBtn.Enabled
 		  UnTarFileBtn.Enabled = Not UnTarFileBtn.Enabled
@@ -775,9 +865,17 @@ End
 		  If mDestination = Nil Then Return
 		  ToggleLockUI()
 		  Self.Title = "zlib Demo - Zipping..."
+		  mOption = UseBZip2ChkBx.Value
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZip
 		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UseBZip2ChkBx
+	#tag Event
+		Sub Open()
+		  Me.Enabled = BZip2.IsAvailable
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -785,6 +883,15 @@ End
 	#tag Event
 		Sub Open()
 		  Me.Enabled = zlib.IsAvailable
+		End Sub
+	#tag EndEvent
+	#tag Event
+		Sub Action()
+		  If Not mLockUI Then
+		    mLockUI = True
+		    UseBZip2ChkBx1.Value = False
+		    mLockUI = False
+		  End If
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -796,6 +903,9 @@ End
 		  If mSource = Nil Then Return
 		  If UseGZipChkBx.Value Then
 		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationTarGzip, mSource.Name + ".tgz")
+		    mOption = True
+		  ElseIf UseBZip2ChkBx1.Value Then
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationTarBzip2, mSource.Name + ".tar.bz2")
 		    mOption = True
 		  Else
 		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar")
@@ -816,6 +926,7 @@ End
 		  If mWorker <> Nil Then Return
 		  Dim types As String = FileTypes1.ApplicationXTar
 		  If zlib.IsAvailable Then types = types + ";" + FileTypes1.ApplicationTarGzip
+		  If BZip2.IsAvailable Then types = types + ";" + FileTypes1.ApplicationTarBzip2
 		  mSource = GetOpenFolderItem(types)
 		  If mSource = Nil Then Return
 		  mDestination = SelectFolder()
@@ -826,6 +937,22 @@ End
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunUnTAR
 		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UseBZip2ChkBx1
+	#tag Event
+		Sub Open()
+		  Me.Enabled = BZip2.IsAvailable
+		End Sub
+	#tag EndEvent
+	#tag Event
+		Sub Action()
+		  If Not mLockUI Then
+		    mLockUI = True
+		    UseGZipChkBx.Value = False
+		    mLockUI = False
+		  End If
 		End Sub
 	#tag EndEvent
 #tag EndEvents

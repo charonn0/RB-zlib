@@ -671,7 +671,7 @@ Protected Module PKZip
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = USE_BZIP2, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
+	#tag Constant, Name = USE_BZIP2, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = USE_ZLIB, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private

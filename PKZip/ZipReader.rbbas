@@ -428,6 +428,7 @@ Protected Class ZipReader
 			Name="ArchiveComment"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="CompressionLevel"
@@ -443,6 +444,7 @@ Protected Class ZipReader
 			Name="CurrentName"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
