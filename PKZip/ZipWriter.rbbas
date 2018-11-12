@@ -2,7 +2,7 @@
 Protected Class ZipWriter
 	#tag Method, Flags = &h0
 		Sub AppendDirectory(Entry As FolderItem, RelativeRoot As FolderItem = Nil)
-		  If Not Entry.Directory Then 
+		  If Not Entry.Directory Then
 		    Call AppendEntry(Entry, RelativeRoot)
 		    Return
 		  End If
@@ -362,6 +362,21 @@ Protected Class ZipWriter
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="ArchiveComment"
+			Group="Behavior"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="CompressionLevel"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="CompressionMethod"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true

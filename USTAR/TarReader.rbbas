@@ -33,7 +33,7 @@ Protected Class TarReader
 
 	#tag Method, Flags = &h1
 		Protected Function ReadBlock() As MemoryBlock
-		  If mStreamPosition Mod BLOCK_SIZE <> 0 Then 
+		  If mStreamPosition Mod BLOCK_SIZE <> 0 Then
 		    mLastError = ERR_MISALIGNED
 		    Return Nil
 		  End If
@@ -253,11 +253,17 @@ Protected Class TarReader
 			Name="CurrentName"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="CurrentOwner"
 			Group="Behavior"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="CurrentType"
+			Group="Behavior"
+			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"

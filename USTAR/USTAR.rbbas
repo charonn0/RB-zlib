@@ -576,7 +576,7 @@ Protected Module USTAR
 	#tag Constant, Name = TUWRITE, Type = Double, Dynamic = False, Default = \"&o00200", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = USE_BZIP, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
+	#tag Constant, Name = USE_BZIP, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = USE_ZLIB, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private

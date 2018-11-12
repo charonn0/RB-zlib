@@ -72,7 +72,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = -1) As UInt32
+		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = - 1) As UInt32
 		  #If USE_ZLIB Then
 		    Return zlib.CRC32(Data, LastCRC, DataSize)
 		  #Else
@@ -462,7 +462,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h1
 		Protected Function TestZip(ZipFile As FolderItem) As Boolean
-		  ' Tests a ZIP file 
+		  ' Tests a ZIP file
 		  
 		  Dim zip As ZipReader
 		  Try
@@ -509,7 +509,7 @@ Protected Module PKZip
 		  Next
 		  
 		  Dim name As String = NormalizeFilename(s(bound))
-		  If name <> "" Then 
+		  If name <> "" Then
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
@@ -523,7 +523,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = -1) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
 		  Dim writer As New ZipWriter
 		  writer.CompressionLevel = CompressionLevel
 		  If CompressionMethod = -1 Then
@@ -546,7 +546,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = -1) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
 		  Dim items() As FolderItem
 		  If ToArchive.Directory Then
 		    GetChildren(ToArchive, items)
@@ -671,7 +671,7 @@ Protected Module PKZip
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = USE_BZIP2, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
+	#tag Constant, Name = USE_BZIP2, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = USE_ZLIB, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
