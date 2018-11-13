@@ -8,7 +8,7 @@ Protected Class TarWriter
 		  End If
 		  
 		  If RelativeRoot = Nil Then RelativeRoot = Entry
-		  Dim entries() As FolderItem
+		  Dim entries() As FolderItem = Array(Entry)
 		  GetChildren(Entry, entries)
 		  Dim c As Integer = UBound(entries)
 		  For i As Integer = 0 To c
