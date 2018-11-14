@@ -1483,19 +1483,19 @@ Protected Module zlib
 
 	#tag Structure, Name = z_stream64, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)), Attributes = \"StructureAlignment \x3D 8"
 		next_in as Ptr
-		  avail_in as UInt32
-		  total_in as UInt32
+		  avail_in as UInt64
+		  total_in as UInt64
 		  next_out as Ptr
-		  avail_out as UInt32
-		  total_out as UInt32
+		  avail_out as UInt64
+		  total_out as UInt64
 		  msg as Ptr
 		  internal_state as Ptr
 		  zalloc as Ptr
 		  zfree as Ptr
 		  opaque as Ptr
-		  data_type as Int32
-		  adler as UInt32
-		reserved as UInt32
+		  data_type as Int64
+		  adler as UInt64
+		reserved as UInt64
 	#tag EndStructure
 
 
