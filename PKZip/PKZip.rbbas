@@ -189,8 +189,8 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function FormatError(ErrorCode As Integer, Optional Encoding As TextEncoding) As String
+	#tag Method, Flags = &h1
+		Protected Function FormatError(ErrorCode As Integer, Optional Encoding As TextEncoding) As String
 		  If Encoding = Nil Then Encoding = Encodings.UTF8
 		  Select Case ErrorCode
 		  Case ERR_END_ARCHIVE
