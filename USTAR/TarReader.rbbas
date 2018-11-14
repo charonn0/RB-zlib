@@ -113,7 +113,7 @@ Protected Class TarReader
 		  Loop
 		  
 		  Dim diff As Integer = name.Size - NameLength
-		  Return name.LeftB(name.LenB - diff)
+		  Return name.LeftB(name.Size - diff)
 		End Function
 	#tag EndMethod
 
