@@ -7,7 +7,7 @@ Begin Window DemoWindow
    Frame           =   0
    FullScreen      =   False
    HasBackColor    =   False
-   Height          =   126
+   Height          =   1.33e+2
    ImplicitInstance=   True
    LiveResize      =   True
    MacProcID       =   0
@@ -23,7 +23,7 @@ Begin Window DemoWindow
    Resizeable      =   False
    Title           =   "zlib Demo"
    Visible         =   True
-   Width           =   221
+   Width           =   2.21e+2
    Begin Timer CompletionTimer
       Height          =   32
       Index           =   -2147483648
@@ -40,7 +40,7 @@ Begin Window DemoWindow
       AutoDeactivate  =   True
       Bold            =   ""
       Enabled         =   True
-      Height          =   126
+      Height          =   133
       HelpTag         =   ""
       Index           =   -2147483648
       InitialParent   =   ""
@@ -63,7 +63,7 @@ Begin Window DemoWindow
       TextUnit        =   0
       Top             =   -1
       Underline       =   ""
-      Value           =   1
+      Value           =   2
       Visible         =   True
       Width           =   221
       Begin PushButton InflateFileBtn
@@ -409,6 +409,37 @@ Begin Window DemoWindow
          Visible         =   True
          Width           =   97
       End
+      Begin PushButton ZipTestBtn
+         AutoDeactivate  =   True
+         Bold            =   ""
+         ButtonStyle     =   0
+         Cancel          =   ""
+         Caption         =   "Test zip"
+         Default         =   ""
+         Enabled         =   True
+         Height          =   22
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   62
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   ""
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   3
+         TabPanelIndex   =   3
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   101
+         Underline       =   ""
+         Visible         =   True
+         Width           =   97
+      End
    End
 End
 #tag EndWindow
@@ -587,6 +618,36 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub RunZipTest(Sender As Thread)
+		  #pragma Unused Sender
+		  'mResult = PKZip.TestZip(mSource)
+		  
+		  Try
+		    Dim zip As New PKZip.ZipReader(BinaryStream.Open(mSource))
+		    Do Until zip.LastError <> 0
+		      Dim tmp As New MemoryBlock(0)
+		      Dim nullstream As New BinaryStream(tmp)
+		      nullstream.Close
+		      Call zip.MoveNext(nullstream)
+		    Loop
+		    zip.Close
+		    mResult = (zip.LastError = PKZip.ERR_END_ARCHIVE)
+		    If Not mResult Then
+		      mErrorCode = zip.LastError
+		      mErrorMsg = PKZip.FormatError(mErrorCode)
+		    End If
+		  Catch Err
+		    mResult = False
+		    mErrorCode = Err.ErrorNumber
+		    mErrorMsg = Err.Message
+		  End Try
+		  
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub ToggleLockUI()
 		  DeflateFileBtn.Enabled = Not DeflateFileBtn.Enabled
 		  GUnZipFileBtn.Enabled = Not GUnZipFileBtn.Enabled
@@ -599,6 +660,7 @@ End
 		  UseGZipChkBx.Enabled = Not UseGZipChkBx.Enabled
 		  TARDirBtn.Enabled = Not TARDirBtn.Enabled
 		  UnTarFileBtn.Enabled = Not UnTarFileBtn.Enabled
+		  ZipTestBtn.Enabled = Not ZipTestBtn.Enabled
 		End Sub
 	#tag EndMethod
 
@@ -825,6 +887,20 @@ End
 		  Self.Title = "Untarring..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunUnTAR
+		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events ZipTestBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  mSource = GetOpenFolderItem(FileTypes1.ApplicationZip)
+		  If mSource = Nil Then Return
+		  Self.Title = "Testing..."
+		  ToggleLockUI()
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunZipTest
 		  mWorker.Run
 		End Sub
 	#tag EndEvent
