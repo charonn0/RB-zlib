@@ -189,6 +189,32 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function FormatError(ErrorCode As Integer, Optional Encoding As TextEncoding) As String
+		  If Encoding = Nil Then Encoding = Encodings.UTF8
+		  Select Case ErrorCode
+		  Case ERR_END_ARCHIVE
+		    Return DefineEncoding("The archive contains no further entries.", Encoding)
+		  Case ERR_INVALID_ENTRY
+		    Return DefineEncoding("The archive entry is corrupt.", Encoding)
+		  Case ERR_NOT_ZIPPED
+		    Return DefineEncoding("The archive is not zipped.", Encoding)
+		  Case ERR_UNSUPPORTED_COMPRESSION
+		    Return DefineEncoding("The archive entry uses a non-standard compression algorithm.", Encoding)
+		  Case ERR_CHECKSUM_MISMATCH
+		    Return DefineEncoding("The archive entry failed verification.", Encoding)
+		  Case ERR_INVALID_NAME
+		    Return DefineEncoding("The archive entry has an illegal file name.", Encoding)
+		  Case ERR_TOO_LARGE
+		    Return DefineEncoding("The file is too large for the zip archive format.", Encoding)
+		  Case ERR_SIZE_REQUIRED
+		    Return DefineEncoding("This operation cannot be perfomed on an unbounded memory block.", Encoding)
+		  Else
+		    Return DefineEncoding("Unknown error.", Encoding)
+		  End Select
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub GetChildren(Root As FolderItem, ByRef Results() As FolderItem)
 		  Dim c As Integer = Root.Count

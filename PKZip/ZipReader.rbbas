@@ -223,7 +223,7 @@ Protected Class ZipReader
 		        Call zr.ReadEntry(out)
 		        reccount = reccount + 1
 		      Catch err
-		        If log <> Nil Then log.WriteLine(" Error: " + err.Message)
+		        If log <> Nil Then log.WriteLine(" Error: " + ReplaceLineEndings(err.Message, " " + EndOfLine))
 		        errcount = errcount + 1
 		      Finally
 		        If out <> Nil Then out.Close
