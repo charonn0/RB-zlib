@@ -72,7 +72,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = -1) As UInt32
+		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = - 1) As UInt32
 		  #If USE_ZLIB Then
 		    Return zlib.CRC32(Data, LastCRC, DataSize)
 		  #Else
@@ -189,6 +189,32 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function FormatError(ErrorCode As Integer, Optional Encoding As TextEncoding) As String
+		  If Encoding = Nil Then Encoding = Encodings.UTF8
+		  Select Case ErrorCode
+		  Case ERR_END_ARCHIVE
+		    Return DefineEncoding("The archive contains no further entries.", Encoding)
+		  Case ERR_INVALID_ENTRY
+		    Return DefineEncoding("The archive entry is corrupt.", Encoding)
+		  Case ERR_NOT_ZIPPED
+		    Return DefineEncoding("The archive is not zipped.", Encoding)
+		  Case ERR_UNSUPPORTED_COMPRESSION
+		    Return DefineEncoding("The archive entry uses a non-standard compression algorithm.", Encoding)
+		  Case ERR_CHECKSUM_MISMATCH
+		    Return DefineEncoding("The archive entry failed verification.", Encoding)
+		  Case ERR_INVALID_NAME
+		    Return DefineEncoding("The archive entry has an illegal file name.", Encoding)
+		  Case ERR_TOO_LARGE
+		    Return DefineEncoding("The file is too large for the zip archive format.", Encoding)
+		  Case ERR_SIZE_REQUIRED
+		    Return DefineEncoding("This operation cannot be perfomed on an unbounded memory block.", Encoding)
+		  Else
+		    Return DefineEncoding("Unknown error.", Encoding)
+		  End Select
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub GetChildren(Root As FolderItem, ByRef Results() As FolderItem)
 		  Dim c As Integer = Root.Count
@@ -202,14 +228,19 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetCompressor(Method As UInt32, Stream As Writeable, CompressionLevel As UInt32) As Writeable
-		  If Method = 0 Then Return Stream
 		  Select Case Method
+		  Case METHOD_NONE
+		    Return Stream
+		    
 		  Case METHOD_DEFLATED
-		    If CompressionLevel = 0 Then Return Stream
 		    #If USE_ZLIB Then
 		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, zlib.RAW_ENCODING)
 		    #endif
 		    
+		  Case METHOD_BZIP2
+		    #If USE_BZIP2 Then
+		      Return BZip2.BZ2Stream.Create(Stream, CompressionLevel)
+		    #endif
 		  End Select
 		  
 		  Return Nil
@@ -219,7 +250,7 @@ Protected Module PKZip
 	#tag Method, Flags = &h21
 		Private Function GetDecompressor(Method As UInt32, Stream As Readable) As Readable
 		  Select Case Method
-		  Case 0 ' store
+		  Case METHOD_NONE
 		    Return Stream
 		    
 		  Case METHOD_DEFLATED
@@ -229,6 +260,12 @@ Protected Module PKZip
 		      Return z
 		    #endif
 		    
+		  Case METHOD_BZIP2
+		    #If USE_BZIP2 Then
+		      Dim z As BZip2.BZ2Stream = BZip2.BZ2Stream.Open(Stream)
+		      z.BufferedReading = False
+		      Return z
+		    #endif
 		  End Select
 		  
 		  Return Nil
@@ -453,7 +490,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h1
 		Protected Function TestZip(ZipFile As FolderItem) As Boolean
-		  ' Tests a ZIP file 
+		  ' Tests a ZIP file
 		  
 		  Dim zip As ZipReader
 		  Try
@@ -500,7 +537,7 @@ Protected Module PKZip
 		  Next
 		  
 		  Dim name As String = NormalizeFilename(s(bound))
-		  If name <> "" Then 
+		  If name <> "" Then
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
@@ -514,9 +551,22 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
 		  Dim writer As New ZipWriter
+		  #If DebugBuild Then
+		    writer.ArchiveComment = "Made with RB-zlib"
+		  #endif
 		  writer.CompressionLevel = CompressionLevel
+		  If CompressionMethod = -1 Then
+		    #If USE_ZLIB Then
+		      CompressionMethod = METHOD_DEFLATED
+		    #ElseIf USE_BZIP2 Then
+		      CompressionMethod = METHOD_BZIP2
+		    #Else
+		      CompressionMethod = 0
+		    #endif
+		  End If
+		  writer.CompressionMethod = CompressionMethod
 		  Dim c As Integer = UBound(ToArchive)
 		  For i As Integer = 0 To c
 		    Call writer.AppendEntry(ToArchive(i), RelativeRoot)
@@ -527,16 +577,39 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
 		  Dim items() As FolderItem
 		  If ToArchive.Directory Then
 		    GetChildren(ToArchive, items)
 		  Else
 		    items.Append(ToArchive)
 		  End If
-		  Return WriteZip(items, OutputFile, ToArchive, Overwrite, CompressionLevel)
+		  Return WriteZip(items, OutputFile, ToArchive, Overwrite, CompressionLevel, CompressionMethod)
 		End Function
 	#tag EndMethod
+
+
+	#tag Note, Name = Copying
+		RB-PKZip (https://github.com/charonn0/RB-zlib)
+		
+		Copyright (c)2018 Andrew Lambert, all rights reserved.
+		
+		 Permission to use, copy, modify, and distribute this software for any purpose
+		 with or without fee is hereby granted, provided that the above copyright
+		 notice and this permission notice appear in all copies.
+		 
+		    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN
+		    NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+		    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+		    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+		    OR OTHER DEALINGS IN THE SOFTWARE.
+		 
+		 Except as contained in this notice, the name of a copyright holder shall not
+		 be used in advertising or otherwise to promote the sale, use or other dealings
+		 in this Software without prior written authorization of the copyright holder.
+	#tag EndNote
 
 
 	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"16384", Scope = Private
@@ -620,10 +693,19 @@ Protected Module PKZip
 	#tag Constant, Name = META_STREAM, Type = String, Dynamic = False, Default = \"$r", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Private
+	#tag Constant, Name = METHOD_BZIP2, Type = Double, Dynamic = False, Default = \"12", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = METHOD_NONE, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = USE_BZIP2, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = USE_ZLIB, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private

@@ -10,7 +10,7 @@
 
 	#tag FileType
 		CodeName=ApplicationXGzip
-		Extension=.gz;.tgz
+		Extension=.gz
 		Flags=&h0
 		MacCreator=SITx
 		MacType=Gzip
@@ -31,9 +31,36 @@
 		Extension=.zip
 		Flags=&h0
 		MacCreator=SITx
-		MacType=ZIP 
+		MacType=ZIP
 		Name=application/zip
 		UTI=com.pkware.zip-archive
+	#tag EndFileType
+
+	#tag FileType
+		CodeName=ApplicationXBzip2
+		Extension=.bz2
+		Flags=&h0
+		MacCreator=
+		MacType=Bzip
+		Name=application/x-bzip2
+	#tag EndFileType
+
+	#tag FileType
+		CodeName=ApplicationTarGzip
+		Extension=.tar.gz;.tgz
+		Flags=&h0
+		MacCreator=SITx
+		MacType=Gzip
+		Name=application/tar+gzip
+	#tag EndFileType
+
+	#tag FileType
+		CodeName=ApplicationTarBzip2
+		Extension=.tar.bz2;.tbz2
+		Flags=&h0
+		MacCreator=
+		MacType=Bzip
+		Name=application/tar+bzip2
 	#tag EndFileType
 
 #tag EndFileTypeSet

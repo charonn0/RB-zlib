@@ -12,7 +12,7 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Sub Constructor(ZipStream As BinaryStream, Force As Boolean = False)
-		  ' Construct a ZipReader from the ZipStream. 
+		  ' Construct a ZipReader from the ZipStream.
 		  ' If Force=True then less strict techniques are used:
 		  '  * The zip data is assumed to start at offset 0
 		  '  * The central directory is ignored
@@ -223,7 +223,7 @@ Protected Class ZipReader
 		        Call zr.ReadEntry(out)
 		        reccount = reccount + 1
 		      Catch err
-		        If log <> Nil Then log.WriteLine(" Error: " + err.Message)
+		        If log <> Nil Then log.WriteLine(" Error: " + ReplaceLineEndings(err.Message, " " + EndOfLine))
 		        errcount = errcount + 1
 		      Finally
 		        If out <> Nil Then out.Close
@@ -424,6 +424,26 @@ Protected Class ZipReader
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="ArchiveComment"
+			Group="Behavior"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="CompressionLevel"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="CurrentIndex"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="CurrentName"
+			Group="Behavior"
+			Type="String"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true

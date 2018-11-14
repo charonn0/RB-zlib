@@ -1,13 +1,13 @@
 #tag Window
 Begin Window DemoWindow
-   BackColor       =   &hFFFFFF
+   BackColor       =   16777215
    Backdrop        =   ""
    CloseButton     =   True
    Composite       =   False
    Frame           =   0
    FullScreen      =   False
    HasBackColor    =   False
-   Height          =   1.26e+2
+   Height          =   1.33e+2
    ImplicitInstance=   True
    LiveResize      =   True
    MacProcID       =   0
@@ -17,10 +17,10 @@ Begin Window DemoWindow
    MenuBar         =   ""
    MenuBarVisible  =   True
    MinHeight       =   64
-   MinimizeButton  =   True
+   MinimizeButton  =   False
    MinWidth        =   64
    Placement       =   2
-   Resizeable      =   True
+   Resizeable      =   False
    Title           =   "zlib Demo"
    Visible         =   True
    Width           =   2.21e+2
@@ -40,7 +40,7 @@ Begin Window DemoWindow
       AutoDeactivate  =   True
       Bold            =   ""
       Enabled         =   True
-      Height          =   126
+      Height          =   133
       HelpTag         =   ""
       Index           =   -2147483648
       InitialParent   =   ""
@@ -54,14 +54,14 @@ Begin Window DemoWindow
       Panels          =   ""
       Scope           =   0
       SmallTabs       =   ""
-      TabDefinition   =   "Deflate\rGZip\rZip"
+      TabDefinition   =   "Deflate\rGZip\rZip\rTAR"
       TabIndex        =   8
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "System"
       TextSize        =   0
       TextUnit        =   0
-      Top             =   0
+      Top             =   -1
       Underline       =   ""
       Value           =   2
       Visible         =   True
@@ -92,7 +92,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -123,7 +123,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   85
+         Top             =   76
          Underline       =   ""
          Value           =   False
          Visible         =   True
@@ -155,7 +155,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -186,7 +186,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -217,7 +217,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -248,7 +248,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   87
+         Top             =   78
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -279,7 +279,7 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   41
+         Top             =   32
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -310,7 +310,132 @@ Begin Window DemoWindow
          TextFont        =   "System"
          TextSize        =   0
          TextUnit        =   0
-         Top             =   64
+         Top             =   55
+         Underline       =   ""
+         Visible         =   True
+         Width           =   97
+      End
+      Begin CheckBox UseGZipChkBx
+         AutoDeactivate  =   True
+         Bold            =   ""
+         Caption         =   "Use GZip"
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   60
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   ""
+         LockTop         =   True
+         Scope           =   0
+         State           =   0
+         TabIndex        =   0
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   81
+         Underline       =   ""
+         Value           =   False
+         Visible         =   True
+         Width           =   100
+      End
+      Begin PushButton TARDirBtn
+         AutoDeactivate  =   True
+         Bold            =   ""
+         ButtonStyle     =   0
+         Cancel          =   ""
+         Caption         =   "TAR a folder"
+         Default         =   ""
+         Enabled         =   True
+         Height          =   22
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   60
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   ""
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   1
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   57
+         Underline       =   ""
+         Visible         =   True
+         Width           =   97
+      End
+      Begin PushButton UnTarFileBtn
+         AutoDeactivate  =   True
+         Bold            =   ""
+         ButtonStyle     =   0
+         Cancel          =   ""
+         Caption         =   "UnTAR a file"
+         Default         =   ""
+         Enabled         =   True
+         Height          =   22
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   60
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   ""
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   2
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   34
+         Underline       =   ""
+         Visible         =   True
+         Width           =   97
+      End
+      Begin PushButton ZipTestBtn
+         AutoDeactivate  =   True
+         Bold            =   ""
+         ButtonStyle     =   0
+         Cancel          =   ""
+         Caption         =   "Test zip"
+         Default         =   ""
+         Enabled         =   True
+         Height          =   22
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "TabPanel1"
+         Italic          =   ""
+         Left            =   62
+         LockBottom      =   ""
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   ""
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   3
+         TabPanelIndex   =   3
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   0
+         TextUnit        =   0
+         Top             =   101
          Underline       =   ""
          Visible         =   True
          Width           =   97
@@ -401,6 +526,49 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub RunTAR(Sender As Thread)
+		  #pragma Unused Sender
+		  Dim compressionlevel As Integer
+		  If mOption Then compressionlevel = 6
+		  mResult = USTAR.WriteTar(mSource, mDestination, False, compressionlevel)
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As USTAR.TARException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub RunUnTAR(Sender As Thread)
+		  #pragma Unused Sender
+		  mUnzipped = USTAR.ReadTar(mSource, mDestination)
+		  mResult = UBound(mUnzipped) > -1
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As USTAR.TARException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub RunUnZip(Sender As Thread)
 		  #pragma Unused Sender
 		  mUnzipped = PKZip.ReadZip(mSource, mDestination)
@@ -461,6 +629,53 @@ End
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub RunZipTest(Sender As Thread)
+		  #pragma Unused Sender
+		  'mResult = PKZip.TestZip(mSource)
+		  
+		  Try
+		    Dim zip As New PKZip.ZipReader(BinaryStream.Open(mSource))
+		    Do Until zip.LastError <> 0
+		      Dim tmp As New MemoryBlock(0)
+		      Dim nullstream As New BinaryStream(tmp)
+		      nullstream.Close
+		      Call zip.MoveNext(nullstream)
+		    Loop
+		    zip.Close
+		    mResult = (zip.LastError = PKZip.ERR_END_ARCHIVE)
+		    If Not mResult Then
+		      mErrorCode = zip.LastError
+		      mErrorMsg = PKZip.FormatError(mErrorCode)
+		    End If
+		  Catch Err
+		    mResult = False
+		    mErrorCode = Err.ErrorNumber
+		    mErrorMsg = Err.Message
+		  End Try
+		  
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ToggleLockUI()
+		  DeflateFileBtn.Enabled = Not DeflateFileBtn.Enabled
+		  GUnZipFileBtn.Enabled = Not GUnZipFileBtn.Enabled
+		  GZipFileBtn.Enabled = Not GZipFileBtn.Enabled
+		  InflateFileBtn.Enabled = Not InflateFileBtn.Enabled
+		  UnzipFileBtn.Enabled = Not UnzipFileBtn.Enabled
+		  ZipDirBtn.Enabled = Not ZipDirBtn.Enabled
+		  ZipRepairBtn.Enabled = Not ZipRepairBtn.Enabled
+		  UseRawChkBx.Enabled = Not UseRawChkBx.Enabled
+		  UseGZipChkBx.Enabled = Not UseGZipChkBx.Enabled
+		  TARDirBtn.Enabled = Not TARDirBtn.Enabled
+		  UnTarFileBtn.Enabled = Not UnTarFileBtn.Enabled
+		  ZipTestBtn.Enabled = Not ZipTestBtn.Enabled
+		End Sub
+	#tag EndMethod
+
 
 	#tag Property, Flags = &h21
 		Private mDestination As FolderItem
@@ -472,6 +687,10 @@ End
 
 	#tag Property, Flags = &h21
 		Private mErrorMsg As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mLockUI As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -511,6 +730,7 @@ End
 		  Self.Title = "zlib Demo"
 		  mErrorCode = 0
 		  mErrorMsg = ""
+		  ToggleLockUI()
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -524,8 +744,9 @@ End
 		  If Right(name, 2) = ".z" Then name = Left(name, name.Len - 2)
 		  mDestination = GetSaveFolderItem("", name)
 		  If mDestination = Nil Then Return
+		  ToggleLockUI()
 		  mOption = UseRawChkBx.Value
-		  Self.Title = "zlib Demo - Inflating..."
+		  Self.Title = "Inflating..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunInflate
 		  mWorker.Run
@@ -540,8 +761,9 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationXCompress, mSource.Name + ".z")
 		  If mDestination = Nil Then Return
+		  ToggleLockUI()
 		  mOption = UseRawChkBx.Value
-		  Self.Title = "zlib Demo - Deflating..."
+		  Self.Title = "Deflating..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunDeflate
 		  mWorker.Run
@@ -558,7 +780,8 @@ End
 		  If Right(name, 3) = ".gz" Then name = Left(name, name.Len - 3)
 		  mDestination = GetSaveFolderItem("", name)
 		  If mDestination = Nil Then Return
-		  Self.Title = "zlib Demo - GUnZipping..."
+		  Self.Title = "GUnZipping..."
+		  ToggleLockUI()
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunGUnZip
 		  mWorker.Run
@@ -573,6 +796,8 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationXGzip, mSource.Name + ".gz")
 		  If mDestination = Nil Then Return
+		  Self.Title = "GZipping..."
+		  ToggleLockUI()
 		  Self.Title = "zlib Demo - GZipping..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunGZip
@@ -588,7 +813,8 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + "_repared.zip")
 		  If mDestination = Nil Then Return
-		  Self.Title = "zlib Demo - Repairing..."
+		  Self.Title = "Repairing..."
+		  ToggleLockUI()
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZipRepair
 		  mWorker.Run
@@ -604,6 +830,8 @@ End
 		  mDestination = SelectFolder()
 		  If mDestination = Nil Then Return
 		  If mDestination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
+		  Self.Title = "Unzipping..."
+		  ToggleLockUI()
 		  Self.Title = "zlib Demo - Unzipping..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunUnzip
@@ -619,9 +847,72 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + ".zip")
 		  If mDestination = Nil Then Return
+		  ToggleLockUI()
 		  Self.Title = "zlib Demo - Zipping..."
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZip
+		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UseGZipChkBx
+	#tag Event
+		Sub Open()
+		  Me.Enabled = zlib.IsAvailable
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events TARDirBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  mSource = SelectFolder()
+		  If mSource = Nil Then Return
+		  If UseGZipChkBx.Value Then
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationTarGzip, mSource.Name + ".tgz")
+		    mOption = True
+		  Else
+		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar")
+		    mOption = False
+		  End If
+		  If mDestination = Nil Then Return
+		  ToggleLockUI()
+		  Self.Title = "Tarring (no feathers)..."
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunTAR
+		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events UnTarFileBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  Dim types As String = FileTypes1.ApplicationXTar
+		  If zlib.IsAvailable Then types = types + ";" + FileTypes1.ApplicationTarGzip
+		  mSource = GetOpenFolderItem(types)
+		  If mSource = Nil Then Return
+		  mDestination = SelectFolder()
+		  If mDestination = Nil Then Return
+		  If mDestination.Count <> 0 And MsgBox("The target directory is not empty. Proceed with extraction?", 4 + 48, "Destination is not empty") <> 6 Then Return
+		  ToggleLockUI()
+		  Self.Title = "Untarring..."
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunUnTAR
+		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events ZipTestBtn
+	#tag Event
+		Sub Action()
+		  If mWorker <> Nil Then Return
+		  mSource = GetOpenFolderItem(FileTypes1.ApplicationZip)
+		  If mSource = Nil Then Return
+		  Self.Title = "Testing..."
+		  ToggleLockUI()
+		  mWorker = New Thread
+		  AddHandler mWorker.Run, WeakAddressOf RunZipTest
 		  mWorker.Run
 		End Sub
 	#tag EndEvent
