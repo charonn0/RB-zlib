@@ -530,10 +530,16 @@ End
 		  #pragma Unused Sender
 		  Dim compressionlevel As Integer
 		  If mOption Then compressionlevel = 6
-		  mResult = USTAR.WriteTar(mSource, mDestination, compressionlevel)
+		  mResult = USTAR.WriteTar(mSource, mDestination, False, compressionlevel)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As USTAR.TARException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message
@@ -549,6 +555,12 @@ End
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
+		  mResult = False
+		  mErrorCode = err.ErrorNumber
+		  mErrorMsg = err.Message
+		  CompletionTimer.Mode = Timer.ModeSingle
+		  
+		Exception err As USTAR.TARException
 		  mResult = False
 		  mErrorCode = err.ErrorNumber
 		  mErrorMsg = err.Message

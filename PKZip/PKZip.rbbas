@@ -228,8 +228,10 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetCompressor(Method As UInt32, Stream As Writeable, CompressionLevel As UInt32) As Writeable
-		  If Method = 0 Then Return Stream
 		  Select Case Method
+		  Case METHOD_NONE
+		    Return Stream
+		    
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
 		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, zlib.RAW_ENCODING)
@@ -248,7 +250,7 @@ Protected Module PKZip
 	#tag Method, Flags = &h21
 		Private Function GetDecompressor(Method As UInt32, Stream As Readable) As Readable
 		  Select Case Method
-		  Case 0 ' store
+		  Case METHOD_NONE
 		    Return Stream
 		    
 		  Case METHOD_DEFLATED
@@ -695,6 +697,9 @@ Protected Module PKZip
 	#tag EndConstant
 
 	#tag Constant, Name = METHOD_DEFLATED, Type = Double, Dynamic = False, Default = \"8", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = METHOD_NONE, Type = Double, Dynamic = False, Default = \"0", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = MIN_ARCHIVE_SIZE, Type = Double, Dynamic = False, Default = \"ZIP_DIRECTORY_FOOTER_SIZE\r", Scope = Private
