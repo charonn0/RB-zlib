@@ -551,6 +551,9 @@ Protected Module PKZip
 	#tag Method, Flags = &h1
 		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
 		  Dim writer As New ZipWriter
+		  #If DebugBuild Then
+		    writer.ArchiveComment = "Made with RB-zlib"
+		  #endif
 		  writer.CompressionLevel = CompressionLevel
 		  If CompressionMethod = -1 Then
 		    #If USE_ZLIB Then
