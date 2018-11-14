@@ -454,7 +454,7 @@ Protected Module USTAR
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem, Optional RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer) As Boolean
+		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem, Optional RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 0) As Boolean
 		  ' Creates/appends a TAR file with the ToArchive FolderItems
 		  Dim tar As New TARWriter
 		  For i As Integer = 0 To UBound(ToArchive)
@@ -487,7 +487,7 @@ Protected Module USTAR
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteTar(RootDirectory As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer) As Boolean
+		Protected Function WriteTar(RootDirectory As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 0) As Boolean
 		  ' Creates/appends a TAR file with the ToArchive FolderItems
 		  Dim items() As FolderItem
 		  GetChildren(RootDirectory, items)
