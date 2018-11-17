@@ -20,6 +20,8 @@ Inherits RuntimeException
 		    Me.Message = "The archive entry failed verification."
 		  Case ERR_INVALID_NAME
 		    Me.Message = "The archive entry has an illegal file name."
+		  Case ERR_TOO_LARGE
+		    Me.Message = "The file is too large for the zip archive format."
 		    
 		    'zlib's built-in error messages suck; these are much better
 		  Case Z_BUF_ERROR
@@ -31,7 +33,7 @@ Inherits RuntimeException
 		  Case Z_STREAM_ERROR
 		    Me.Message = "The stream state is inconsistent or invalid."
 		  Case Z_VERSION_ERROR
-		    Me.Message = "The zlib library is a different version than what was expected."
+		    Me.Message = "The zlib library is a different version than what was expected (needs: 1.2.8; has: " + zlib.Version + ")."
 		  Case Z_NEED_DICT
 		    Me.Message = "The stream is compressed with a custom dictionary." ' not an error per se, but a special condition
 		  Case Z_STREAM_END

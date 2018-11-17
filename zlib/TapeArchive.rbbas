@@ -1,5 +1,5 @@
 #tag Class
-Protected Class TapeArchive
+ Attributes ( deprecated, hidden = true ) Protected Class TapeArchive
 	#tag Method, Flags = &h0
 		Function AppendDirectory(DirectoryName As String) As Boolean
 		  Me.Reset()
@@ -94,10 +94,14 @@ Protected Class TapeArchive
 
 	#tag Method, Flags = &h0
 		 Shared Function Create(TARFile As FolderItem, OverWrite As Boolean = False) As zlib.TapeArchive
-		  Dim bs As BinaryStream
-		  bs = BinaryStream.Create(TARFile, OverWrite)
-		  Return New TapeArchive(bs)
-		  
+		  #If Not USE_USTAR Then
+		    Dim bs As BinaryStream = BinaryStream.Create(TARFile, OverWrite)
+		    Return New TapeArchive(bs)
+		  #Else
+		    #pragma Unused TarFile
+		    #pragma Unused Overwrite
+		    Raise New RuntimeException
+		  #endif
 		End Function
 	#tag EndMethod
 
@@ -241,8 +245,14 @@ Protected Class TapeArchive
 
 	#tag Method, Flags = &h0
 		 Shared Function Open(TARFile As FolderItem, ReadWrite As Boolean = True) As zlib.TapeArchive
-		  Dim bs As BinaryStream = BinaryStream.Open(TARFile, ReadWrite)
-		  If bs <> Nil Then Return New TapeArchive(bs)
+		  #If Not USE_USTAR Then
+		    Dim bs As BinaryStream = BinaryStream.Open(TARFile, ReadWrite)
+		    If bs <> Nil Then Return New TapeArchive(bs)
+		  #Else
+		    #pragma Unused TarFile
+		    #pragma Unused ReadWrite
+		    Raise New RuntimeException
+		  #endif
 		  
 		End Function
 	#tag EndMethod
