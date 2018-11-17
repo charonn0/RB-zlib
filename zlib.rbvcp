@@ -15,6 +15,17 @@ Class=TapeArchive;zlib/TapeArchive.rbbas;&h9F69FFF;&h5A1247FF;false
 FileTypeSet=FileTypes1;FileTypes1.rbbas;&h649F97FF;&h0;false
 Class=ZipArchive;zlib/ZipArchive.rbbas;&h67437FFF;&h5A1247FF;false
 Module=Testing;Testing.rbbas;&h7D27AFFF;&h0;false
+Module=USTAR;USTAR/USTAR.rbbas;&h6D6037FF;&h0;false
+Class=TarWriter;USTAR/TarWriter.rbbas;&h12B7DFFF;&h6D6037FF;false
+Class=TARException;USTAR/TARException.rbbas;&h46032FFF;&h6D6037FF;false
+Class=TarReader;USTAR/TarReader.rbbas;&h66E677FF;&h6D6037FF;false
+Module=PKZip;PKZip/PKZip.rbbas;&h1F121FFF;&h0;false
+Class=ZipException;PKZip/ZipException.rbbas;&hAA64FFF;&h1F121FFF;false
+Class=ZipWriter;PKZip/ZipWriter.rbbas;&h2ADD1FFF;&h1F121FFF;false
+Class=ZipReader;PKZip/ZipReader.rbbas;&h127E8FFF;&h1F121FFF;false
+Window=DemoWindow;DemoWindow.rbfrm;&h41F68FFF;&h0;false
+DefaultWindow=DemoWindow
+>>>>>>> master
 MajorVersion=1
 MinorVersion=0
 SubVersion=0

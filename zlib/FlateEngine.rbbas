@@ -32,13 +32,6 @@ Private Class FlateEngine
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub Destructor()
-		  zstruct.zfree = Nil
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Function LastError() As Integer
 		  Return mLastError
@@ -67,7 +60,7 @@ Private Class FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return zstruct.zfree <> Nil
+			  Return zstruct.internal_state <> Nil
 			End Get
 		#tag EndGetter
 		IsOpen As Boolean
