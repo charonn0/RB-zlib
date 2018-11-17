@@ -155,7 +155,7 @@ This example performs a hand-rolled HTTP request using a TCPSocket, and demonstr
 3. Copy the `zlib` module and the `PKZip` module into your project and save.
 
 ### Ensure the zlib shared library is installed
-zlib is installed by default on most Unix-like operating systems, including OS X and most Linux distributions, however only version zlib 1.2.8 is supported.
+zlib is installed by default on most Unix-like operating systems, including OS X and most Linux distributions, however at least zlib version 1.2.8 is needed.
 
 Windows does not have it installed by default, you will need to ship the DLL with your application. You can use pre-built DLL available [here](http://zlib.net/zlib128-dll.zip) (Win32x86), or you can [build them yourself from source](http://zlib.net/zlib-1.2.8.tar.gz). 
 
