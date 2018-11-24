@@ -321,7 +321,7 @@ Protected Module USTAR
 		  //Returns True if the Target is likely a tape archive
 		  
 		  Dim header As MemoryBlock = Target.Read(BLOCK_SIZE)
-		  Return Val("&o" + header.StringValue(148, 8)) = GetChecksum(header)
+		  Return header.HeaderChecksum = GetChecksum(header)
 		End Function
 	#tag EndMethod
 
