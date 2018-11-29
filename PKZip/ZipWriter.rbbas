@@ -162,11 +162,15 @@ Protected Class ZipWriter
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
 		      d.Value(META_METHOD) = CompressionMethod
+		    #Else
+		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    #endif
 		  Case 0
 		  Case METHOD_BZIP2
 		    #If USE_BZIP2 Then
 		      d.Value(META_METHOD) = CompressionMethod
+		    #Else
+		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    #endif
 		  Case 0
 		    d.Value(META_METHOD) = CompressionMethod
