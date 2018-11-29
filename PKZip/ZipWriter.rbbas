@@ -159,21 +159,23 @@ Protected Class ZipWriter
 		  If d = Nil Then Return
 		  If d.HasKey(META_METHOD) Then d.Remove(META_METHOD)
 		  Select Case CompressionMethod
+		  Case METHOD_NONE
+		    d.Value(META_METHOD) = CompressionMethod
+		    
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
 		      d.Value(META_METHOD) = CompressionMethod
 		    #Else
 		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    #endif
-		  Case 0
+		    
 		  Case METHOD_BZIP2
 		    #If USE_BZIP2 Then
 		      d.Value(META_METHOD) = CompressionMethod
 		    #Else
 		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    #endif
-		  Case 0
-		    d.Value(META_METHOD) = CompressionMethod
+		    
 		  Else
 		    Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		  End Select
