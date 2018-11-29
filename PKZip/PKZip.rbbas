@@ -17,7 +17,7 @@ Protected Module PKZip
 		      If USE_ZLIB Then
 		        Methods.Append(item.Lookup(META_METHOD, METHOD_DEFLATED))
 		      Else
-		        Methods.Append(item.Lookup(META_METHOD, 0))
+		        Methods.Append(item.Lookup(META_METHOD, METHOD_NONE))
 		      End If
 		    End If
 		  Next
