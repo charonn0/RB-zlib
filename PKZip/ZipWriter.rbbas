@@ -157,7 +157,6 @@ Protected Class ZipWriter
 		Sub SetEntryCompressionMethod(Path As String, CompressionMethod As Integer)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  If d.HasKey(META_METHOD) Then d.Remove(META_METHOD)
 		  Select Case CompressionMethod
 		  Case METHOD_NONE
 		    d.Value(META_METHOD) = CompressionMethod
