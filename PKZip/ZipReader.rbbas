@@ -86,6 +86,12 @@ Protected Class ZipReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Index() As Integer
+		  Return mIndex
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function LastError() As Integer
 		  Return mLastError
 		End Function
