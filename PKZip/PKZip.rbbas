@@ -209,6 +209,8 @@ Protected Module PKZip
 		    Return DefineEncoding("The file is too large for the zip archive format.", Encoding)
 		  Case ERR_SIZE_REQUIRED
 		    Return DefineEncoding("This operation cannot be perfomed on an unbounded memory block.", Encoding)
+		  Case ERR_PATH_TOO_LONG
+		    Return DefineEncoding("The path is too long to store in the zip format.", Encoding)
 		  Else
 		    Return DefineEncoding("Unknown error.", Encoding)
 		  End Select
@@ -628,6 +630,9 @@ Protected Module PKZip
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_NOT_ZIPPED, Type = Double, Dynamic = False, Default = \"-200", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = ERR_PATH_TOO_LONG, Type = Double, Dynamic = False, Default = \"-208", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_SIZE_REQUIRED, Type = Double, Dynamic = False, Default = \"-207", Scope = Protected
