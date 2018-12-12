@@ -369,6 +369,10 @@ Protected Class ZipWriter
 	#tag EndProperty
 
 
+	#tag Constant, Name = MAX_PATH_LENGTH, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
+	#tag EndConstant
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="ArchiveComment"
