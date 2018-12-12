@@ -76,6 +76,7 @@ Protected Class ZipWriter
 		  Dim directory() As ZipDirectoryHeader
 		  
 		  Dim c As Integer = UBound(paths)
+		  If c >= 65535 And ArchiveComment = "" Then ArchiveComment = "Warning: This archive contains more than 65,535 entries."
 		  For i As Integer = 0 To c
 		    Dim path As String = paths(i)
 		    Dim source As Readable = sources(i)
