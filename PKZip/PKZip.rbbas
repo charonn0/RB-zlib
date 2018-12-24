@@ -73,16 +73,19 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = - 1) As UInt32
+		  ' Calculate the CRC32 checksum for the Data. Pass back the returned value
+		  ' to continue processing.
+		  '    Dim crc As UInt32
+		  '    Do
+		  '      crc = CRC32(NextData, crc)
+		  '    Loop
+		  ' If Data.Size is not known (-1) then specify the size as DataSize
+		  
 		  #If USE_ZLIB Then
+		    ' zlib has an optimized C implementation that's orders of magnitude faster than the
+		    ' optimized Xojo implementation below, so we use it if it's available.
 		    Return zlib.CRC32(Data, LastCRC, DataSize)
 		  #Else
-		    ' Calculate the CRC32 checksum for the Data. Pass back the returned value
-		    ' to continue processing.
-		    '    Dim crc As UInt32
-		    '    Do
-		    '      crc = CRC32(NextData, crc)
-		    '    Loop
-		    ' If Data.Size is not known (-1) then specify the size as DataSize
 		    If DataSize = -1 Then DataSize = Data.Size
 		    If DataSize = -1 Then Raise New ZipException(ERR_SIZE_REQUIRED)
 		    
