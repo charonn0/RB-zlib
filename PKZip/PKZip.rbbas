@@ -310,6 +310,41 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function IsZipped(Extends Target As BinaryStream) As Boolean
+		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
+		  
+		  Const FILE_SIGNATURE = &h04034b50
+		  
+		  Dim IsZip As Boolean
+		  Dim pos As UInt64 = Target.Position
+		  Target.Position = 0
+		  Try
+		    Target.LittleEndian = True
+		    IsZip = (Target.ReadUInt32 = FILE_SIGNATURE)
+		  Catch
+		    IsZip = False
+		  Finally
+		    Target.Position = pos
+		  End Try
+		  Return IsZip
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
+		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
+		  
+		  If TargetFile = Nil Then Return False
+		  If Not TargetFile.Exists Then Return False
+		  If TargetFile.Directory Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsZip As Boolean = bs.IsZipped()
+		  bs.Close
+		  Return IsZip
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function ListZip(ZipFile As FolderItem) As String()
 		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
