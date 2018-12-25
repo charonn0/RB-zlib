@@ -538,11 +538,12 @@ Protected Module PKZip
 		  Catch Err As ZipException
 		    Return False
 		  End Try
-		  zip.ValidateChecksums = True
+		  
+		  Dim tmp As New MemoryBlock(0)
+		  Dim nullstream As New BinaryStream(tmp)
+		  nullstream.Close
+		  
 		  Do Until zip.LastError <> 0
-		    Dim tmp As New MemoryBlock(0)
-		    Dim nullstream As New BinaryStream(tmp)
-		    nullstream.Close
 		    Call zip.MoveNext(nullstream)
 		  Loop
 		  zip.Close
