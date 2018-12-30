@@ -203,6 +203,7 @@ Protected Class ZipWriter
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteDirectory(Stream As BinaryStream, Headers() As ZipDirectoryHeader, Names() As String, Comments() As String, Extras() As MemoryBlock, ArchiveComment As String)
 		  ArchiveComment = ConvertEncoding(ArchiveComment, Encodings.UTF8)
+		  If ArchiveComment.LenB > MAX_COMMENT_SIZE Then Raise New ZipException(ERR_TOO_LARGE)
 		  Dim c As Integer = UBound(Headers)
 		  Dim footer As ZipDirectoryFooter
 		  footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE
