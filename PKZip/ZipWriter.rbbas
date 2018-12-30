@@ -34,7 +34,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As MemoryBlock, ModifyDate As Date = Nil)
-		  If Path.Len > MAX_PATH_LENGTH Then Raise New ZipException(ERR_PATH_TOO_LONG)
+		  If Path.Len > MAX_PATH_SIZE Then Raise New ZipException(ERR_PATH_TOO_LONG)
 		  Dim bs As New BinaryStream(Data)
 		  AppendEntry(Path, bs, bs.Length, ModifyDate)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
@@ -45,7 +45,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As Readable, Length As UInt32, ModifyDate As Date = Nil)
-		  If Path.Len > MAX_PATH_LENGTH Then Raise New ZipException(ERR_PATH_TOO_LONG)
+		  If Path.Len > MAX_PATH_SIZE Then Raise New ZipException(ERR_PATH_TOO_LONG)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
 		  d.Value(META_STREAM) = Data
@@ -368,10 +368,6 @@ Protected Class ZipWriter
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
 	#tag EndProperty
-
-
-	#tag Constant, Name = MAX_PATH_LENGTH, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
-	#tag EndConstant
 
 
 	#tag ViewBehavior
