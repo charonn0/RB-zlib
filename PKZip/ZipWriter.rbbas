@@ -270,6 +270,15 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Shared Sub WriteEntryFooter(Stream As BinaryStream, CRC As UInt32, CompressedSize As UInt32, UncompressedSize As UInt32)
+		  Stream.WriteUInt32(ZIP_ENTRY_FOOTER_SIGNATURE)
+		  Stream.WriteUInt32(CRC)
+		  Stream.WriteUInt32(CompressedSize)
+		  Stream.WriteUInt32(UncompressedSize)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock, Level As UInt32, Method As UInt32)
 		  If Not USE_ZLIB Then Level = 0
 		  If Length = 0 Or Level = 0 Then method = 0
@@ -286,6 +295,9 @@ Protected Class ZipWriter
 		  If Name.Encoding = Encodings.UTF8 Then
 		    DirectoryHeader.Flag = FLAG_NAME_ENCODING
 		  End If
+		  #If Not OUTPUT_SEEKABLE Then
+		    If Length > 0 Then DirectoryHeader.Flag = DirectoryHeader.Flag Or FLAG_DESCRIPTOR
+		  #endif
 		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
 		  
 		  Stream.WriteUInt16(method) ' method
@@ -341,11 +353,15 @@ Protected Class ZipWriter
 		    Dim compsz As UInt32 = endoff - dataoff
 		    DirectoryHeader.CompressedSize = compsz
 		    DirectoryHeader.CRC32 = crc
-		    Stream.Position = compszoff
-		    Stream.WriteUInt32(compsz)
-		    Stream.Position = crcoff
-		    Stream.WriteUInt32(crc)
-		    Stream.Position = endoff
+		    #If OUTPUT_SEEKABLE Then
+		      Stream.Position = compszoff
+		      Stream.WriteUInt32(compsz)
+		      Stream.Position = crcoff
+		      Stream.WriteUInt32(crc)
+		      Stream.Position = endoff
+		    #Else
+		      WriteEntryFooter(Stream, crc, compsz, Length)
+		    #EndIf
 		  End If
 		End Sub
 	#tag EndMethod
@@ -370,6 +386,10 @@ Protected Class ZipWriter
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
 	#tag EndProperty
+
+
+	#tag Constant, Name = OUTPUT_SEEKABLE, Type = Boolean, Dynamic = False, Default = \"True", Scope = Protected
+	#tag EndConstant
 
 
 	#tag ViewBehavior
