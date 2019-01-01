@@ -336,15 +336,17 @@ Protected Class ZipWriter
 		      If z IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(z).Close
 		    #endif
 		  End If
-		  Dim endoff As UInt64 = Stream.Position
-		  Dim compsz As UInt32 = endoff - dataoff
-		  Stream.Position = compszoff
-		  Stream.WriteUInt32(compsz)
-		  DirectoryHeader.CompressedSize = compsz
-		  Stream.Position = crcoff
-		  Stream.WriteUInt32(crc)
-		  DirectoryHeader.CRC32 = crc
-		  Stream.Position = endoff
+		  If Length > 0 Then
+		    Dim endoff As UInt64 = Stream.Position
+		    Dim compsz As UInt32 = endoff - dataoff
+		    DirectoryHeader.CompressedSize = compsz
+		    DirectoryHeader.CRC32 = crc
+		    Stream.Position = compszoff
+		    Stream.WriteUInt32(compsz)
+		    Stream.Position = crcoff
+		    Stream.WriteUInt32(crc)
+		    Stream.Position = endoff
+		  End If
 		End Sub
 	#tag EndMethod
 
