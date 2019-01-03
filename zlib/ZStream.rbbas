@@ -20,6 +20,7 @@ Implements zlib.CompressedStream
 		  mDeflater = Nil
 		  mInflater = Nil
 		  mSourceMB = Nil
+		  mReadBuffer = ""
 		End Sub
 	#tag EndMethod
 
