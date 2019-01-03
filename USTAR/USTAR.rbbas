@@ -47,6 +47,26 @@ Protected Module USTAR
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function FormatError(ErrorCode As Integer, Optional Encoding As TextEncoding) As String
+		  If Encoding = Nil Then Encoding = Encodings.UTF8
+		  Select Case ErrorCode
+		  Case ERR_END_ARCHIVE
+		    Return DefineEncoding("The archive contains no further entries.", Encoding)
+		  Case ERR_INVALID_ENTRY
+		    Return DefineEncoding("The archive entry is corrupt.", Encoding)
+		  Case ERR_CHECKSUM_MISMATCH
+		    Return DefineEncoding("The archive entry failed verification.", Encoding)
+		  Case ERR_INVALID_NAME
+		    Return DefineEncoding("The archive entry has an illegal file name.", Encoding)
+		  Case ERR_MISALIGNED
+		    Return DefineEncoding("The archive is corrupt.", Encoding)
+		  Else
+		    Return DefineEncoding("Unknown error.", Encoding)
+		  End Select
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function GetCheckSum(TarHeader As MemoryBlock) As UInt32
 		  If TarHeader.Size <> BLOCK_SIZE Then Return 0

@@ -10,7 +10,7 @@ Protected Class TarReader
 		Sub Constructor(TARStream As Readable)
 		  ' Constructs a TARStream from any Readable object.
 		  mStream = TARStream
-		  If Not ReadHeader() Then Raise New TARException(ERR_MISALIGNED)
+		  If Not ReadHeader() Then Raise New TARException(mLastError)
 		End Sub
 	#tag EndMethod
 
