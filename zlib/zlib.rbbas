@@ -1110,7 +1110,7 @@ Protected Module zlib
 		Done As Integer
 	#tag EndStructure
 
-	#tag Structure, Name = z_stream, Flags = &h21
+	#tag Structure, Name = z_stream, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit)) or  (TargetWeb and (Target32Bit)) or  (TargetDesktop and (Target32Bit)) or  (TargetIOS and (Target32Bit)), Attributes = \"StructureAlignment \x3D 1"
 		next_in as Ptr
 		  avail_in as UInt32
 		  total_in as UInt32
@@ -1127,6 +1127,22 @@ Protected Module zlib
 		reserved as UInt32
 	#tag EndStructure
 
+	#tag Structure, Name = z_stream, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)), Attributes = \"StructureAlignment \x3D 8"
+		next_in as Ptr
+		  avail_in as UInteger
+		  total_in as UInteger
+		  next_out as Ptr
+		  avail_out as UInteger
+		  total_out as UInteger
+		  msg as Ptr
+		  internal_state as Ptr
+		  zalloc as Ptr
+		  zfree as Ptr
+		  opaque as Ptr
+		  data_type as Integer
+		  adler as UInteger
+		reserved as UInteger
+	#tag EndStructure
 
 	#tag ViewBehavior
 		#tag ViewProperty
