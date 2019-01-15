@@ -331,6 +331,12 @@ Implements zlib.CompressedStream
 		      EOL = EndOfLine.UNIX
 		    #endif
 		  End If
+		  
+		  ' try the easy way
+		  Dim i As Integer = InStrB(Me.Lookahead, EOL)
+		  If i > 0 Then Return Me.Read(i + EOL.LenB - 1)
+		  
+		  ' try the hard way
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
 		  Dim lastchar As String
