@@ -193,6 +193,18 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Lookahead(encoding As TextEncoding = Nil) As String
+		  If Me.BufferedReading = False Then Return ""
+		  If mReadBuffer.LenB < 2 Then
+		    mBufferedReading = False
+		    mReadBuffer = mReadBuffer + Me.Read(CHUNK_SIZE, encoding)
+		    mBufferedReading = True
+		  End If
+		  Return DefineEncoding(mReadBuffer, encoding)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		 Shared Function Open(InputStream As FolderItem, Encoding As Integer = zlib.Z_DETECT) As zlib.ZStream
 		  ' Create a decompression stream where the compressed input is read from the Source file.
 		  
