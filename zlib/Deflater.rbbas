@@ -20,11 +20,11 @@ Inherits FlateEngine
 		  
 		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or Encoding <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
 		    ' Open the compressed stream using custom options
-		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, "1.2.8" + Chr(0), zstruct.Size)
+		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, "1.2.8" + Chr(0), Me.Size)
 		    
 		  Else
 		    ' process zlib-wrapped deflate data
-		    mLastError = deflateInit_(zstruct, CompressionLevel, "1.2.8" + Chr(0), zstruct.Size)
+		    mLastError = deflateInit_(zstruct, CompressionLevel, "1.2.8" + Chr(0), Me.Size)
 		    
 		  End If
 		  
@@ -93,29 +93,29 @@ Inherits FlateEngine
 		    If ReadCount > -1 Then sz = Min(ReadCount - count, CHUNK_SIZE) Else sz = CHUNK_SIZE
 		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
 		    
-		    zstruct.avail_in = chunk.Size
-		    zstruct.next_in = chunk
+		    Me.avail_in = chunk.Size
+		    Me.next_in = chunk
 		    count = count + chunk.Size
 		    
 		    Do
 		      ' provide more output space
-		      zstruct.next_out = outbuff
-		      zstruct.avail_out = outbuff.Size
-		      mLastError = deflate(zstruct, Flushing)
+		      Me.next_out = outbuff
+		      Me.avail_out = outbuff.Size
+		      mLastError = deflate_(zstruct, Flushing)
 		      If mLastError = Z_STREAM_ERROR Then Return False ' the stream state is inconsistent!!!
 		      ' consume any output
-		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
+		      Dim have As UInt32 = CHUNK_SIZE - Me.avail_out
 		      If have > 0 Then
 		        If have <> outbuff.Size Then outbuff.Size = have
 		        WriteTo.Write(outbuff)
 		      End If
 		      ' keep going until zlib doesn't use all the output space or an error
-		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
+		    Loop Until mLastError <> Z_OK Or Me.avail_out <> 0
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
 		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
-		  Return zstruct.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
+		  Return Me.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
 		  
 		  
 		End Function
@@ -191,15 +191,6 @@ Inherits FlateEngine
 		End Function
 	#tag EndMethod
 
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  Return zstruct.data_type
-			End Get
-		#tag EndGetter
-		DataType As UInt32
-	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter

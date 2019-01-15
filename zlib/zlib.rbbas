@@ -114,10 +114,6 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
-	#tag EndExternalMethod
-
 	#tag Method, Flags = &h1
 		Protected Function Deflate(Source As FolderItem, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Compress the Source file into the Destination file. Use Inflate to reverse.
@@ -269,51 +265,55 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateBound Lib zlib1 (ByRef Stream As z_stream, DataLength As UInt32) As UInt32
+		Private Soft Declare Function deflateBound Lib zlib1 (Stream As Ptr, DataLength As UInt32) As UInt32
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateCopy Lib zlib1 (ByRef Dst As z_stream, Src As z_stream) As Integer
+		Private Soft Declare Function deflateCopy Lib zlib1 (Dst As Ptr, Src As Ptr) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateEnd Lib zlib1 (ByRef Stream As z_stream) As Integer
+		Private Soft Declare Function deflateEnd Lib zlib1 (Stream As Ptr) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateInit2_ Lib zlib1 (ByRef Stream As z_stream, CompressionLevel As Integer, CompressionMethod As Integer, Encoding As Integer, MemLevel As Integer, Strategy As Integer, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function deflateInit2_ Lib zlib1 (Stream As Ptr, CompressionLevel As Integer, CompressionMethod As Integer, Encoding As Integer, MemLevel As Integer, Strategy As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateInit_ Lib zlib1 (ByRef Stream As z_stream, CompressionLevel As Integer, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function deflateInit_ Lib zlib1 (Stream As Ptr, CompressionLevel As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateParams Lib zlib1 (ByRef Stream As z_stream, Level As Integer, Strategy As Integer) As Integer
+		Private Soft Declare Function deflateParams Lib zlib1 (Stream As Ptr, Level As Integer, Strategy As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflatePending Lib zlib1 (ByRef Stream As z_stream, ByRef Pending As UInt32, ByRef Bits As Integer) As Integer
+		Private Soft Declare Function deflatePending Lib zlib1 (Stream As Ptr, ByRef Pending As UInt32, ByRef Bits As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflatePrime Lib zlib1 (ByRef Stream As z_stream, Bits As Integer, Value As Integer) As Integer
+		Private Soft Declare Function deflatePrime Lib zlib1 (Stream As Ptr, Bits As Integer, Value As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateReset Lib zlib1 (ByRef Stream As z_stream) As Integer
+		Private Soft Declare Function deflateReset Lib zlib1 (Stream As Ptr) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateSetDictionary Lib zlib1 (ByRef Stream As z_stream, Dictionary As Ptr, DictLength As UInt32) As Integer
+		Private Soft Declare Function deflateSetDictionary Lib zlib1 (Stream As Ptr, Dictionary As Ptr, DictLength As UInt32) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateSetHeader Lib zlib1 (ByRef Stream As z_stream, Header As gz_headerp) As Integer
+		Private Soft Declare Function deflateSetHeader Lib zlib1 (Stream As Ptr, Header As gz_headerp) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function deflateTune Lib zlib1 (ByRef Stream As z_stream, GoodLength As Integer, MaxLazy As Integer, NiceLength As Integer, MaxChain As Integer) As Integer
+		Private Soft Declare Function deflateTune Lib zlib1 (Stream As Ptr, GoodLength As Integer, MaxLazy As Integer, NiceLength As Integer, MaxChain As Integer) As Integer
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function deflate_ Lib zlib1 Alias "deflate" (Stream As Ptr, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h21
@@ -559,10 +559,6 @@ Protected Module zlib
 		Private Soft Declare Function gzwrite Lib zlib1 (gzFile As Ptr, Buffer As Ptr, Length As UInt32) As Integer
 	#tag EndExternalMethod
 
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
-	#tag EndExternalMethod
-
 	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As FolderItem, Destination As FolderItem, Overwrite As Boolean = False, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Decompress the Source file and write the output to the Destination file. Reverses the Deflate method
@@ -666,6 +662,10 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
+	#tag ExternalMethod, Flags = &h21
+		Private Soft Declare Function inflate Lib zlib1 (Stream As Ptr, Flush As Integer) As Integer
+	#tag EndExternalMethod
+
 	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As Readable, Destination As FolderItem, Overwrite As Boolean = False, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Decompress the Source stream into the Destination file. Reverses the Deflate method
@@ -719,47 +719,47 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateCopy Lib zlib1 (ByRef Dst As z_stream, Src As z_stream) As Integer
+		Private Soft Declare Function inflateCopy Lib zlib1 (Dst As Ptr, Src As Ptr) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateEnd Lib zlib1 (ByRef Stream As z_stream) As Integer
+		Private Soft Declare Function inflateEnd Lib zlib1 (Stream As Ptr) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateGetDictionary Lib zlib1 (ByRef Stream As z_stream, Dictionary As Ptr, ByRef DictLength As UInt32) As Integer
+		Private Soft Declare Function inflateGetDictionary Lib zlib1 (Stream As Ptr, Dictionary As Ptr, ByRef DictLength As UInt32) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateGetHeader Lib zlib1 (ByRef Stream As z_stream, ByRef Header As gz_headerp) As Integer
+		Private Soft Declare Function inflateGetHeader Lib zlib1 (Stream As Ptr, ByRef Header As gz_headerp) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateInit2_ Lib zlib1 (ByRef Stream As z_stream, Encoding As Integer, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function inflateInit2_ Lib zlib1 (Stream As Ptr, Encoding As Integer, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateInit_ Lib zlib1 (ByRef Stream As z_stream, Version As CString, StreamSz As Integer) As Integer
+		Private Soft Declare Function inflateInit_ Lib zlib1 (Stream As Ptr, Version As CString, StreamSz As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateMark Lib zlib1 (ByRef Stream As z_stream) As UInt32
+		Private Soft Declare Function inflateMark Lib zlib1 (Stream As Ptr) As UInt32
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateReset Lib zlib1 (ByRef Stream As z_stream) As Integer
+		Private Soft Declare Function inflateReset Lib zlib1 (Stream As Ptr) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateReset2 Lib zlib1 (ByRef Stream As z_stream, Encoding As Integer) As Integer
+		Private Soft Declare Function inflateReset2 Lib zlib1 (Stream As Ptr, Encoding As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateSetDictionary Lib zlib1 (ByRef Stream As z_stream, Dictionary As Ptr, DictLength As UInt32) As Integer
+		Private Soft Declare Function inflateSetDictionary Lib zlib1 (Stream As Ptr, Dictionary As Ptr, DictLength As UInt32) As Integer
 	#tag EndExternalMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflateSync Lib zlib1 (ByRef Dst As z_stream) As Integer
+		Private Soft Declare Function inflateSync Lib zlib1 (Dst As Ptr) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
@@ -1110,7 +1110,7 @@ Protected Module zlib
 		Done As Integer
 	#tag EndStructure
 
-	#tag Structure, Name = z_stream, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit)) or  (TargetWeb and (Target32Bit)) or  (TargetDesktop and (Target32Bit)) or  (TargetIOS and (Target32Bit)), Attributes = \"StructureAlignment \x3D 1"
+	#tag Structure, Name = z_stream_32_1, Flags = &h21
 		next_in as Ptr
 		  avail_in as UInt32
 		  total_in as UInt32
@@ -1127,22 +1127,40 @@ Protected Module zlib
 		reserved as UInt32
 	#tag EndStructure
 
-	#tag Structure, Name = z_stream, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)), Attributes = \"StructureAlignment \x3D 8"
+	#tag Structure, Name = z_stream_32_8, Flags = &h21, Attributes = \"StructureAlignment \x3D 8"
 		next_in as Ptr
-		  avail_in as UInteger
-		  total_in as UInteger
+		  avail_in as UInt32
+		  total_in as UInt32
 		  next_out as Ptr
-		  avail_out as UInteger
-		  total_out as UInteger
+		  avail_out as UInt32
+		  total_out as UInt32
 		  msg as Ptr
 		  internal_state as Ptr
 		  zalloc as Ptr
 		  zfree as Ptr
 		  opaque as Ptr
-		  data_type as Integer
-		  adler as UInteger
-		reserved as UInteger
+		  data_type as Int32
+		  adler as UInt32
+		reserved as UInt32
 	#tag EndStructure
+
+	#tag Structure, Name = z_stream_64_8, Flags = &h21, Attributes = \"StructureAlignment \x3D 8"
+		next_in as Ptr
+		  avail_in as UInt32
+		  total_in as UInt64
+		  next_out as Ptr
+		  avail_out as UInt64
+		  total_out as UInt64
+		  msg as Ptr
+		  internal_state as Ptr
+		  zalloc as Ptr
+		  zfree as Ptr
+		  opaque as Ptr
+		  data_type as Int64
+		  adler as UInt64
+		reserved as UInt64
+	#tag EndStructure
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
