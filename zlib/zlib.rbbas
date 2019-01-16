@@ -1146,7 +1146,7 @@ Protected Module zlib
 
 	#tag Structure, Name = z_stream_64_8, Flags = &h21, Attributes = \"StructureAlignment \x3D 8"
 		next_in as Ptr
-		  avail_in as UInt32
+		  avail_in as UInt64
 		  total_in as UInt64
 		  next_out as Ptr
 		  avail_out as UInt64
