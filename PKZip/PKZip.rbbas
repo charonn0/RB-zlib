@@ -1,7 +1,7 @@
 #tag Module
 Protected Module PKZip
 	#tag Method, Flags = &h21
-		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Readable, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean, ByRef Levels() As UInt32, ByRef Methods() As UInt32)
+		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Variant, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean, ByRef Levels() As UInt32, ByRef Methods() As UInt32)
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)

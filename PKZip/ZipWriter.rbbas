@@ -1,5 +1,24 @@
 #tag Class
 Protected Class ZipWriter
+	#tag Method, Flags = &h1
+		Protected Sub Append(Path As String, Data As Variant, Length As UInt32, ModifyDate As Date = Nil)
+		  If Path.Len > MAX_PATH_SIZE Then Raise New ZipException(ERR_PATH_TOO_LONG)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
+		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
+		  d.Value(META_STREAM) = Data
+		  d.Value(META_LENGTH) = Length
+		  If ModifyDate = Nil Then ModifyDate = New Date
+		  d.Value(META_MODTIME) = ModifyDate
+		  If d.Value(META_DIR) = True Then
+		    d.Value(META_LEVEL) = 0
+		    d.Value(META_METHOD) = 0
+		  Else
+		    d.Value(META_LEVEL) = CompressionLevel
+		    d.Value(META_METHOD) = CompressionMethod
+		  End If
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub AppendDirectory(Entry As FolderItem, RelativeRoot As FolderItem = Nil)
 		  If Not Entry.Directory Then
@@ -21,13 +40,8 @@ Protected Class ZipWriter
 		Function AppendEntry(Entry As FolderItem, Optional RelativeRoot As FolderItem) As String
 		  If Entry.Length > &hFFFFFFFF Then Raise New ZipException(ERR_TOO_LARGE)
 		  Dim path As String = GetRelativePath(RelativeRoot, Entry)
-		  Dim bs As BinaryStream
-		  If Not Entry.Directory Then
-		    bs = BinaryStream.Open(Entry)
-		  Else
-		    path = path + "/"
-		  End If
-		  AppendEntry(path, bs, Entry.Length, Entry.ModificationDate)
+		  If Entry.Directory Then path = path + "/"
+		  Append(path, Entry, Entry.Length, Entry.ModificationDate)
 		  Return path
 		End Function
 	#tag EndMethod
@@ -67,7 +81,7 @@ Protected Class ZipWriter
 		  WriteTo.LittleEndian = True
 		  Dim paths(), comments() As String
 		  Dim lengths(), levels(), methods() As UInt32
-		  Dim sources() As Readable
+		  Dim sources() As Variant
 		  Dim modtimes() As Date
 		  Dim extras() As MemoryBlock
 		  Dim dirstatus() As Boolean
@@ -79,13 +93,28 @@ Protected Class ZipWriter
 		  If c >= 65535 And ArchiveComment = "" Then ArchiveComment = "Warning: This archive contains more than 65,535 entries."
 		  For i As Integer = 0 To c
 		    Dim path As String = paths(i)
-		    Dim source As Readable = sources(i)
+		    Dim source As Readable
+		    Dim closeable As Boolean
+		    Select Case sources(i)
+		    Case IsA Readable
+		      source = sources(i)
+		    Case IsA FolderItem
+		      Dim f As FolderItem = sources(i)
+		      If Not f.Directory Then
+		        source = BinaryStream.Open(f)
+		        closeable = True
+		      End If
+		    End Select
 		    path = ConvertEncoding(path, Encodings.UTF8)
 		    If dirstatus(i) And Right(path, 1) <> "/" Then path = path + "/"
 		    Dim dirheader As ZipDirectoryHeader
 		    WriteEntryHeader(WriteTo, path, lengths(i), source, modtimes(i), dirheader, extras(i), levels(i), methods(i))
 		    directory.Append(dirheader)
-		    If source IsA BinaryStream Then BinaryStream(source).Position = 0 ' be kind, rewind
+		    If closeable Then
+		      BinaryStream(source).Close
+		    ElseIf source IsA BinaryStream Then
+		      BinaryStream(source).Position = 0 ' be kind, rewind
+		    End If
 		  Next
 		  
 		  WriteDirectory(WriteTo, directory, paths, comments, extras, ArchiveComment)
@@ -397,6 +426,7 @@ Protected Class ZipWriter
 			Name="ArchiveComment"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="CompressionLevel"
