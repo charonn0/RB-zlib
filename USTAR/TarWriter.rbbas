@@ -185,7 +185,7 @@ Protected Class TarWriter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mLastError As Integer
+		Private mLastError As Int32
 	#tag EndProperty
 
 

@@ -236,7 +236,7 @@ Private Class FlateEngine
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mLastError As Integer
+		Protected mLastError As Int32
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h1

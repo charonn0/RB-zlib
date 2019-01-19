@@ -88,7 +88,10 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h1
 		Protected Sub gzError()
-		  If gzFile <> Nil Then mLastMsg = _gzerror(gzFile, mLastError)
+		  ' use a temp Integer variable here since the mLastError variable is an Int32
+		  Dim e As Integer
+		  If gzFile <> Nil Then mLastMsg = _gzerror(gzFile, e)
+		  mLastError = e
 		End Sub
 	#tag EndMethod
 
@@ -291,7 +294,7 @@ Implements zlib.CompressedStream
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mLastError As Integer
+		Private mLastError As Int32
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
