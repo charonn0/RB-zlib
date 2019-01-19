@@ -59,20 +59,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As Readable, Length As UInt32, ModifyDate As Date = Nil)
-		  If Path.Len > MAX_PATH_SIZE Then Raise New ZipException(ERR_PATH_TOO_LONG)
-		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
-		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
-		  d.Value(META_STREAM) = Data
-		  d.Value(META_LENGTH) = Length
-		  If ModifyDate = Nil Then ModifyDate = New Date
-		  d.Value(META_MODTIME) = ModifyDate
-		  If d.Value(META_DIR) = True Then
-		    d.Value(META_LEVEL) = 0
-		    d.Value(META_METHOD) = 0
-		  Else
-		    d.Value(META_LEVEL) = CompressionLevel
-		    d.Value(META_METHOD) = CompressionMethod
-		  End If
+		  Append(Path, Data, Length, ModifyDate)
 		End Sub
 	#tag EndMethod
 
