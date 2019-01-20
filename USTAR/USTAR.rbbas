@@ -1,7 +1,7 @@
 #tag Module
 Protected Module USTAR
 	#tag Method, Flags = &h21
-		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Readable, ByRef DirectoryStatus() As Boolean, ByRef Modes() As Permissions)
+		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Variant, ByRef DirectoryStatus() As Boolean, ByRef Modes() As Permissions)
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
