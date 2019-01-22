@@ -314,6 +314,7 @@ Protected Module PKZip
 		Private Function IsZipped(Extends Target As BinaryStream) As Boolean
 		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
 		  
+		  If Target = Nil Then Return False
 		  Dim IsZip As Boolean
 		  Dim pos As UInt64 = Target.Position
 		  Target.Position = 0
