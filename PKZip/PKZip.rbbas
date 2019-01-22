@@ -314,14 +314,12 @@ Protected Module PKZip
 		Private Function IsZipped(Extends Target As BinaryStream) As Boolean
 		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
 		  
-		  Const FILE_SIGNATURE = &h04034b50
-		  
 		  Dim IsZip As Boolean
 		  Dim pos As UInt64 = Target.Position
 		  Target.Position = 0
 		  Try
 		    Target.LittleEndian = True
-		    IsZip = (Target.ReadUInt32 = FILE_SIGNATURE)
+		    IsZip = (Target.ReadUInt32 = ZIP_ENTRY_HEADER_SIGNATURE)
 		  Catch
 		    IsZip = False
 		  Finally
@@ -339,8 +337,15 @@ Protected Module PKZip
 		  If Not TargetFile.Exists Then Return False
 		  If TargetFile.Directory Then Return False
 		  Dim bs As BinaryStream
-		  Dim IsZip As Boolean = bs.IsZipped()
-		  bs.Close
+		  Dim IsZip As Boolean
+		  Try
+		    bs = BinaryStream.Open(TargetFile)
+		    IsZip = bs.IsZipped()
+		  Catch
+		    IsZip = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
 		  Return IsZip
 		End Function
 	#tag EndMethod
