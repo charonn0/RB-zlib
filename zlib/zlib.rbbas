@@ -498,10 +498,6 @@ Protected Module zlib
 		End Function
 	#tag EndMethod
 
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function inflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
-	#tag EndExternalMethod
-
 	#tag Method, Flags = &h1
 		Protected Function Inflate(Source As FolderItem, Destination As FolderItem, Overwrite As Boolean = False, Dictionary As MemoryBlock = Nil, Encoding As Integer = zlib.DEFLATE_ENCODING) As Boolean
 		  ' Decompress the Source file and write the output to the Destination file. Reverses the Deflate method
