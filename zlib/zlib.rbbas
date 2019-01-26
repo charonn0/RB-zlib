@@ -316,27 +316,6 @@ Protected Module zlib
 		Private Soft Declare Function deflate_ Lib zlib1 Alias "deflate" (Stream As Ptr, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
-	#tag Method, Flags = &h21
-		Private Function get_errno() As Integer
-		  Dim err As Integer
-		  Dim mb As MemoryBlock
-		  #If TargetWin32 Then
-		    Declare Function _get_errno Lib "msvcrt" (ByRef Error As Integer) As Integer
-		    Dim e As Integer = _get_errno(err)
-		    If e <> 0 Then err = e
-		  #elseif TargetLinux
-		    Declare Function __errno_location Lib "libc.so" () As Ptr
-		    mb = __errno_location()
-		  #elseif TargetMacOS
-		    Declare Function __error Lib "System" () As Ptr
-		    mb = __error()
-		  #endif
-		  If mb <> Nil Then err = mb.Int32Value(0)
-		  Return err
-		  
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1
 		Protected Function GUnZip(Source As FolderItem) As MemoryBlock
 		  ' GUnZip the Source file and return it. Reverses the GZip method
@@ -426,22 +405,6 @@ Protected Module zlib
 		  Return Inflate(Source, Destination, Nil, GZIP_ENCODING)
 		End Function
 	#tag EndMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Sub gzclearerr Lib zlib1 (gzFile As Ptr)
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzclose Lib zlib1 (gzFile As Ptr) As Integer
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzeof Lib zlib1 (gzFile As Ptr) As Boolean
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzflush Lib zlib1 (gzFile As Ptr, Flush As Integer) As Integer
-	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
 		Protected Function GZip(Source As FolderItem, Destination As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False) As Boolean
@@ -536,27 +499,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzoffset Lib zlib1 (gzFile As Ptr) As Integer
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzopen Lib zlib1 (Path As CString, Mode As CString) As Ptr
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzread Lib zlib1 (gzFile As Ptr, Buffer As Ptr, Length As UInt32) As Integer
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzseek Lib zlib1 (gzFile As Ptr, Offset As Integer, Whence As Integer) As Integer
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzsetparams Lib zlib1 (gzFile As Ptr, Level As Integer, Strategy As Integer) As Integer
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Soft Declare Function gzwrite Lib zlib1 (gzFile As Ptr, Buffer As Ptr, Length As UInt32) As Integer
+		Private Soft Declare Function inflate Lib zlib1 (ByRef Stream As z_stream, Flush As Integer) As Integer
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
