@@ -279,7 +279,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
-		  If Root = Nil Then Return Item.Name
+		  If Root = Nil Or Root.AbsolutePath = Item.AbsolutePath Then Return Item.Name
 		  Dim s() As String
 		  Do Until Item.AbsolutePath = Root.AbsolutePath
 		    s.Insert(0, Item.Name)
