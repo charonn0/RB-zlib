@@ -4,21 +4,7 @@ Inherits RuntimeException
 	#tag Method, Flags = &h1000
 		Sub Constructor(ErrorCode As Integer)
 		  Me.ErrorNumber = ErrorCode
-		  
-		  Select Case ErrorCode
-		  Case ERR_END_ARCHIVE
-		    Me.Message = "The archive contains no further entries."
-		  Case ERR_INVALID_ENTRY
-		    Me.Message = "The archive entry is corrupt."
-		  Case ERR_MISALIGNED
-		    Me.Message = "The archive is corrupt."
-		  Case ERR_CHECKSUM_MISMATCH
-		    Me.Message = "The archive entry failed verification."
-		  Case ERR_INVALID_NAME
-		    Me.Message = "The archive entry has an illegal file name."
-		  Else
-		    Me.Message = "Unknown error"
-		  End Select
+		  Me.Message = USTAR.FormatError(ErrorCode)
 		End Sub
 	#tag EndMethod
 

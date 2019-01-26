@@ -34,6 +34,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As MemoryBlock, ModifyDate As Date = Nil)
+		  If Path.Len > MAX_PATH_SIZE Then Raise New ZipException(ERR_PATH_TOO_LONG)
 		  Dim bs As New BinaryStream(Data)
 		  AppendEntry(Path, bs, bs.Length, ModifyDate)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
@@ -44,6 +45,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As Readable, Length As UInt32, ModifyDate As Date = Nil)
+		  If Path.Len > MAX_PATH_SIZE Then Raise New ZipException(ERR_PATH_TOO_LONG)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
 		  d.Value(META_STREAM) = Data
@@ -74,6 +76,7 @@ Protected Class ZipWriter
 		  Dim directory() As ZipDirectoryHeader
 		  
 		  Dim c As Integer = UBound(paths)
+		  If c >= 65535 And ArchiveComment = "" Then ArchiveComment = "Warning: This archive contains more than 65,535 entries."
 		  For i As Integer = 0 To c
 		    Dim path As String = paths(i)
 		    Dim source As Readable = sources(i)
@@ -157,19 +160,24 @@ Protected Class ZipWriter
 		Sub SetEntryCompressionMethod(Path As String, CompressionMethod As Integer)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  If d.HasKey(META_METHOD) Then d.Remove(META_METHOD)
 		  Select Case CompressionMethod
+		  Case METHOD_NONE
+		    d.Value(META_METHOD) = CompressionMethod
+		    
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
 		      d.Value(META_METHOD) = CompressionMethod
+		    #Else
+		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    #endif
-		  Case 0
+		    
 		  Case METHOD_BZIP2
 		    #If USE_BZIP2 Then
 		      d.Value(META_METHOD) = CompressionMethod
+		    #Else
+		      Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    #endif
-		  Case 0
-		    d.Value(META_METHOD) = CompressionMethod
+		    
 		  Else
 		    Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		  End Select
@@ -195,6 +203,7 @@ Protected Class ZipWriter
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteDirectory(Stream As BinaryStream, Headers() As ZipDirectoryHeader, Names() As String, Comments() As String, Extras() As MemoryBlock, ArchiveComment As String)
 		  ArchiveComment = ConvertEncoding(ArchiveComment, Encodings.UTF8)
+		  If ArchiveComment.LenB > MAX_COMMENT_SIZE Then Raise New ZipException(ERR_TOO_LARGE)
 		  Dim c As Integer = UBound(Headers)
 		  Dim footer As ZipDirectoryFooter
 		  footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE
@@ -261,6 +270,15 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Shared Sub WriteEntryFooter(Stream As BinaryStream, CRC As UInt32, CompressedSize As UInt32, UncompressedSize As UInt32)
+		  Stream.WriteUInt32(ZIP_ENTRY_FOOTER_SIGNATURE)
+		  Stream.WriteUInt32(CRC)
+		  Stream.WriteUInt32(CompressedSize)
+		  Stream.WriteUInt32(UncompressedSize)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock, Level As UInt32, Method As UInt32)
 		  If Not USE_ZLIB Then Level = 0
 		  If Length = 0 Or Level = 0 Then method = 0
@@ -277,6 +295,9 @@ Protected Class ZipWriter
 		  If Name.Encoding = Encodings.UTF8 Then
 		    DirectoryHeader.Flag = FLAG_NAME_ENCODING
 		  End If
+		  #If Not OUTPUT_SEEKABLE Then
+		    If Length > 0 Then DirectoryHeader.Flag = DirectoryHeader.Flag Or FLAG_DESCRIPTOR
+		  #endif
 		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
 		  
 		  Stream.WriteUInt16(method) ' method
@@ -327,15 +348,21 @@ Protected Class ZipWriter
 		      If z IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(z).Close
 		    #endif
 		  End If
-		  Dim endoff As UInt64 = Stream.Position
-		  Dim compsz As UInt32 = endoff - dataoff
-		  Stream.Position = compszoff
-		  Stream.WriteUInt32(compsz)
-		  DirectoryHeader.CompressedSize = compsz
-		  Stream.Position = crcoff
-		  Stream.WriteUInt32(crc)
-		  DirectoryHeader.CRC32 = crc
-		  Stream.Position = endoff
+		  If Length > 0 Then
+		    Dim endoff As UInt64 = Stream.Position
+		    Dim compsz As UInt32 = endoff - dataoff
+		    DirectoryHeader.CompressedSize = compsz
+		    DirectoryHeader.CRC32 = crc
+		    #If OUTPUT_SEEKABLE Then
+		      Stream.Position = compszoff
+		      Stream.WriteUInt32(compsz)
+		      Stream.Position = crcoff
+		      Stream.WriteUInt32(crc)
+		      Stream.Position = endoff
+		    #Else
+		      WriteEntryFooter(Stream, crc, compsz, Length)
+		    #EndIf
+		  End If
 		End Sub
 	#tag EndMethod
 
@@ -359,6 +386,10 @@ Protected Class ZipWriter
 	#tag Property, Flags = &h1
 		Protected mLastError As Integer
 	#tag EndProperty
+
+
+	#tag Constant, Name = OUTPUT_SEEKABLE, Type = Boolean, Dynamic = False, Default = \"True", Scope = Protected
+	#tag EndConstant
 
 
 	#tag ViewBehavior

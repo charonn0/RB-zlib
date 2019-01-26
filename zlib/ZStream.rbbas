@@ -20,6 +20,7 @@ Implements zlib.CompressedStream
 		  mDeflater = Nil
 		  mInflater = Nil
 		  mSourceMB = Nil
+		  mReadBuffer = ""
 		End Sub
 	#tag EndMethod
 
@@ -192,6 +193,18 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Lookahead(encoding As TextEncoding = Nil) As String
+		  If Me.BufferedReading = False Then Return ""
+		  If mReadBuffer.LenB < 2 Then
+		    mBufferedReading = False
+		    mReadBuffer = mReadBuffer + Me.Read(CHUNK_SIZE, encoding)
+		    mBufferedReading = True
+		  End If
+		  Return DefineEncoding(mReadBuffer, encoding)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		 Shared Function Open(InputStream As FolderItem, Encoding As Integer = zlib.Z_DETECT) As zlib.ZStream
 		  ' Create a decompression stream where the compressed input is read from the Source file.
 		  
@@ -318,6 +331,12 @@ Implements zlib.CompressedStream
 		      EOL = EndOfLine.UNIX
 		    #endif
 		  End If
+		  
+		  ' try the easy way
+		  Dim i As Integer = InStrB(Me.Lookahead, EOL)
+		  If i > 0 Then Return Me.Read(i + EOL.LenB - 1)
+		  
+		  ' try the hard way
 		  Dim data As New MemoryBlock(0)
 		  Dim ret As New BinaryStream(data)
 		  Dim lastchar As String

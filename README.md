@@ -149,10 +149,10 @@ This example performs a hand-rolled HTTP request using a TCPSocket, and demonstr
 ```
 
 ## How to incorporate zlib into your Realbasic/Xojo project
-### Import the `zlib` module
+### Import the `zlib`, `USTAR`, and `PKZip` modules
 1. Download the RB-zlib project either in [ZIP archive format](https://github.com/charonn0/RB-zlib/archive/master.zip) or by cloning the repository with your Git client.
 2. Open the RB-zlib project in REALstudio or Xojo. Open your project in a separate window.
-3. Copy the `zlib` module and the `PKZip` module into your project and save.
+3. Copy the `zlib`, `USTAR`, and `PKZip` modules into your project and save.
 
 ### Ensure the zlib shared library is installed
 zlib is installed by default on most Unix-like operating systems, including OS X and most Linux distributions, however at least zlib version 1.2.8 is needed.

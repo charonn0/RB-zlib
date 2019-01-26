@@ -17,7 +17,7 @@ Protected Module PKZip
 		      If USE_ZLIB Then
 		        Methods.Append(item.Lookup(META_METHOD, METHOD_DEFLATED))
 		      Else
-		        Methods.Append(item.Lookup(META_METHOD, 0))
+		        Methods.Append(item.Lookup(META_METHOD, METHOD_NONE))
 		      End If
 		    End If
 		  Next
@@ -73,16 +73,19 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = - 1) As UInt32
+		  ' Calculate the CRC32 checksum for the Data. Pass back the returned value
+		  ' to continue processing.
+		  '    Dim crc As UInt32
+		  '    Do
+		  '      crc = CRC32(NextData, crc)
+		  '    Loop
+		  ' If Data.Size is not known (-1) then specify the size as DataSize
+		  
 		  #If USE_ZLIB Then
+		    ' zlib has an optimized C implementation that's orders of magnitude faster than the
+		    ' optimized Xojo implementation below, so we use it if it's available.
 		    Return zlib.CRC32(Data, LastCRC, DataSize)
 		  #Else
-		    ' Calculate the CRC32 checksum for the Data. Pass back the returned value
-		    ' to continue processing.
-		    '    Dim crc As UInt32
-		    '    Do
-		    '      crc = CRC32(NextData, crc)
-		    '    Loop
-		    ' If Data.Size is not known (-1) then specify the size as DataSize
 		    If DataSize = -1 Then DataSize = Data.Size
 		    If DataSize = -1 Then Raise New ZipException(ERR_SIZE_REQUIRED)
 		    
@@ -209,6 +212,8 @@ Protected Module PKZip
 		    Return DefineEncoding("The file is too large for the zip archive format.", Encoding)
 		  Case ERR_SIZE_REQUIRED
 		    Return DefineEncoding("This operation cannot be perfomed on an unbounded memory block.", Encoding)
+		  Case ERR_PATH_TOO_LONG
+		    Return DefineEncoding("The path is too long to store in the zip format.", Encoding)
 		  Else
 		    Return DefineEncoding("Unknown error.", Encoding)
 		  End Select
@@ -302,6 +307,47 @@ Protected Module PKZip
 		  Loop
 		  
 		  Return Join(s, "/")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function IsZipped(Extends Target As BinaryStream) As Boolean
+		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
+		  
+		  If Target = Nil Then Return False
+		  Dim IsZip As Boolean
+		  Dim pos As UInt64 = Target.Position
+		  Target.Position = 0
+		  Try
+		    Target.LittleEndian = True
+		    IsZip = (Target.ReadUInt32 = ZIP_ENTRY_HEADER_SIGNATURE)
+		  Catch
+		    IsZip = False
+		  Finally
+		    Target.Position = pos
+		  End Try
+		  Return IsZip
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
+		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
+		  
+		  If TargetFile = Nil Then Return False
+		  If Not TargetFile.Exists Then Return False
+		  If TargetFile.Directory Then Return False
+		  Dim bs As BinaryStream
+		  Dim IsZip As Boolean
+		  Try
+		    bs = BinaryStream.Open(TargetFile)
+		    IsZip = bs.IsZipped()
+		  Catch
+		    IsZip = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
+		  Return IsZip
 		End Function
 	#tag EndMethod
 
@@ -498,11 +544,12 @@ Protected Module PKZip
 		  Catch Err As ZipException
 		    Return False
 		  End Try
-		  zip.ValidateChecksums = True
+		  
+		  Dim tmp As New MemoryBlock(0)
+		  Dim nullstream As New BinaryStream(tmp)
+		  nullstream.Close
+		  
 		  Do Until zip.LastError <> 0
-		    Dim tmp As New MemoryBlock(0)
-		    Dim nullstream As New BinaryStream(tmp)
-		    nullstream.Close
 		    Call zip.MoveNext(nullstream)
 		  Loop
 		  zip.Close
@@ -630,6 +677,9 @@ Protected Module PKZip
 	#tag Constant, Name = ERR_NOT_ZIPPED, Type = Double, Dynamic = False, Default = \"-200", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = ERR_PATH_TOO_LONG, Type = Double, Dynamic = False, Default = \"-208", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = ERR_SIZE_REQUIRED, Type = Double, Dynamic = False, Default = \"-207", Scope = Protected
 	#tag EndConstant
 
@@ -655,6 +705,9 @@ Protected Module PKZip
 	#tag EndConstant
 
 	#tag Constant, Name = MAX_NAME_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = MAX_PATH_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = META_COMMENT, Type = String, Dynamic = False, Default = \"$c", Scope = Private
