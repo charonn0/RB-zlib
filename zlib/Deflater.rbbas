@@ -128,22 +128,6 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Pending() As Single
-		  ' Returns the number of bytes and bits of output that have been generated, but not yet provided 
-		  ' in the available output. The bytes not provided would be due to the available output space 
-		  ' being consumed. The number of bits of output not provided are between 0 and 7, where they await 
-		  ' more bits to join them in order to fill out a full byte.
-		  
-		  If Not IsOpen Then Return 0.0
-		  Dim bytes As UInt32
-		  Dim bits As Integer
-		  mLastError = deflatePending(zstruct, bytes, bits)
-		  If mLastError = Z_OK Then Return CDbl(Str(bytes) + "." + Str(bits))
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Prime(Bits As Integer, Value As Integer) As Boolean
 		  ' Inserts bits in the deflate output stream. The intent is that this function is used to start off the deflate 
 		  ' output with the bits leftover from a previous deflate stream when appending to it. As such, this function can
@@ -260,6 +244,25 @@ Inherits FlateEngine
 	#tag Property, Flags = &h1
 		Protected mStrategy As Integer = Z_DEFAULT_STRATEGY
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns the number of bytes and bits of output that have been generated, but not yet provided
+			  ' in the available output. The bytes not provided would be due to the available output space
+			  ' being consumed. The number of bits of output not provided are between 0 and 7, where they await
+			  ' more bits to join them in order to fill out a full byte.
+			  
+			  If Not IsOpen Then Return 0.0
+			  Dim bytes As UInt32
+			  Dim bits As Integer
+			  mLastError = deflatePending(zstruct, bytes, bits)
+			  If mLastError = Z_OK Then Return bytes + (bits / 10)
+			  
+			End Get
+		#tag EndGetter
+		Pending As Single
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
