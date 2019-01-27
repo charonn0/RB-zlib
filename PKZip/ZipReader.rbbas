@@ -74,11 +74,10 @@ Protected Class ZipReader
 		    If Not FindEntryFooter(mStream, footer) Then
 		      mLastError = ERR_INVALID_ENTRY
 		      Return False
-		    Else
-		      mCurrentEntry.CompressedSize = footer.CompressedSize
-		      mCurrentEntry.UncompressedSize = footer.UncompressedSize
-		      mCurrentEntry.CRC32 = footer.CRC32
 		    End If
+		    mCurrentEntry.CompressedSize = footer.CompressedSize
+		    mCurrentEntry.UncompressedSize = footer.UncompressedSize
+		    mCurrentEntry.CRC32 = footer.CRC32
 		    mStream.Position = datastart
 		  End If
 		  Return True
