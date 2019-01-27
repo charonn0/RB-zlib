@@ -320,7 +320,7 @@ Protected Module PKZip
 		  Target.Position = 0
 		  Try
 		    Target.LittleEndian = True
-		    IsZip = (Target.ReadUInt32 = ZIP_ENTRY_HEADER_SIGNATURE)
+		    IsZip = SeekSignature(Target, ZIP_ENTRY_HEADER_SIGNATURE)
 		  Catch
 		    IsZip = False
 		  Finally
