@@ -47,7 +47,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(Data As MemoryBlock) As MemoryBlock
+		Attributes( deprecated )  Function Inflate(Data As MemoryBlock) As MemoryBlock
 		  ' Decompresses Data and returns it as a new MemoryBlock, or Nil on error.
 		  ' Check LastError for details if there was an error.
 		  
