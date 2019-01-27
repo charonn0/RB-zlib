@@ -334,7 +334,7 @@ Implements zlib.CompressedStream
 		  
 		  ' try the easy way
 		  Dim i As Integer = InStrB(Me.Lookahead, EOL)
-		  If i > 0 Then Return Me.Read(i + EOL.LenB - 1)
+		  If i > 0 Then Return Me.Read(i + EOL.LenB - 1, encoding)
 		  
 		  ' try the hard way
 		  Dim data As New MemoryBlock(0)
@@ -356,7 +356,7 @@ Implements zlib.CompressedStream
 		  Loop
 		  If lastchar <> "" Then ret.Write(lastchar)
 		  ret.Close
-		  Return data
+		  Return DefineEncoding(data, encoding)
 		End Function
 	#tag EndMethod
 
