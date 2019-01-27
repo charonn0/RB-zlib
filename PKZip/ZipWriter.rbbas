@@ -148,7 +148,7 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastError() As Integer
+		Function LastError() As Int32
 		  Return mLastError
 		End Function
 	#tag EndMethod
@@ -400,7 +400,7 @@ Protected Class ZipWriter
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mLastError As Integer
+		Protected mLastError As Int32
 	#tag EndProperty
 
 

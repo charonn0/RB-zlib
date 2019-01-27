@@ -183,7 +183,7 @@ Implements zlib.CompressedStream
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastError() As Integer
+		Function LastError() As Int32
 		  If mInflater <> Nil Then
 		    Return mInflater.LastError
 		  ElseIf mDeflater <> Nil Then

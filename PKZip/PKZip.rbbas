@@ -124,9 +124,9 @@ Protected Module PKZip
 		    &hB3667A2E,&hC4614AB8,&h5D681B02,&h2A6F2B94,&hB40BBE37,&hC30C8EA1,&h5A05DF1B,&h2D02EF8D)
 		    
 		    LastCRC = LastCRC XOr &hFFFFFFFF
-		    For i As Integer = 0 To Data.Size - 1
-		      Dim tmp As UInt32 = LastCRC / 256
-		      LastCRC = (tmp And &hFFFFFFFF) XOr CRCTable((LastCRC XOr Data.UInt8Value(i)) And &hFF)
+		    Dim sz As Integer = Data.Size - 1
+		    For i As Integer = 0 To sz
+		      LastCRC = ShiftRight(LastCRC, 8) XOr CRCTable((LastCRC XOr Data.UInt8Value(i)) And &hFF)
 		    Next i
 		    Return LastCRC XOr &hFFFFFFFF
 		  #endif
@@ -279,7 +279,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
-		  If Root = Nil Then Return Item.Name
+		  If Root = Nil Or Root.AbsolutePath = Item.AbsolutePath Then Return Item.Name
 		  Dim s() As String
 		  Do Until Item.AbsolutePath = Root.AbsolutePath
 		    s.Insert(0, Item.Name)
@@ -314,14 +314,13 @@ Protected Module PKZip
 		Private Function IsZipped(Extends Target As BinaryStream) As Boolean
 		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
 		  
-		  Const FILE_SIGNATURE = &h04034b50
-		  
+		  If Target = Nil Then Return False
 		  Dim IsZip As Boolean
 		  Dim pos As UInt64 = Target.Position
 		  Target.Position = 0
 		  Try
 		    Target.LittleEndian = True
-		    IsZip = (Target.ReadUInt32 = FILE_SIGNATURE)
+		    IsZip = SeekSignature(Target, ZIP_ENTRY_HEADER_SIGNATURE)
 		  Catch
 		    IsZip = False
 		  Finally
@@ -339,8 +338,15 @@ Protected Module PKZip
 		  If Not TargetFile.Exists Then Return False
 		  If TargetFile.Directory Then Return False
 		  Dim bs As BinaryStream
-		  Dim IsZip As Boolean = bs.IsZipped()
-		  bs.Close
+		  Dim IsZip As Boolean
+		  Try
+		    bs = BinaryStream.Open(TargetFile)
+		    IsZip = bs.IsZipped()
+		  Catch
+		    IsZip = False
+		  Finally
+		    If bs <> Nil Then bs.Close
+		  End Try
 		  Return IsZip
 		End Function
 	#tag EndMethod
@@ -633,7 +639,7 @@ Protected Module PKZip
 	#tag Note, Name = Copying
 		RB-PKZip (https://github.com/charonn0/RB-zlib)
 		
-		Copyright (c)2018 Andrew Lambert, all rights reserved.
+		Copyright (c)2018-19 Andrew Lambert, all rights reserved.
 		
 		 Permission to use, copy, modify, and distribute this software for any purpose
 		 with or without fee is hereby granted, provided that the above copyright
