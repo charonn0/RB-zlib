@@ -1,5 +1,17 @@
 #tag Class
 Protected Class TarWriter
+	#tag Method, Flags = &h1
+		Protected Sub Append(Path As String, Data As Variant, Length As UInt32, ModifyDate As Date = Nil, Mode As Permissions = Nil)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
+		  If d = Nil Then Raise New TARException(ERR_INVALID_NAME)
+		  d.Value("$r") = Data
+		  d.Value("$s") = Length
+		  If ModifyDate = Nil Then ModifyDate = New Date
+		  d.Value("$t") = ModifyDate
+		  d.Value("$m") = Mode
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub AppendDirectory(Entry As FolderItem, RelativeRoot As FolderItem = Nil)
 		  If Not Entry.Directory Then
@@ -20,14 +32,9 @@ Protected Class TarWriter
 	#tag Method, Flags = &h0
 		Function AppendEntry(Entry As FolderItem, Optional RelativeRoot As FolderItem) As String
 		  Dim path As String = GetRelativePath(RelativeRoot, Entry)
-		  Dim bs As BinaryStream
-		  If Not Entry.Directory Then
-		    bs = BinaryStream.Open(Entry)
-		  Else
-		    path = path + "/"
-		  End If
+		  If Entry.Directory Then path = path + "/"
 		  Dim p As New Permissions(Entry.Permissions)
-		  AppendEntry(path, bs, Entry.Length, Entry.ModificationDate, p)
+		  Append(path, Entry, Entry.Length, Entry.ModificationDate, p)
 		  Return path
 		End Function
 	#tag EndMethod
@@ -66,7 +73,7 @@ Protected Class TarWriter
 		Sub Commit(WriteTo As Writeable)
 		  Dim paths() As String
 		  Dim lengths() As UInt32
-		  Dim sources() As Readable
+		  Dim sources() As Variant
 		  Dim modtimes() As Date
 		  Dim dirstatus() As Boolean
 		  Dim modes() As Permissions
@@ -77,7 +84,13 @@ Protected Class TarWriter
 		    Dim length As UInt32 = lengths(i)
 		    Dim path As String = paths(i)
 		    path = ConvertEncoding(path, Encodings.UTF8)
-		    Dim source As Readable = sources(i)
+		    Dim source As Readable
+		    If sources(i) IsA Readable Then
+		      source = sources(i)
+		    ElseIf sources(i) IsA FolderItem Then
+		      Dim f As FolderItem = sources(i)
+		      If Not f.Directory Then source = BinaryStream.Open(f)
+		    End If
 		    Dim modtime As Date = modtimes(i)
 		    Dim mode As Permissions = modes(i)
 		    If dirstatus(i) And Right(path, 1) <> "/" Then path = path + "/"
@@ -111,7 +124,7 @@ Protected Class TarWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastError() As Integer
+		Function LastError() As Int32
 		  Return mLastError
 		End Function
 	#tag EndMethod
@@ -185,7 +198,7 @@ Protected Class TarWriter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mLastError As Integer
+		Private mLastError As Int32
 	#tag EndProperty
 
 

@@ -1,7 +1,7 @@
 #tag Module
 Protected Module PKZip
 	#tag Method, Flags = &h21
-		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Readable, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean, ByRef Levels() As UInt32, ByRef Methods() As UInt32)
+		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Variant, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean, ByRef Levels() As UInt32, ByRef Methods() As UInt32)
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
@@ -124,9 +124,9 @@ Protected Module PKZip
 		    &hB3667A2E,&hC4614AB8,&h5D681B02,&h2A6F2B94,&hB40BBE37,&hC30C8EA1,&h5A05DF1B,&h2D02EF8D)
 		    
 		    LastCRC = LastCRC XOr &hFFFFFFFF
-		    For i As Integer = 0 To Data.Size - 1
-		      Dim tmp As UInt32 = LastCRC / 256
-		      LastCRC = (tmp And &hFFFFFFFF) XOr CRCTable((LastCRC XOr Data.UInt8Value(i)) And &hFF)
+		    Dim sz As Integer = Data.Size - 1
+		    For i As Integer = 0 To sz
+		      LastCRC = ShiftRight(LastCRC, 8) XOr CRCTable((LastCRC XOr Data.UInt8Value(i)) And &hFF)
 		    Next i
 		    Return LastCRC XOr &hFFFFFFFF
 		  #endif
@@ -279,7 +279,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
-		  If Root = Nil Then Return Item.Name
+		  If Root = Nil Or Root.AbsolutePath = Item.AbsolutePath Then Return Item.Name
 		  Dim s() As String
 		  Do Until Item.AbsolutePath = Root.AbsolutePath
 		    s.Insert(0, Item.Name)
@@ -320,7 +320,7 @@ Protected Module PKZip
 		  Target.Position = 0
 		  Try
 		    Target.LittleEndian = True
-		    IsZip = (Target.ReadUInt32 = ZIP_ENTRY_HEADER_SIGNATURE)
+		    IsZip = SeekSignature(Target, ZIP_ENTRY_HEADER_SIGNATURE)
 		  Catch
 		    IsZip = False
 		  Finally
@@ -639,7 +639,7 @@ Protected Module PKZip
 	#tag Note, Name = Copying
 		RB-PKZip (https://github.com/charonn0/RB-zlib)
 		
-		Copyright (c)2018 Andrew Lambert, all rights reserved.
+		Copyright (c)2018-19 Andrew Lambert, all rights reserved.
 		
 		 Permission to use, copy, modify, and distribute this software for any purpose
 		 with or without fee is hereby granted, provided that the above copyright

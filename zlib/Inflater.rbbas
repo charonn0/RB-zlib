@@ -12,9 +12,9 @@ Inherits FlateEngine
 		  Super.Constructor()
 		  
 		  If Encoding = DEFLATE_ENCODING Then
-		    mLastError = inflateInit_(zstruct, "1.2.8" + Chr(0), zstruct.Size)
+		    mLastError = inflateInit_(zstruct, "1.2.8" + Chr(0), Me.Size)
 		  Else
-		    mLastError = inflateInit2_(zstruct, Encoding, "1.2.8" + Chr(0), zstruct.Size)
+		    mLastError = inflateInit2_(zstruct, Encoding, "1.2.8" + Chr(0), Me.Size)
 		    If mLastError = Z_OK And Encoding >= GZIP_ENCODING Then mLastError = inflateGetHeader(zstruct, mGZHeader)
 		  End If
 		  If mLastError <> Z_OK Then Raise New zlibException(mLastError)
@@ -47,7 +47,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(Data As MemoryBlock) As MemoryBlock
+		Attributes( deprecated )  Function Inflate(Data As MemoryBlock) As MemoryBlock
 		  ' Decompresses Data and returns it as a new MemoryBlock, or Nil on error.
 		  ' Check LastError for details if there was an error.
 		  
@@ -85,22 +85,22 @@ Inherits FlateEngine
 		    Dim sz As Integer
 		    If ReadCount > -1 Then sz = Min(ReadCount - count, CHUNK_SIZE) Else sz = CHUNK_SIZE
 		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
-		    zstruct.avail_in = chunk.Size
-		    zstruct.next_in = chunk
+		    Me.avail_in = chunk.Size
+		    Me.next_in = chunk
 		    count = count + chunk.Size
 		    Do
 		      ' provide more output space
-		      zstruct.next_out = outbuff
-		      zstruct.avail_out = outbuff.Size
+		      Me.next_out = outbuff
+		      Me.avail_out = outbuff.Size
 		      mLastError = inflate(zstruct, Z_NO_FLUSH)
 		      ' consume any output
-		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
+		      Dim have As UInt32 = CHUNK_SIZE - Me.avail_out
 		      If have > 0 Then
 		        If have <> outbuff.Size Then outbuff.Size = have
 		        WriteTo.Write(outbuff)
 		      End If
 		      ' keep going until zlib doesn't use all the output space or an error
-		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
+		    Loop Until mLastError <> Z_OK Or Me.avail_out <> 0
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
@@ -149,8 +149,8 @@ Inherits FlateEngine
 		  
 		  If Not IsOpen Then Return False
 		  
-		  zstruct.next_out = Nil
-		  zstruct.avail_out = 0
+		  Me.next_out = Nil
+		  Me.avail_out = 0
 		  
 		  Dim count As Integer
 		  Do
@@ -158,8 +158,8 @@ Inherits FlateEngine
 		    If MaxCount > -1 Then sz = Min(MaxCount - count, CHUNK_SIZE) Else sz = CHUNK_SIZE
 		    Dim chunk As MemoryBlock = ReadFrom.Read(sz)
 		    If chunk.Size <= 0 Then Return False
-		    zstruct.avail_in = chunk.Size
-		    zstruct.next_in = chunk
+		    Me.avail_in = chunk.Size
+		    Me.next_in = chunk
 		    count = count + chunk.Size
 		    mLastError = inflateSync(zstruct)
 		  Loop Until mLastError <> Z_DATA_ERROR Or ReadFrom.EOF Or (MaxCount > -1 And count >= MaxCount)
@@ -168,16 +168,6 @@ Inherits FlateEngine
 		End Function
 	#tag EndMethod
 
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  ' Returns the decoding state
-			  Return zstruct.data_type
-			End Get
-		#tag EndGetter
-		DataType As UInt32
-	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter

@@ -20,11 +20,11 @@ Inherits FlateEngine
 		  
 		  If CompressionStrategy <> Z_DEFAULT_STRATEGY Or Encoding <> DEFLATE_ENCODING Or MemoryLevel <> DEFAULT_MEM_LVL Then
 		    ' Open the compressed stream using custom options
-		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, "1.2.8" + Chr(0), zstruct.Size)
+		    mLastError = deflateInit2_(zstruct, CompressionLevel, Z_DEFLATED, Encoding, MemoryLevel, CompressionStrategy, "1.2.8" + Chr(0), Me.Size)
 		    
 		  Else
 		    ' process zlib-wrapped deflate data
-		    mLastError = deflateInit_(zstruct, CompressionLevel, "1.2.8" + Chr(0), zstruct.Size)
+		    mLastError = deflateInit_(zstruct, CompressionLevel, "1.2.8" + Chr(0), Me.Size)
 		    
 		  End If
 		  
@@ -53,7 +53,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
+		Attributes( deprecated )  Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
 		  ' Compresses Data and returns it as a new MemoryBlock, or Nil on error.
 		  ' Check LastError for details if there was an error.
 		  
@@ -93,29 +93,29 @@ Inherits FlateEngine
 		    If ReadCount > -1 Then sz = Min(ReadCount - count, CHUNK_SIZE) Else sz = CHUNK_SIZE
 		    If ReadFrom <> Nil And sz > 0 Then chunk = ReadFrom.Read(sz) Else chunk = ""
 		    
-		    zstruct.avail_in = chunk.Size
-		    zstruct.next_in = chunk
+		    Me.avail_in = chunk.Size
+		    Me.next_in = chunk
 		    count = count + chunk.Size
 		    
 		    Do
 		      ' provide more output space
-		      zstruct.next_out = outbuff
-		      zstruct.avail_out = outbuff.Size
-		      mLastError = deflate(zstruct, Flushing)
+		      Me.next_out = outbuff
+		      Me.avail_out = outbuff.Size
+		      mLastError = deflate_(zstruct, Flushing)
 		      If mLastError = Z_STREAM_ERROR Then Return False ' the stream state is inconsistent!!!
 		      ' consume any output
-		      Dim have As UInt32 = CHUNK_SIZE - zstruct.avail_out
+		      Dim have As UInt32 = CHUNK_SIZE - Me.avail_out
 		      If have > 0 Then
 		        If have <> outbuff.Size Then outbuff.Size = have
 		        WriteTo.Write(outbuff)
 		      End If
 		      ' keep going until zlib doesn't use all the output space or an error
-		    Loop Until mLastError <> Z_OK Or zstruct.avail_out <> 0
+		    Loop Until mLastError <> Z_OK Or Me.avail_out <> 0
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
 		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
-		  Return zstruct.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
+		  Return Me.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
 		  
 		  
 		End Function
@@ -125,22 +125,6 @@ Inherits FlateEngine
 		Private Sub Destructor()
 		  If IsOpen Then mLastError = deflateEnd(zstruct)
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Pending() As Single
-		  ' Returns the number of bytes and bits of output that have been generated, but not yet provided 
-		  ' in the available output. The bytes not provided would be due to the available output space 
-		  ' being consumed. The number of bits of output not provided are between 0 and 7, where they await 
-		  ' more bits to join them in order to fill out a full byte.
-		  
-		  If Not IsOpen Then Return 0.0
-		  Dim bytes As UInt32
-		  Dim bits As Integer
-		  mLastError = deflatePending(zstruct, bytes, bits)
-		  If mLastError = Z_OK Then Return CDbl(Str(bytes) + "." + Str(bits))
-		  
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -191,15 +175,6 @@ Inherits FlateEngine
 		End Function
 	#tag EndMethod
 
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  Return zstruct.data_type
-			End Get
-		#tag EndGetter
-		DataType As UInt32
-	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -269,6 +244,25 @@ Inherits FlateEngine
 	#tag Property, Flags = &h1
 		Protected mStrategy As Integer = Z_DEFAULT_STRATEGY
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns the number of bytes and bits of output that have been generated, but not yet provided
+			  ' in the available output. The bytes not provided would be due to the available output space
+			  ' being consumed. The number of bits of output not provided are between 0 and 7, where they await
+			  ' more bits to join them in order to fill out a full byte.
+			  
+			  If Not IsOpen Then Return 0.0
+			  Dim bytes As UInt32
+			  Dim bits As Integer
+			  mLastError = deflatePending(zstruct, bytes, bits)
+			  If mLastError = Z_OK Then Return bytes + (bits / 10)
+			  
+			End Get
+		#tag EndGetter
+		Pending As Single
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
