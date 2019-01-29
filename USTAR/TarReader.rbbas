@@ -95,11 +95,10 @@ Protected Class TarReader
 		  mCurrentSize = header.HeaderFilesize
 		  mCurrentModTime = header.HeaderModDate
 		  mCurrentChecksum = header.HeaderChecksum
-		  'mCurrentLinkIndicator = header.HeaderLinkIndicator
 		  mCurrentLinkName = header.HeaderLinkName
 		  
 		  If CurrentName = "" Then mLastError = ERR_INVALID_NAME
-		  If mStream.EOF Then mLastError = ERR_END_ARCHIVE
+		  If mStream.EOF Or header.HeaderChecksum = 0 Then mLastError = ERR_END_ARCHIVE
 		  Return mLastError = 0
 		End Function
 	#tag EndMethod
@@ -187,11 +186,6 @@ Protected Class TarReader
 			  return mCurrentType
 			End Get
 		#tag EndGetter
-		#tag Setter
-			Set
-			  mCurrentType = value
-			End Set
-		#tag EndSetter
 		CurrentType As String
 	#tag EndComputedProperty
 
@@ -201,10 +195,6 @@ Protected Class TarReader
 
 	#tag Property, Flags = &h21
 		Private mCurrentGroup As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mCurrentLinkIndicator As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
