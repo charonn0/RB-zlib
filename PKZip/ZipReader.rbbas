@@ -124,7 +124,7 @@ Protected Class ZipReader
 		    Dim sz As Integer = Min(mCurrentEntry.CompressedSize - offset, CHUNK_SIZE)
 		    Dim data As MemoryBlock = zipstream.Read(sz)
 		    If data.Size > 0 Then
-		      If ValidateChecksums Then CRC = PKZip.CRC32(data, CRC, data.Size)
+		      If ValidateChecksums Then CRC = PKZip.CRC32(data, CRC)
 		      Destination.Write(data)
 		    End If
 		  Loop Until zipstream.EOF
