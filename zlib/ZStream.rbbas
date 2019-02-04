@@ -171,14 +171,14 @@ Implements zlib.CompressedStream
 	#tag Method, Flags = &h0
 		Function IsReadable() As Boolean
 		  ' Returns True if the stream is in decompression mode
-		  Return Me.Inflater <> Nil
+		  Return mInflater <> Nil
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function IsWriteable() As Boolean
 		  ' Returns True if the stream is in compression mode
-		  Return Me.Deflater <> Nil
+		  Return mDeflater <> Nil
 		End Function
 	#tag EndMethod
 
