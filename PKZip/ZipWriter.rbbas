@@ -344,7 +344,7 @@ Protected Class ZipWriter
 		  DirectoryHeader.ExtraLength = ExtraData.Size
 		  Stream.WriteUInt16(ExtraData.Size) ' extra length
 		  
-		  Stream.Write(Name)
+		  Stream.Write(Name) ' name
 		  Stream.Write(ExtraData) ' extra
 		  
 		  dataoff = Stream.Position
