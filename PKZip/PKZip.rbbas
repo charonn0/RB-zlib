@@ -127,7 +127,7 @@ Protected Module PKZip
 		    Dim sz As Integer = Data.Size - 1
 		    For i As Integer = 0 To sz
 		      LastCRC = ShiftRight(LastCRC, 8) XOr CRCTable((LastCRC XOr Data.UInt8Value(i)) And &hFF)
-		    Next i
+		    Next
 		    Return LastCRC XOr &hFFFFFFFF
 		  #endif
 		End Function
