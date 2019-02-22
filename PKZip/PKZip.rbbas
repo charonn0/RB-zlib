@@ -312,7 +312,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function IsZipped(Extends Target As BinaryStream) As Boolean
-		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
+		  //Checks the pkzip magic number. Returns True if the Target stream is likely a zip archive
 		  
 		  If Target = Nil Then Return False
 		  Dim IsZip As Boolean
@@ -334,9 +334,7 @@ Protected Module PKZip
 		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
 		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
 		  
-		  If TargetFile = Nil Then Return False
-		  If Not TargetFile.Exists Then Return False
-		  If TargetFile.Directory Then Return False
+		  If TargetFile = Nil Or Not TargetFile.Exists Or TargetFile.Directory Then Return False
 		  Dim bs As BinaryStream
 		  Dim IsZip As Boolean
 		  Try
