@@ -138,12 +138,25 @@ Protected Class ZipWriter
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
 		  Dim n As String = d.Lookup(META_PATH, "$INVALID")
-		  If n = "$INVALID" Then Return
-		  Dim w As WeakRef = d.Lookup(META_PARENT, Nil)
-		  If w.Value IsA Dictionary Then
-		    Dim p As Dictionary = Dictionary(w.Value)
-		    p.Remove(n)
-		  End If
+		  Select Case n
+		  Case "$INVALID"
+		    ' not found
+		  Case "$ROOT"
+		    ' delete all
+		    Dim nms() As String
+		    For Each name As String In d.Keys
+		      If Left(name, 1) <> "$" Then nms.Append(name)
+		    Next
+		    For Each name AS String In nms
+		      d.Remove(name)
+		    Next
+		  Else
+		    Dim w As WeakRef = d.Lookup(META_PARENT, Nil)
+		    If w.Value IsA Dictionary Then
+		      Dim p As Dictionary = Dictionary(w.Value)
+		      p.Remove(n)
+		    End If
+		  End Select
 		End Sub
 	#tag EndMethod
 
