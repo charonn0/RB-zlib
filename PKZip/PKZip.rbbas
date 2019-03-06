@@ -481,7 +481,7 @@ Protected Module PKZip
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False, VerifyCRC As Boolean = True) As FolderItem()
 		  ' Extracts a ZIP file to the ExtractTo directory
 		  
-		  Dim zip As New ZipReader(BinaryStream.Open(ZipFile))
+		  Dim zip As New ZipReader(ZipFile)
 		  zip.ValidateChecksums = VerifyCRC
 		  Dim ret() As FolderItem
 		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()

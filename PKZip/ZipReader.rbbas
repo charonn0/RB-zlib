@@ -132,7 +132,7 @@ Protected Class ZipReader
 		    mStream.Position = mStream.Position + ZIP_ENTRY_FOOTER_SIZE
 		  End If
 		  
-		  If ValidateChecksums And (crc <> mCurrentEntry.CRC32) Then
+		  If ValidateChecksums And (CRC <> mCurrentEntry.CRC32) Then
 		    mLastError = ERR_CHECKSUM_MISMATCH
 		    Return False Or mForced
 		  End If
