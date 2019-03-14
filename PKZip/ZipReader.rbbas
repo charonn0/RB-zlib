@@ -29,12 +29,28 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Sub Constructor(ZipStream As FolderItem, Force As Boolean = False)
+		  ' Construct a ZipReader from the ZipStream file.
+		  ' If Force=True then less strict techniques are used:
+		  '  * The zip data is assumed to start at offset 0
+		  '  * The central directory is ignored
+		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
+		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
+		  ' Forible reading can yield a performance boost on well-formed archives.
+		  
 		  Me.Constructor(BinaryStream.Open(ZipStream), Force)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor(ZipData As MemoryBlock, Force As Boolean = False)
+		  ' Construct a ZipReader from the ZipData.
+		  ' If Force=True then less strict techniques are used:
+		  '  * The zip data is assumed to start at offset 0
+		  '  * The central directory is ignored
+		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
+		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
+		  ' Forible reading can yield a performance boost on well-formed archives.
+		  
 		  mData = ZipData
 		  Me.Constructor(New BinaryStream(mData), Force)
 		End Sub
@@ -42,6 +58,8 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Function Count() As UInt32
+		  ' Returns the number of entries purported to exist in the archive (this can be wrong.)
+		  
 		  Return mDirectoryFooter.ThisRecordCount
 		End Function
 	#tag EndMethod
@@ -54,6 +72,9 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h21
 		Private Function FindDirectoryFooter() As Boolean
+		  ' Locates the end-of-central-directory footer and archive comment.
+		  ' Returns True if the footer is found and appears to be sane.
+		  
 		  If Not FindDirectoryFooter(mStream) Then Return False
 		  If Not ReadDirectoryFooter(mStream, mDirectoryFooter) Then Return False
 		  mArchiveComment = mStream.Read(mDirectoryFooter.CommentLength)
@@ -71,7 +92,7 @@ Protected Class ZipReader
 		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR And mCurrentEntry.CompressedSize = 0 Then ' descriptor follows
 		    Dim datastart As UInt64 = mStream.Position
 		    Dim footer As ZipEntryFooter
-		    If Not FindEntryFooter(mStream, footer) Then
+		    If Not PKZip.FindEntryFooter(mStream, footer) Then
 		      mLastError = ERR_INVALID_ENTRY
 		      Return False
 		    End If
@@ -86,14 +107,17 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Function LastError() As Int32
+		  ' The most recent error while reading the archive. Check this value if MoveNext() or Reset() return False.
+		  
 		  Return mLastError
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable) As Boolean
-		  ' Extract the current item. If ExtractTo is Nil then the current item is skipped.
-		  ' Returns True if the item was extracted and the next item is ready. Check LastError
+		  ' Extract the current item and then read the metadata of the next item, if any.
+		  ' If ExtractTo is Nil then the current item is skipped.
+		  ' Returns True if the current item was extracted and the next item is ready. Check LastError
 		  ' for details if this method returns False; in particulur the error ERR_END_ARCHIVE
 		  ' means that extraction was successful but there are no further entries.
 		  
@@ -103,6 +127,11 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h1
 		Protected Function ReadEntry(Destination As Writeable) As Boolean
+		  ' Decompress the current item into the Destination parameter.
+		  ' Returns True on success; check LastError if it returns False.
+		  ' On successful return, the mStream property will be positioned to
+		  ' read the headers of the next entry.
+		  
 		  If Destination = Nil Or mCurrentEntry.CompressedSize = 0 Then
 		    ' skip the current item
 		    mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
@@ -143,7 +172,11 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h1
 		Protected Function ReadHeader() As Boolean
-		  ' read the next entry header
+		  ' Read the next entry's header into the CurrentName, CurrentSize, etc. properties.
+		  ' Returns True on success; check LastError if it returns False.
+		  ' On successful return, the mStream property will be positioned to
+		  ' read the file data of the (now) current item.
+		  
 		  Dim doitanyway As Boolean = mForced And (mStream.Length - mStream.Position >= MIN_ARCHIVE_SIZE)
 		  If mStream.Position >= mDirectoryFooter.Offset And Not doitanyway Then
 		    mLastError = ERR_END_ARCHIVE
@@ -255,6 +288,12 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Function Reset(Index As Integer) As Boolean
+		  ' Repositions the "current" item to the specified Index. The first item is
+		  ' at index zero. Pass -1 to perform a consistency check on the file
+		  ' structure; this check verifies that the file appears to be a properly
+		  ' formatted zip file, but doesn't verify the integrity of the files stored
+		  ' within (See PKZip.TestZip for that.)
+		  
 		  mIndex = -1
 		  mCurrentExtra = Nil
 		  mCurrentEntry.StringValue(True) = ""
@@ -303,6 +342,8 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the compression level that was used on the current item.
+			  
 			  Select Case True
 			  Case BitAnd(mCurrentEntry.Flag, 1) = 1 And BitAnd(mCurrentEntry.Flag, 2) = 2
 			    Return 1 ' fastest
