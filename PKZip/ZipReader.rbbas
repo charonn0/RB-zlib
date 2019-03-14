@@ -236,12 +236,8 @@ Protected Class ZipReader
 		      " processed(" + Format(reccount, "###,###,##0") + " OK, " + Format(errcount, "###,###,##0") + " errors.)---")
 		    End If
 		    
-		    If writer <> Nil Then
-		      writer.Commit(RecoveryFile, True)
-		      ok = (writer.LastError = 0)
-		    Else
-		      ok = True
-		    End If
+		    If writer <> Nil Then writer.Commit(RecoveryFile, True)
+		    ok = True
 		  Catch Err
 		    ok = False
 		  Finally

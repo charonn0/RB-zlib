@@ -616,8 +616,13 @@ Protected Module PKZip
 		  For i As Integer = 0 To c
 		    Call writer.AppendEntry(ToArchive(i), RelativeRoot)
 		  Next
-		  writer.Commit(OutputFile, Overwrite)
-		  Return writer.LastError = 0
+		  Try
+		    writer.Commit(OutputFile, Overwrite)
+		  Catch
+		    Return False
+		  End Try
+		  
+		  Return True
 		End Function
 	#tag EndMethod
 

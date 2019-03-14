@@ -161,12 +161,6 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastError() As Int32
-		  Return mLastError
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub SetEntryComment(Path As String, Comment As String)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
@@ -410,10 +404,6 @@ Protected Class ZipWriter
 
 	#tag Property, Flags = &h21
 		Private mEntries As Dictionary
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mLastError As Int32
 	#tag EndProperty
 
 
