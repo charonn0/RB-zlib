@@ -213,7 +213,7 @@ Protected Module PKZip
 		  Case ERR_SIZE_REQUIRED
 		    Return DefineEncoding("This operation cannot be perfomed on an unbounded memory block.", Encoding)
 		  Case ERR_PATH_TOO_LONG
-		    Return DefineEncoding("The path is too long to store in the zip format.", Encoding)
+		    Return DefineEncoding("The file or path name is too long for the zip archive format.", Encoding)
 		  Else
 		    Return DefineEncoding("Unknown error.", Encoding)
 		  End Select
