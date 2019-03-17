@@ -114,11 +114,15 @@ Protected Class TarReader
 		  mCurrentGroup = header.HeaderGroup
 		  mCurrentSize = header.HeaderFilesize
 		  mCurrentModTime = header.HeaderModDate
-		  mCurrentChecksum = header.HeaderChecksum
 		  mCurrentLinkName = header.HeaderLinkName
 		  
 		  If CurrentName = "" Then mLastError = ERR_INVALID_NAME
-		  If mStream.EOF Or header.HeaderChecksum = 0 Then mLastError = ERR_END_ARCHIVE
+		  If mStream.EOF Or header.HeaderChecksum = 0 Then
+		    mLastError = ERR_END_ARCHIVE
+		  ElseIf ValidateChecksums And header.HeaderChecksum <> GetChecksum(header) Then
+		    mLastError = ERR_CHECKSUM_MISMATCH
+		  End If
+		  
 		  Return mLastError = 0
 		End Function
 	#tag EndMethod
@@ -138,15 +142,6 @@ Protected Class TarReader
 		End Function
 	#tag EndMethod
 
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  Return mCurrentChecksum
-			End Get
-		#tag EndGetter
-		CurrentChecksum As UInt32
-	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -212,10 +207,6 @@ Protected Class TarReader
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentChecksum As UInt32
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private mCurrentGroup As Integer
 	#tag EndProperty
 
@@ -257,6 +248,10 @@ Protected Class TarReader
 
 	#tag Property, Flags = &h21
 		Private mStreamPosition As UInt64
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		ValidateChecksums As Boolean = True
 	#tag EndProperty
 
 
