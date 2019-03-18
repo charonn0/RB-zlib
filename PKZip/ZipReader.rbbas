@@ -146,10 +146,10 @@ Protected Class ZipReader
 		  End If
 		  
 		  ' read the compressed data
-		  Dim p As UInt64 = mStream.Position
+		  Dim startpos As UInt64 = mStream.Position
 		  Dim CRC As UInt32
-		  Do Until mStream.Position - p >= mCurrentEntry.CompressedSize
-		    Dim offset As UInt64 = mStream.Position - p
+		  Do Until mStream.Position - startpos >= mCurrentEntry.CompressedSize
+		    Dim offset As UInt64 = mStream.Position - startpos
 		    Dim sz As Integer = Min(mCurrentEntry.CompressedSize - offset, CHUNK_SIZE)
 		    Dim data As MemoryBlock = zipstream.Read(sz)
 		    If data.Size > 0 Then
