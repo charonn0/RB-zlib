@@ -366,7 +366,7 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock, Level As UInt32, Method As UInt32)
-		  If Not USE_ZLIB Then Level = 0
+		  If Not USE_ZLIB And Not USE_BZIP2 Then Level = 0
 		  If Length = 0 Or Level = 0 Then method = 0
 		  
 		  DirectoryHeader.Offset = Stream.Position
