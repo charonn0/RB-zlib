@@ -1,9 +1,8 @@
 #tag Class
 Protected Class ZStream
-Implements zlib.CompressedStream
+Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Sub Close()
-		  // Part of the zlib.CompressedStream interface.
 		  ' End the stream. If the stream is being written/compressed then all pending output is flushed.
 		  ' If the stream is being read/decompressed then all pending output is discarded; check EOF to
 		  ' determine whether there is pending output. After this method returns all calls to Read/Write 
@@ -147,7 +146,6 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h0
 		Sub Flush(Flushing As Integer)
-		  // Part of the zlib.CompressedStream interface.
 		  ' Flushing may be:
 		  '   Z_NO_FLUSH:      allows deflate to decide how much data to accumulate before producing output
 		  '   Z_SYNC_FLUSH:    all pending output is flushed to the output buffer and the output is aligned on a byte boundary.
@@ -171,14 +169,14 @@ Implements zlib.CompressedStream
 	#tag Method, Flags = &h0
 		Function IsReadable() As Boolean
 		  ' Returns True if the stream is in decompression mode
-		  Return Me.Inflater <> Nil
+		  Return mInflater <> Nil
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function IsWriteable() As Boolean
 		  ' Returns True if the stream is in compression mode
-		  Return Me.Deflater <> Nil
+		  Return mDeflater <> Nil
 		End Function
 	#tag EndMethod
 
@@ -281,7 +279,6 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h0
 		Function ReadAll(encoding As TextEncoding = Nil) As String
-		  // Part of the zlib.CompressedStream interface.
 		  ' Read compressed bytes until EOF, inflate and return any output.
 		  
 		  If mInflater = Nil Then Raise New IOException
@@ -308,7 +305,6 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h0
 		Function ReadLine(encoding As TextEncoding = Nil, EOL As String = "") As String
-		  // Part of the zlib.CompressedStream interface.
 		  ' Reads one line of decompressed text from the compressed stream.
 		  ' If EOL is not specified then the target platform EOL marker is used by default.
 		  
@@ -316,7 +312,7 @@ Implements zlib.CompressedStream
 		    Dim e As New NilObjectException
 		    e.Message = "The stream is not readable."
 		    Raise e
-		  ElseIf Not BufferedReading Then 
+		  ElseIf Not BufferedReading Then
 		    Dim e As New IOException
 		    e.Message = "The stream is not buffered."
 		    Raise e
@@ -334,7 +330,7 @@ Implements zlib.CompressedStream
 		  
 		  ' try the easy way
 		  Dim i As Integer = InStrB(Me.Lookahead, EOL)
-		  If i > 0 Then Return Me.Read(i + EOL.LenB - 1)
+		  If i > 0 Then Return Me.Read(i + EOL.LenB - 1, encoding)
 		  
 		  ' try the hard way
 		  Dim data As New MemoryBlock(0)
@@ -356,7 +352,7 @@ Implements zlib.CompressedStream
 		  Loop
 		  If lastchar <> "" Then ret.Write(lastchar)
 		  ret.Close
-		  Return data
+		  Return DefineEncoding(data, encoding)
 		End Function
 	#tag EndMethod
 
@@ -418,7 +414,6 @@ Implements zlib.CompressedStream
 
 	#tag Method, Flags = &h0
 		Sub WriteLine(Data As String, EOL As String = "")
-		  // Part of the zlib.CompressedStream interface.
 		  ' Write Data to the compressed stream followed by an EOL marker.
 		  ' If EOL is not specified then the target platform EOL marker is used by default.
 		  

@@ -4,11 +4,11 @@ Protected Class TarWriter
 		Protected Sub Append(Path As String, Data As Variant, Length As UInt32, ModifyDate As Date = Nil, Mode As Permissions = Nil)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New TARException(ERR_INVALID_NAME)
-		  d.Value("$r") = Data
-		  d.Value("$s") = Length
+		  d.Value(META_STREAM) = Data
+		  d.Value(META_LENGTH) = Length
 		  If ModifyDate = Nil Then ModifyDate = New Date
-		  d.Value("$t") = ModifyDate
-		  d.Value("$m") = Mode
+		  d.Value(META_MODTIME) = ModifyDate
+		  d.Value(META_MODE) = Mode
 		End Sub
 	#tag EndMethod
 
@@ -45,7 +45,7 @@ Protected Class TarWriter
 		  AppendEntry(Path, bs, bs.Length, ModifyDate)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New TarException(ERR_INVALID_NAME)
-		  d.Value("$rr") = Data
+		  d.Value(META_MEMORY) = Data
 		End Sub
 	#tag EndMethod
 
@@ -53,11 +53,11 @@ Protected Class TarWriter
 		Sub AppendEntry(Path As String, Data As Readable, Length As UInt32, ModifyDate As Date = Nil, Mode As Permissions = Nil)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New TARException(ERR_INVALID_NAME)
-		  d.Value("$r") = Data
-		  d.Value("$s") = Length
+		  d.Value(META_STREAM) = Data
+		  d.Value(META_LENGTH) = Length
 		  If ModifyDate = Nil Then ModifyDate = New Date
-		  d.Value("$t") = ModifyDate
-		  d.Value("$m") = Mode
+		  d.Value(META_MODTIME) = ModifyDate
+		  d.Value(META_MODE) = Mode
 		End Sub
 	#tag EndMethod
 
@@ -105,7 +105,7 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
-		  mEntries = New Dictionary("$n":"$ROOT", "$p":Nil, "$d":True)
+		  mEntries = New Dictionary(META_PATH:"$ROOT", META_PARENT:Nil, META_DIR:True)
 		End Sub
 	#tag EndMethod
 
@@ -113,9 +113,9 @@ Protected Class TarWriter
 		Sub DeleteEntry(Path As String)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  Dim n As String = d.Lookup("$n", "$INVALID")
+		  Dim n As String = d.Lookup(META_PATH, "$INVALID")
 		  If n = "$INVALID" Then Return
-		  Dim w As WeakRef = d.Lookup("$p", Nil)
+		  Dim w As WeakRef = d.Lookup(META_PARENT, Nil)
 		  If w.Value IsA Dictionary Then
 		    Dim p As Dictionary = Dictionary(w.Value)
 		    p.Remove(n)
@@ -133,7 +133,7 @@ Protected Class TarWriter
 		Sub SetEntryModificationDate(Path As String, ModDate As Date)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
-		  d.Value("$t") = ModDate
+		  d.Value(META_MODTIME) = ModDate
 		End Sub
 	#tag EndMethod
 

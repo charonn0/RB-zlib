@@ -127,7 +127,7 @@ Protected Module PKZip
 		    Dim sz As Integer = Data.Size - 1
 		    For i As Integer = 0 To sz
 		      LastCRC = ShiftRight(LastCRC, 8) XOr CRCTable((LastCRC XOr Data.UInt8Value(i)) And &hFF)
-		    Next i
+		    Next
 		    Return LastCRC XOr &hFFFFFFFF
 		  #endif
 		End Function
@@ -213,7 +213,7 @@ Protected Module PKZip
 		  Case ERR_SIZE_REQUIRED
 		    Return DefineEncoding("This operation cannot be perfomed on an unbounded memory block.", Encoding)
 		  Case ERR_PATH_TOO_LONG
-		    Return DefineEncoding("The path is too long to store in the zip format.", Encoding)
+		    Return DefineEncoding("The file or path name is too long for the zip archive format.", Encoding)
 		  Else
 		    Return DefineEncoding("Unknown error.", Encoding)
 		  End Select
@@ -312,7 +312,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function IsZipped(Extends Target As BinaryStream) As Boolean
-		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
+		  //Checks the pkzip magic number. Returns True if the Target stream is likely a zip archive
 		  
 		  If Target = Nil Then Return False
 		  Dim IsZip As Boolean
@@ -334,9 +334,7 @@ Protected Module PKZip
 		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
 		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
 		  
-		  If TargetFile = Nil Then Return False
-		  If Not TargetFile.Exists Then Return False
-		  If TargetFile.Directory Then Return False
+		  If TargetFile = Nil Or Not TargetFile.Exists Or TargetFile.Directory Then Return False
 		  Dim bs As BinaryStream
 		  Dim IsZip As Boolean
 		  Try
@@ -483,7 +481,7 @@ Protected Module PKZip
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False, VerifyCRC As Boolean = True) As FolderItem()
 		  ' Extracts a ZIP file to the ExtractTo directory
 		  
-		  Dim zip As New ZipReader(BinaryStream.Open(ZipFile))
+		  Dim zip As New ZipReader(ZipFile)
 		  zip.ValidateChecksums = VerifyCRC
 		  Dim ret() As FolderItem
 		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
@@ -618,8 +616,13 @@ Protected Module PKZip
 		  For i As Integer = 0 To c
 		    Call writer.AppendEntry(ToArchive(i), RelativeRoot)
 		  Next
-		  writer.Commit(OutputFile, Overwrite)
-		  Return writer.LastError = 0
+		  Try
+		    writer.Commit(OutputFile, Overwrite)
+		  Catch
+		    Return False
+		  End Try
+		  
+		  Return True
 		End Function
 	#tag EndMethod
 

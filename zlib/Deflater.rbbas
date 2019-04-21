@@ -116,8 +116,6 @@ Inherits FlateEngine
 		  
 		  If Flushing = Z_FINISH And mLastError <> Z_STREAM_END Then Raise New zlibException(mLastError)
 		  Return Me.avail_in = 0 And (mLastError = Z_OK Or mLastError = Z_STREAM_END)
-		  
-		  
 		End Function
 	#tag EndMethod
 

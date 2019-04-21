@@ -2,6 +2,8 @@
 Protected Class TarReader
 	#tag Method, Flags = &h0
 		Sub Close()
+		  ' Releases all resources. The TarReader may not be used after calling this method.
+		  
 		  If mStream <> Nil Then mStream = Nil
 		End Sub
 	#tag EndMethod
@@ -16,13 +18,19 @@ Protected Class TarReader
 
 	#tag Method, Flags = &h0
 		Function LastError() As Int32
+		  ' The most recent error while reading the archive. Check this value if MoveNext() returns False.
+		  
 		  Return mLastError
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable = Nil) As Boolean
-		  ' Extracts the current entry into ExtractTo, and queues the next extry.
+		  ' Extract the current item and then read the metadata of the next item, if any.
+		  ' If ExtractTo is Nil then the current item is skipped.
+		  ' Returns True if the current item was extracted and the next item is ready. Check LastError
+		  ' for details if this method returns False; in particulur the error ERR_END_ARCHIVE
+		  ' means that extraction was successful but there are no further entries.
 		  
 		  Return ReadEntry(ExtractTo) And ReadHeader()
 		End Function
@@ -30,6 +38,8 @@ Protected Class TarReader
 
 	#tag Method, Flags = &h21
 		Private Function Read(Count As Integer) As MemoryBlock
+		  ' Reads from the stream while keeping track of the position in the uncompressed stream
+		  
 		  Dim data As MemoryBlock = mStream.Read(Count)
 		  mStreamPosition = mStreamPosition + data.Size
 		  Return data
@@ -38,6 +48,10 @@ Protected Class TarReader
 
 	#tag Method, Flags = &h1
 		Protected Function ReadBlock() As MemoryBlock
+		  ' TAR files consist of a sequence of equally-sized blocks. This method reads
+		  ' one  block from the stream and ensures that the stream.position is a multiple 
+		  ' of the block size.
+		  
 		  If mStreamPosition Mod BLOCK_SIZE <> 0 Then
 		    mLastError = ERR_MISALIGNED
 		    Return Nil
@@ -56,6 +70,9 @@ Protected Class TarReader
 
 	#tag Method, Flags = &h1
 		Protected Function ReadEntry(WriteTo As Writeable) As Boolean
+		  ' Decompress the current item into the WriteTo parameter.
+		  ' Returns True on success; check LastError if it returns False.
+		  
 		  Dim total As UInt64
 		  Do Until total = CurrentFileSize
 		    Dim data As MemoryBlock = ReadBlock()
@@ -74,6 +91,9 @@ Protected Class TarReader
 
 	#tag Method, Flags = &h1
 		Protected Function ReadHeader() As Boolean
+		  ' Read the next entry's header into the CurrentName, CurrentFileSize, etc. properties.
+		  ' Returns True on success; check LastError if it returns False.
+		  
 		  mLastError = 0
 		  Dim header As MemoryBlock = ReadBlock()
 		  mCurrentType = header.HeaderType
@@ -94,18 +114,23 @@ Protected Class TarReader
 		  mCurrentGroup = header.HeaderGroup
 		  mCurrentSize = header.HeaderFilesize
 		  mCurrentModTime = header.HeaderModDate
-		  mCurrentChecksum = header.HeaderChecksum
-		  'mCurrentLinkIndicator = header.HeaderLinkIndicator
 		  mCurrentLinkName = header.HeaderLinkName
 		  
 		  If CurrentName = "" Then mLastError = ERR_INVALID_NAME
-		  If mStream.EOF Then mLastError = ERR_END_ARCHIVE
+		  If mStream.EOF Or header.HeaderChecksum = 0 Then
+		    mLastError = ERR_END_ARCHIVE
+		  ElseIf ValidateChecksums And header.HeaderChecksum <> GetChecksum(header) Then
+		    mLastError = ERR_CHECKSUM_MISMATCH
+		  End If
+		  
 		  Return mLastError = 0
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Function ReadLongName(NameLength As Integer) As String
+		  ' Reads the long file name encoded in one or more data blocks.
+		  
 		  mLastError = 0
 		  Dim name As New MemoryBlock(0)
 		  Do Until name.Size >= NameLength
@@ -117,15 +142,6 @@ Protected Class TarReader
 		End Function
 	#tag EndMethod
 
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  Return mCurrentChecksum
-			End Get
-		#tag EndGetter
-		CurrentChecksum As UInt32
-	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -187,24 +203,11 @@ Protected Class TarReader
 			  return mCurrentType
 			End Get
 		#tag EndGetter
-		#tag Setter
-			Set
-			  mCurrentType = value
-			End Set
-		#tag EndSetter
 		CurrentType As String
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
-		Private mCurrentChecksum As UInt32
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private mCurrentGroup As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mCurrentLinkIndicator As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -245,6 +248,10 @@ Protected Class TarReader
 
 	#tag Property, Flags = &h21
 		Private mStreamPosition As UInt64
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		ValidateChecksums As Boolean = True
 	#tag EndProperty
 
 

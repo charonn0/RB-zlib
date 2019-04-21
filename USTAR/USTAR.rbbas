@@ -5,13 +5,13 @@ Protected Module USTAR
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
-		      If item.Lookup("$d", False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, DirectoryStatus, Modes)
+		      If item.Lookup(META_DIR, False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, DirectoryStatus, Modes)
 		      Paths.Append(GetTreeParentPath(item))
-		      Lengths.Append(item.Lookup("$s", 0))
-		      ModTimes.Append(item.Value("$t"))
-		      Sources.Append(item.Value("$r"))
-		      DirectoryStatus.Append(item.Value("$d"))
-		      Modes.Append(item.Value("$m"))
+		      Lengths.Append(item.Lookup(META_LENGTH, 0))
+		      ModTimes.Append(item.Value(META_MODTIME))
+		      Sources.Append(item.Value(META_STREAM))
+		      DirectoryStatus.Append(item.Value(META_DIR))
+		      Modes.Append(item.Value(META_MODE))
 		    End If
 		  Next
 		End Sub
@@ -114,12 +114,12 @@ Protected Module USTAR
 	#tag Method, Flags = &h21
 		Private Function GetTreeParentPath(Child As Dictionary) As String
 		  Dim s() As String
-		  If Child.Value("$d") = True Then
+		  If Child.Value(META_DIR) = True Then
 		    s.Append("")
 		  End If
-		  Do Until Child = Nil Or Child.Value("$n") = "$ROOT"
-		    s.Insert(0, Child.Value("$n"))
-		    Dim w As WeakRef = Child.Value("$p")
+		  Do Until Child = Nil Or Child.Value(META_PATH) = "$ROOT"
+		    s.Insert(0, Child.Value(META_PATH))
+		    Dim w As WeakRef = Child.Value(META_PARENT)
 		    If w = Nil Or w.Value = Nil Then
 		      Child = Nil
 		    Else
@@ -449,11 +449,11 @@ Protected Module USTAR
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
 		      child = New Dictionary
-		      child.Value("$n") = name
-		      child.Value("$d") = True
-		      child.Value("$p") = New WeakRef(parent)
+		      child.Value(META_PATH) = name
+		      child.Value(META_DIR) = True
+		      child.Value(META_PARENT) = New WeakRef(parent)
 		    Else
-		      child.Value("$d") = True
+		      child.Value(META_DIR) = True
 		    End If
 		    parent.Value(name) = child
 		    parent = child
@@ -464,7 +464,7 @@ Protected Module USTAR
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary("$n":name, "$d":false, "$p":New WeakRef(parent))
+		      child = New Dictionary(META_PATH:name, META_DIR:false, META_PARENT:New WeakRef(parent))
 		    End If
 		    parent.Value(name) = child
 		    parent = child
@@ -575,6 +575,33 @@ Protected Module USTAR
 	#tag EndConstant
 
 	#tag Constant, Name = LONGNAMETYPE, Type = String, Dynamic = False, Default = \"L", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_DIR, Type = String, Dynamic = False, Default = \"$d", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_LENGTH, Type = String, Dynamic = False, Default = \"$s", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_LEVEL, Type = String, Dynamic = False, Default = \"$l", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_MEMORY, Type = String, Dynamic = False, Default = \"$rr", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_MODE, Type = String, Dynamic = False, Default = \"$m", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_MODTIME, Type = String, Dynamic = False, Default = \"$t", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_PARENT, Type = String, Dynamic = False, Default = \"$p", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_PATH, Type = String, Dynamic = False, Default = \"$n", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = META_STREAM, Type = String, Dynamic = False, Default = \"$r", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = REGTYPE, Type = String, Dynamic = False, Default = \"0", Scope = Private
