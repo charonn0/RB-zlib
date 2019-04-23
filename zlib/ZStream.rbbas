@@ -192,6 +192,10 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h0
 		Function Lookahead(encoding As TextEncoding = Nil) As String
+		  ' Returns the contents of the read buffer if BufferedReading is True (the default)
+		  ' If there are fewer than two bytes remaining in the buffer then a new chunk is
+		  ' read into the buffer.
+		  
 		  If Me.BufferedReading = False Then Return ""
 		  If mReadBuffer.LenB < 2 Then
 		    mBufferedReading = False
@@ -288,11 +292,11 @@ Implements Readable,Writeable
 		  If prevmode Then ret.Write(mReadBuffer)
 		  Me.BufferedReading = False
 		  Do Until Me.EOF
-		    ret.Write(Me.Read(CHUNK_SIZE, encoding))
+		    ret.Write(Me.Read(CHUNK_SIZE))
 		  Loop
 		  ret.Close
 		  Me.BufferedReading = prevmode
-		  Return data
+		  Return DefineEncoding(data, encoding)
 		End Function
 	#tag EndMethod
 
@@ -323,7 +327,7 @@ Implements Readable,Writeable
 		      EOL = EndOfLine.Windows
 		    #ElseIf TargetMacOS Then
 		      EOL = EndOfLine.Macintosh
-		    #ElseIf TargetLinux Then
+		    #Else Then
 		      EOL = EndOfLine.UNIX
 		    #endif
 		  End If
@@ -366,6 +370,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function Sync(MaxCount As Integer = - 1) As Boolean
 		  ' Reads compressed bytes from the input stream until a possible full flush point is detected.
+		  ' A full flush point is made when the compression stream is flushed with the Z_FULL_FLUSH parameter.
 		  ' If a flush point was found then decompressor switches to RAW_ENCODING, the Position
 		  ' property of the Source BinaryStream is moved to the flush point, and this method returns True.
 		  
