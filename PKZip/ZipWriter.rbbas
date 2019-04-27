@@ -51,7 +51,7 @@ Protected Class ZipWriter
 		  ' then the file is added to the root of the archive. Returns a path
 		  ' which can be used with the SetEntry* methods to modify the entry.
 		  
-		  If Entry.Length > &hFFFFFFFF Then Raise New ZipException(ERR_TOO_LARGE)
+		  If Entry.Length > MAX_FILE_SIZE Then Raise New ZipException(ERR_TOO_LARGE)
 		  Dim path As String = GetRelativePath(RelativeRoot, Entry)
 		  If Entry.Directory Then path = path + "/"
 		  Append(path, Entry, Entry.Length, Entry.ModificationDate)
@@ -408,8 +408,8 @@ Protected Class ZipWriter
 		  
 		  If ExtraData = Nil Then
 		    ExtraData = ""
-		  Else
-		    If ExtraData.Size > &hFFFF Then Raise New ZipException(ERR_TOO_LARGE)
+		  ElseIf ExtraData.Size > MAX_EXTRA_SIZE Then
+		    Raise New ZipException(ERR_TOO_LARGE)
 		  End If
 		  DirectoryHeader.ExtraLength = ExtraData.Size
 		  Stream.WriteUInt16(ExtraData.Size) ' extra length

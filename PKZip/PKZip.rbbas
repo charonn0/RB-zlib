@@ -707,6 +707,9 @@ Protected Module PKZip
 	#tag Constant, Name = MAX_EXTRA_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = MAX_FILE_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFFFFFF", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = MAX_NAME_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
 	#tag EndConstant
 
