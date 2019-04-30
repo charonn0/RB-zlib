@@ -137,6 +137,7 @@ Inherits FlateEngine
 		    mLastError = inflateReset(zstruct)
 		  Else
 		    mLastError = inflateReset2(zstruct, Encoding)
+		    If mLastError = Z_OK Then mEncoding = Encoding
 		  End If
 		End Sub
 	#tag EndMethod
