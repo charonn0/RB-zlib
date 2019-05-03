@@ -3,6 +3,8 @@
 
 **RB-zlib** is a zlib [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects.
 
+The minimum supported zlib version is 1.2.8. The minimum supported Xojo version is RS2009R3.
+
 ## Hilights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
 * [Read](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader) and [write](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipWriter) zip archives (.zip)
