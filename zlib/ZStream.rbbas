@@ -384,7 +384,6 @@ Implements Readable,Writeable
 		    BinaryStream(mSource).Position = flushpos
 		    If raw.Inflate(mSource, tmp, 1024) Then
 		      BinaryStream(mSource).Position = flushpos
-		      raw.IgnoreChecksums = True
 		      mInflater.Reset(RAW_ENCODING)
 		      mInflater.IgnoreChecksums = True
 		      mReadBuffer = ""
