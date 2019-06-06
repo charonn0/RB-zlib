@@ -94,11 +94,8 @@ Protected Module zlib
 		  Static avail As Boolean
 		  If Not avail Then avail = zlib.IsAvailable
 		  If Not avail Or NewData = Nil Then Return 0
-		  Static CRC_POLYNOMIAL As UInt32
-		  If CRC_POLYNOMIAL = 0 Then CRC_POLYNOMIAL = _crc32(0, Nil, 0)
 		  
 		  If NewDataSize = -1 Then NewDataSize = NewData.Size
-		  If LastCRC = 0 Then LastCRC = CRC_POLYNOMIAL
 		  Return _crc32(LastCRC, NewData, NewDataSize)
 		  
 		End Function

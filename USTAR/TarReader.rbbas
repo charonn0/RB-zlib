@@ -9,6 +9,34 @@ Protected Class TarReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Constructor(TarStream As FolderItem)
+		  ' Construct a TarReader from the TarStream file.
+		  
+		  #If USE_ZLIB Then
+		    If TarStream.IsGZipped Then
+		      Me.Constructor(zlib.ZStream.Open(TarStream))
+		      Return
+		    Else
+		  #endif
+		  
+		  Me.Constructor(BinaryStream.Open(TarStream))
+		  
+		  #If USE_ZLIB Then
+		    End If
+		  #endif
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(TarData As MemoryBlock)
+		  ' Construct a TarReader from the TarData.
+		  
+		  mData = TarData
+		  Me.Constructor(New BinaryStream(mData))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(TARStream As Readable)
 		  ' Constructs a TARStream from any Readable object.
 		  mStream = TARStream
@@ -25,7 +53,7 @@ Protected Class TarReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function MoveNext(ExtractTo As Writeable = Nil) As Boolean
+		Function MoveNext(ExtractTo As Writeable) As Boolean
 		  ' Extract the current item and then read the metadata of the next item, if any.
 		  ' If ExtractTo is Nil then the current item is skipped.
 		  ' Returns True if the current item was extracted and the next item is ready. Check LastError
@@ -236,6 +264,10 @@ Protected Class TarReader
 
 	#tag Property, Flags = &h21
 		Private mCurrentType As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mData As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

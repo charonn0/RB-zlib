@@ -510,6 +510,10 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function SeekSignature(Stream As BinaryStream, Signature As UInt32) As Boolean
+		  ' Locates the Signature in the Stream. If the Signature is found then this method returns True and the Stream.Position
+		  ' property reflects the point in the Stream where it was found. If the Signature was not found this method returns False
+		  ' and the Stream.Position property is unchanged.
+		  
 		  Dim pos As UInt64 = Stream.Position
 		  Dim ok As Boolean
 		  Dim sig As New MemoryBlock(4)
@@ -705,6 +709,9 @@ Protected Module PKZip
 	#tag EndConstant
 
 	#tag Constant, Name = MAX_EXTRA_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = MAX_FILE_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFFFFFF", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = MAX_NAME_SIZE, Type = Double, Dynamic = False, Default = \"&hFFFF", Scope = Private

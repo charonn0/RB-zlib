@@ -121,6 +121,11 @@ Protected Class ZipReader
 		  ' for details if this method returns False; in particulur the error ERR_END_ARCHIVE
 		  ' means that extraction was successful but there are no further entries.
 		  
+		  If Not mForced And mStream.Position >= mDirectoryFooter.Offset Then
+		    mLastError = ERR_END_ARCHIVE
+		    Return False
+		  End If
+		  
 		  Return ReadEntry(ExtractTo) And ReadHeader()
 		End Function
 	#tag EndMethod
@@ -185,19 +190,18 @@ Protected Class ZipReader
 		  
 		  mIndex = mIndex + 1
 		  If Not ReadEntryHeader(mStream, mCurrentEntry) Then
-		    If Not mForced Then
-		      mLastError = ERR_INVALID_ENTRY
-		    Else
-		      mLastError = ERR_END_ARCHIVE
-		    End If
+		    mCurrentEntry.StringValue(True) = ""
+		    If mForced Then mLastError = ERR_END_ARCHIVE Else mLastError = ERR_INVALID_ENTRY
 		    Return False
 		  End If
+		  
 		  mCurrentName = mStream.Read(mCurrentEntry.FilenameLength).Trim
 		  If BitAnd(mCurrentEntry.Flag, FLAG_NAME_ENCODING) = FLAG_NAME_ENCODING Then ' UTF8 names
 		    mCurrentName = DefineEncoding(mCurrentName, Encodings.UTF8)
 		  Else ' CP437 names
 		    mCurrentName = DefineEncoding(mCurrentName, Encodings.DOSLatinUS)
 		  End If
+		  
 		  mCurrentExtra = mStream.Read(mCurrentEntry.ExtraLength)
 		  
 		  Return FindEntryFooter()
