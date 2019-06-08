@@ -18,7 +18,7 @@ Protected Module USTAR
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
+		Private Function CreateRelativePath(Root As FolderItem, Path As String) As FolderItem
 		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
 		  
 		  If Root = Nil Or Not Root.Directory Then Return Nil
@@ -420,7 +420,7 @@ Protected Module USTAR
 		  Do
 		    If bs <> Nil Then bs.Close
 		    bs = Nil
-		    Dim g As FolderItem = CreateTree(ExtractTo, tar.CurrentName)
+		    Dim g As FolderItem = CreateRelativePath(ExtractTo, tar.CurrentName)
 		    If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
 		    fs.Append(g)
 		  Loop Until Not tar.MoveNext(bs)

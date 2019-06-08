@@ -251,7 +251,7 @@ Protected Class ZipReader
 		    
 		    Do Until zr.LastError = ERR_END_ARCHIVE
 		      If log <> Nil Then log.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.CurrentIndex) + "/" + Str(zr.mStream.Position) + ")")
-		      Dim f As FolderItem = CreateTree(root, zr.CurrentName)
+		      Dim f As FolderItem = CreateRelativePath(root, zr.CurrentName)
 		      Dim out As BinaryStream
 		      If Not f.Directory Then out = BinaryStream.Create(f, True)
 		      items.Insert(0, f)

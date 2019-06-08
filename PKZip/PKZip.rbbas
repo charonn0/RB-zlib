@@ -134,7 +134,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
+		Private Function CreateRelativePath(Root As FolderItem, Path As String) As FolderItem
 		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
 		  
 		  If Root = Nil Or Not Root.Directory Then Return Nil
@@ -487,7 +487,7 @@ Protected Module PKZip
 		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
 		  
 		  Do Until zip.LastError <> 0
-		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
+		    Dim f As FolderItem = CreateRelativePath(ExtractTo, zip.CurrentName)
 		    If f = Nil Then Raise New ZipException(ERR_INVALID_NAME)
 		    Dim outstream As BinaryStream
 		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)
