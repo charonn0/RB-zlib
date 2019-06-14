@@ -45,14 +45,6 @@ Protected Class TarReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastError() As Int32
-		  ' The most recent error while reading the archive. Check this value if MoveNext() returns False.
-		  
-		  Return mLastError
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable) As Boolean
 		  ' Extract the current item and then read the metadata of the next item, if any.
 		  ' If ExtractTo is Nil then the current item is skipped.
@@ -232,6 +224,17 @@ Protected Class TarReader
 			End Get
 		#tag EndGetter
 		CurrentType As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' The most recent error while reading the archive. Check this value if MoveNext() returns False.
+			  
+			  Return mLastError
+			End Get
+		#tag EndGetter
+		LastError As Int32
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
