@@ -2,6 +2,8 @@
 Protected Module PKZip
 	#tag Method, Flags = &h21
 		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Variant, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean, ByRef Levels() As UInt32, ByRef Methods() As UInt32)
+		  ' This method takes the zip archive modelled by the Root parameter and uses it to populate the other parameters.
+		  
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
@@ -358,8 +360,7 @@ Protected Module PKZip
 		  
 		  Do Until zip.LastError <> 0
 		    ret.Append(zip.CurrentName)
-		    Call zip.MoveNext(Nil)
-		  Loop
+		  Loop Until Not zip.MoveNext(Nil)
 		  zip.Close
 		  Return ret
 		  
