@@ -330,17 +330,22 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' Returns the compression level that was used on the current item.
+			  ' Returns the compression level that was used on the current item. Some archivers do not
+			  ' fill in this information.
+			  
+			  Dim bit1, bit2 As Boolean
+			  bit1 = (BitAnd(mCurrentEntry.Flag, 1) = 1)
+			  bit2 = (BitAnd(mCurrentEntry.Flag, 2) = 2)
 			  
 			  Select Case True
-			  Case BitAnd(mCurrentEntry.Flag, 1) = 1 And BitAnd(mCurrentEntry.Flag, 2) = 2
+			  Case bit1 And bit2
 			    Return 1 ' fastest
-			  Case BitAnd(mCurrentEntry.Flag, 1) = 1 And BitAnd(mCurrentEntry.Flag, 2) <> 2
-			    Return 9 ' best
-			  Case BitAnd(mCurrentEntry.Flag, 1) <> 1 And BitAnd(mCurrentEntry.Flag, 2) <> 2
-			    Return 6 ' normal
-			  Case BitAnd(mCurrentEntry.Flag, 1) <> 1 And BitAnd(mCurrentEntry.Flag, 2) = 2
+			  Case Not bit1 And bit2
 			    Return 3 ' fast
+			  Case Not bit1 And bit2
+			    Return 6 ' normal
+			  Case bit1 And Not bit2
+			    Return 9 ' best
 			  Case mCurrentEntry.Method = 0
 			    Return 0 ' none
 			  End Select
