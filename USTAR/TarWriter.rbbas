@@ -124,12 +124,6 @@ Protected Class TarWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastError() As Int32
-		  Return mLastError
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub SetEntryModificationDate(Path As String, ModDate As Date)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
@@ -192,6 +186,15 @@ Protected Class TarWriter
 		End Sub
 	#tag EndMethod
 
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mLastError
+			End Get
+		#tag EndGetter
+		LastError As Int32
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
 		Private mEntries As Dictionary
