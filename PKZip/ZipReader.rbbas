@@ -56,14 +56,6 @@ Protected Class ZipReader
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Count() As UInt32
-		  ' Returns the number of entries purported to exist in the archive (this can be wrong.)
-		  
-		  Return mDirectoryFooter.ThisRecordCount
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close
@@ -102,14 +94,6 @@ Protected Class ZipReader
 		    mStream.Position = datastart
 		  End If
 		  Return True
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function LastError() As Int32
-		  ' The most recent error while reading the archive. Check this value if MoveNext() or Reset() return False.
-		  
-		  Return mLastError
 		End Function
 	#tag EndMethod
 
@@ -370,6 +354,17 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the number of entries purported to exist in the archive (this can be wrong.)
+			  
+			  Return mDirectoryFooter.ThisRecordCount
+			End Get
+		#tag EndGetter
+		Count As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  Return mIndex
 			End Get
 		#tag EndGetter
@@ -412,6 +407,17 @@ Protected Class ZipReader
 			End Get
 		#tag EndGetter
 		CurrentUncompressedSize As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' The most recent error while reading the archive. Check this value if MoveNext() or Reset() return False.
+			  
+			  Return mLastError
+			End Get
+		#tag EndGetter
+		LastError As Int32
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
