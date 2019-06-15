@@ -115,13 +115,13 @@ Protected Class ZipReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function ReadEntry(Destination As Writeable) As Boolean
-		  ' Decompress the current item into the Destination parameter.
+		Protected Function ReadEntry(WriteTo As Writeable) As Boolean
+		  ' Decompress the current item into the WriteTo parameter.
 		  ' Returns True on success; check LastError if it returns False.
 		  ' On successful return, the mStream property will be positioned to
 		  ' read the headers of the next entry.
 		  
-		  If Destination = Nil Or mCurrentEntry.CompressedSize = 0 Then
+		  If WriteTo = Nil Or mCurrentEntry.CompressedSize = 0 Then
 		    ' skip the current item
 		    mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
 		    Return True
@@ -143,7 +143,7 @@ Protected Class ZipReader
 		    Dim data As MemoryBlock = zipstream.Read(sz)
 		    If data.Size > 0 Then
 		      If ValidateChecksums Then CRC = PKZip.CRC32(data, CRC)
-		      Destination.Write(data)
+		      WriteTo.Write(data)
 		    End If
 		  Loop Until zipstream.EOF
 		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR Then
