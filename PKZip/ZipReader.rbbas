@@ -342,7 +342,7 @@ Protected Class ZipReader
 			    Return 1 ' fastest
 			  Case Not bit1 And bit2
 			    Return 3 ' fast
-			  Case Not bit1 And bit2
+			  Case Not bit1 And Not bit2
 			    Return 6 ' normal
 			  Case bit1 And Not bit2
 			    Return 9 ' best
