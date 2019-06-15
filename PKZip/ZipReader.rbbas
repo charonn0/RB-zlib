@@ -287,20 +287,17 @@ Protected Class ZipReader
 		  mCurrentEntry.StringValue(True) = ""
 		  mCurrentName = ""
 		  
-		  If mForced Then
-		    mStream.Position = 0
-		    If Not SeekSignature(mStream, ZIP_ENTRY_HEADER_SIGNATURE) Then
-		      mLastError = ERR_NOT_ZIPPED
-		      Return False
-		    End If
-		  Else
+		  If Not mForced Then ' normal mode
+		    ' locate the end-of-directory header
 		    If Not FindDirectoryFooter() Then
 		      mLastError = ERR_NOT_ZIPPED
 		      Return False
 		    End If
 		    
+		    ' read the offset of the central directory
 		    mStream.Position = mDirectoryFooter.Offset
 		    If Not mIsEmpty Then
+		      ' read the first directory header
 		      Dim header As ZipDirectoryHeader
 		      If Not ReadDirectoryHeader(mStream, header) Then
 		        mLastError = ERR_NOT_ZIPPED
@@ -308,8 +305,18 @@ Protected Class ZipReader
 		      End If
 		      mStream.Position = header.Offset ' move to offset of first entry
 		    End If
+		    
+		  Else ' forced mode
+		    ' start at the beginning and scan forward until we find something
+		    ' that looks like an entry
+		    mStream.Position = 0
+		    If Not SeekSignature(mStream, ZIP_ENTRY_HEADER_SIGNATURE) Then
+		      mLastError = ERR_NOT_ZIPPED
+		      Return False
+		    End If
 		  End If
 		  
+		  ' skip each entry until we reach the specified Index
 		  Do
 		    If Not Me.MoveNext(Nil) Then Return ((Index = -1 Or mIsEmpty) And mLastError = ERR_END_ARCHIVE)
 		  Loop Until mIndex >= Index And Index > -1
