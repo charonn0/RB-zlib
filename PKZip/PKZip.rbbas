@@ -333,8 +333,9 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
+		Function IsZipped(Extends TargetFile As FolderItem, ScanStructure As Boolean = False) As Boolean
 		  ' Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive.
+		  ' If ScanStructure is True then the archive structure is checked for consistency.
 		  
 		  If TargetFile = Nil Or Not TargetFile.Exists Or TargetFile.Directory Then Return False
 		  Dim bs As BinaryStream
@@ -342,6 +343,12 @@ Protected Module PKZip
 		  Try
 		    bs = BinaryStream.Open(TargetFile)
 		    IsZip = bs.IsZipped()
+		    If IsZip And ScanStructure Then
+		      Dim tester As New ZipReader(bs)
+		      IsZip = tester.Reset(-1)
+		      tester.Close()
+		    End If
+		    
 		  Catch
 		    IsZip = False
 		  Finally
