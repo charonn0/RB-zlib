@@ -366,7 +366,7 @@ Protected Module PKZip
 		  Dim ret() As String
 		  
 		  Do Until zip.LastError <> 0
-		    ret.Append(zip.CurrentName)
+		    ret.Append(zip.CurrentEntry.Path)
 		  Loop Until Not zip.MoveNext(Nil)
 		  zip.Close
 		  Return ret
@@ -495,7 +495,7 @@ Protected Module PKZip
 		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
 		  
 		  Do Until zip.LastError <> 0
-		    Dim f As FolderItem = CreateRelativePath(ExtractTo, zip.CurrentName)
+		    Dim f As FolderItem = CreateRelativePath(ExtractTo, zip.CurrentEntry.Path)
 		    If f = Nil Then Raise New ZipException(ERR_INVALID_NAME)
 		    Dim outstream As BinaryStream
 		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)

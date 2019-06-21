@@ -166,6 +166,7 @@ Protected Class ZipReader
 		  ' On successful return, the mStream property will be positioned to
 		  ' read the file data of the (now) current item.
 		  
+		  mCurrentOffset = mStream.Position
 		  Dim doitanyway As Boolean = mForced And (mStream.Length - mStream.Position >= MIN_ARCHIVE_SIZE)
 		  If mStream.Position >= mDirectoryFooter.Offset And Not doitanyway Then
 		    mLastError = ERR_END_ARCHIVE
@@ -234,8 +235,9 @@ Protected Class ZipReader
 		    If Not RecoveryFile.Directory Then writer = New ZipWriter
 		    
 		    Do Until zr.LastError = ERR_END_ARCHIVE
-		      If log <> Nil Then log.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.CurrentIndex) + "/" + Str(zr.mStream.Position) + ")")
-		      Dim f As FolderItem = CreateRelativePath(root, zr.CurrentName)
+		      Dim entry As ZipEntry = zr.CurrentEntry
+		      If log <> Nil Then log.WriteLine("Attempting: " + entry.Path + "(" + Str(entry.Index) + "/" + Str(zr.mStream.Position) + ")")
+		      Dim f As FolderItem = CreateRelativePath(root, entry.Path)
 		      Dim out As BinaryStream
 		      If Not f.Directory Then out = BinaryStream.Create(f, True)
 		      items.Insert(0, f)
@@ -324,6 +326,13 @@ Protected Class ZipReader
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function Reset(MakeCurrent As PKZip.ZipEntry) As Boolean
+		  mStream.Position = MakeCurrent.Offset
+		  Return ReadHeader()
+		End Function
+	#tag EndMethod
+
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -332,35 +341,6 @@ Protected Class ZipReader
 			End Get
 		#tag EndGetter
 		ArchiveComment As String
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  ' Returns the compression level that was used on the current item. Some archivers do not
-			  ' fill in this information.
-			  
-			  Dim bit1, bit2 As Boolean
-			  bit1 = (BitAnd(mCurrentEntry.Flag, 1) = 1)
-			  bit2 = (BitAnd(mCurrentEntry.Flag, 2) = 2)
-			  
-			  Select Case True
-			  Case bit1 And bit2
-			    Return 1 ' fastest
-			  Case Not bit1 And bit2
-			    Return 3 ' fast
-			  Case Not bit1 And Not bit2
-			    Return 6 ' normal
-			  Case bit1 And Not bit2
-			    Return 9 ' best
-			  Case mCurrentEntry.Method = 0
-			    Return 0 ' none
-			  End Select
-			  
-			  
-			End Get
-		#tag EndGetter
-		CompressionLevel As Integer
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -377,48 +357,10 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return mIndex
+			  Return New ZipEntry(mCurrentEntry, mCurrentName, mCurrentOffset, mIndex)
 			End Get
 		#tag EndGetter
-		CurrentIndex As Integer
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  If mIndex = -1 Then Return Nil
-			  
-			  Return ConvertDate(mCurrentEntry.ModDate, mCurrentEntry.ModTime)
-			End Get
-		#tag EndGetter
-		CurrentModificationDate As Date
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  If mIndex > -1 Then Return mCurrentName
-			End Get
-		#tag EndGetter
-		CurrentName As String
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  If mIndex > -1 Then Return mCurrentEntry.CompressedSize Else Return 0
-			End Get
-		#tag EndGetter
-		CurrentSize As UInt32
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  If mIndex > -1 Then Return mCurrentEntry.UncompressedSize Else Return 0
-			End Get
-		#tag EndGetter
-		CurrentUncompressedSize As UInt32
+		CurrentEntry As PKZip.ZipEntry
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -446,6 +388,10 @@ Protected Class ZipReader
 
 	#tag Property, Flags = &h21
 		Private mCurrentName As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mCurrentOffset As UInt32
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -486,6 +432,7 @@ Protected Class ZipReader
 			Name="ArchiveComment"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="CompressionLevel"
@@ -501,6 +448,7 @@ Protected Class ZipReader
 			Name="CurrentName"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
