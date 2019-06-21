@@ -55,7 +55,7 @@ Begin Window DemoWindow
       Scope           =   0
       SmallTabs       =   ""
       TabDefinition   =   "Deflate\rGZip\rZip\rTAR"
-      TabIndex        =   8
+      TabIndex        =   0
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "System"
@@ -63,7 +63,7 @@ Begin Window DemoWindow
       TextUnit        =   0
       Top             =   -1
       Underline       =   ""
-      Value           =   2
+      Value           =   3
       Visible         =   True
       Width           =   221
       Begin PushButton InflateFileBtn
@@ -117,7 +117,7 @@ Begin Window DemoWindow
          LockTop         =   True
          Scope           =   0
          State           =   0
-         TabIndex        =   1
+         TabIndex        =   2
          TabPanelIndex   =   1
          TabStop         =   True
          TextFont        =   "System"
@@ -149,7 +149,7 @@ Begin Window DemoWindow
          LockRight       =   ""
          LockTop         =   True
          Scope           =   0
-         TabIndex        =   2
+         TabIndex        =   1
          TabPanelIndex   =   1
          TabStop         =   True
          TextFont        =   "System"
@@ -242,7 +242,7 @@ Begin Window DemoWindow
          LockRight       =   ""
          LockTop         =   True
          Scope           =   0
-         TabIndex        =   0
+         TabIndex        =   2
          TabPanelIndex   =   3
          TabStop         =   True
          TextFont        =   "System"
@@ -273,7 +273,7 @@ Begin Window DemoWindow
          LockRight       =   ""
          LockTop         =   True
          Scope           =   0
-         TabIndex        =   1
+         TabIndex        =   0
          TabPanelIndex   =   3
          TabStop         =   True
          TextFont        =   "System"
@@ -304,7 +304,7 @@ Begin Window DemoWindow
          LockRight       =   ""
          LockTop         =   True
          Scope           =   0
-         TabIndex        =   2
+         TabIndex        =   1
          TabPanelIndex   =   3
          TabStop         =   True
          TextFont        =   "System"
@@ -335,7 +335,7 @@ Begin Window DemoWindow
          LockTop         =   True
          Scope           =   0
          State           =   0
-         TabIndex        =   0
+         TabIndex        =   2
          TabPanelIndex   =   4
          TabStop         =   True
          TextFont        =   "System"
@@ -398,7 +398,7 @@ Begin Window DemoWindow
          LockRight       =   ""
          LockTop         =   True
          Scope           =   0
-         TabIndex        =   2
+         TabIndex        =   0
          TabPanelIndex   =   4
          TabStop         =   True
          TextFont        =   "System"
