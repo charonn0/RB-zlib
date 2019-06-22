@@ -2,6 +2,7 @@
 Protected Class ZipWriter
 	#tag Method, Flags = &h1
 		Protected Sub Append(Path As String, Data As Variant, Length As UInt32, ModifyDate As Date = Nil)
+		  Path = ConvertEncoding(Path, Encodings.UTF8)
 		  If Path.Len > MAX_PATH_SIZE Then Raise New ZipException(ERR_PATH_TOO_LONG)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New ZipException(ERR_INVALID_NAME)
@@ -67,6 +68,7 @@ Protected Class ZipWriter
 		  ' a path are placed in the root of the archive.
 		  ' If the ModifyDate parameter is not specified then the current date and time are used.
 		  
+		  Path = ConvertEncoding(Path, Encodings.UTF8)
 		  If Path.Len > MAX_PATH_SIZE Then Raise New ZipException(ERR_PATH_TOO_LONG)
 		  Dim bs As New BinaryStream(Data)
 		  AppendEntry(Path, bs, bs.Length, ModifyDate)

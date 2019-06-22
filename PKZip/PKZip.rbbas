@@ -2,6 +2,8 @@
 Protected Module PKZip
 	#tag Method, Flags = &h21
 		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Variant, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean, ByRef Levels() As UInt32, ByRef Methods() As UInt32)
+		  ' This method takes the zip archive modelled by the Root parameter and uses it to populate the other parameters.
+		  
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
 		      Dim item As Dictionary = Root.Value(key)
@@ -134,7 +136,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CreateTree(Root As FolderItem, Path As String) As FolderItem
+		Private Function CreateRelativePath(Root As FolderItem, Path As String) As FolderItem
 		  ' Returns a FolderItem corresponding to Root+Path, creating subdirectories as needed
 		  
 		  If Root = Nil Or Not Root.Directory Then Return Nil
@@ -312,7 +314,7 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function IsZipped(Extends Target As BinaryStream) As Boolean
-		  //Checks the pkzip magic number. Returns True if the Target stream is likely a zip archive
+		  ' Checks the pkzip magic number. Returns True if the Target stream is likely a zip archive
 		  
 		  If Target = Nil Then Return False
 		  Dim IsZip As Boolean
@@ -331,8 +333,9 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function IsZipped(Extends TargetFile As FolderItem) As Boolean
-		  //Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive
+		Function IsZipped(Extends TargetFile As FolderItem, ScanStructure As Boolean = False) As Boolean
+		  ' Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive.
+		  ' If ScanStructure is True then the archive structure is checked for consistency.
 		  
 		  If TargetFile = Nil Or Not TargetFile.Exists Or TargetFile.Directory Then Return False
 		  Dim bs As BinaryStream
@@ -340,6 +343,12 @@ Protected Module PKZip
 		  Try
 		    bs = BinaryStream.Open(TargetFile)
 		    IsZip = bs.IsZipped()
+		    If IsZip And ScanStructure Then
+		      Dim tester As New ZipReader(bs)
+		      IsZip = tester.Reset(-1)
+		      tester.Close()
+		    End If
+		    
 		  Catch
 		    IsZip = False
 		  Finally
@@ -358,8 +367,7 @@ Protected Module PKZip
 		  
 		  Do Until zip.LastError <> 0
 		    ret.Append(zip.CurrentName)
-		    Call zip.MoveNext(Nil)
-		  Loop
+		  Loop Until Not zip.MoveNext(Nil)
 		  zip.Close
 		  Return ret
 		  
@@ -487,7 +495,7 @@ Protected Module PKZip
 		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
 		  
 		  Do Until zip.LastError <> 0
-		    Dim f As FolderItem = CreateTree(ExtractTo, zip.CurrentName)
+		    Dim f As FolderItem = CreateRelativePath(ExtractTo, zip.CurrentName)
 		    If f = Nil Then Raise New ZipException(ERR_INVALID_NAME)
 		    Dim outstream As BinaryStream
 		    If Not f.Directory Then outstream = BinaryStream.Create(f, Overwrite)

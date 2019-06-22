@@ -145,7 +145,7 @@ This example performs a hand-rolled HTTP request using a TCPSocket, and demonstr
   
   Dim headers As String = sock.Read(InStrB(sock.Lookahead, CRLF + CRLF) + 3)
   Dim z As zlib.ZStream = zlib.ZStream.Open(sock)
-  Dim webpage As MemoryBlock = z.ReadAll ' read/decompress from the socket
+  Dim webpage As String = z.ReadAll ' read/decompress from the socket
   z.Close
 ```
 

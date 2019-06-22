@@ -56,14 +56,6 @@ Protected Class ZipReader
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Count() As UInt32
-		  ' Returns the number of entries purported to exist in the archive (this can be wrong.)
-		  
-		  Return mDirectoryFooter.ThisRecordCount
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close
@@ -106,14 +98,6 @@ Protected Class ZipReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastError() As Int32
-		  ' The most recent error while reading the archive. Check this value if MoveNext() or Reset() return False.
-		  
-		  Return mLastError
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable) As Boolean
 		  ' Extract the current item and then read the metadata of the next item, if any.
 		  ' If ExtractTo is Nil then the current item is skipped.
@@ -131,13 +115,13 @@ Protected Class ZipReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function ReadEntry(Destination As Writeable) As Boolean
-		  ' Decompress the current item into the Destination parameter.
+		Protected Function ReadEntry(WriteTo As Writeable) As Boolean
+		  ' Decompress the current item into the WriteTo parameter.
 		  ' Returns True on success; check LastError if it returns False.
 		  ' On successful return, the mStream property will be positioned to
 		  ' read the headers of the next entry.
 		  
-		  If Destination = Nil Or mCurrentEntry.CompressedSize = 0 Then
+		  If WriteTo = Nil Or mCurrentEntry.CompressedSize = 0 Then
 		    ' skip the current item
 		    mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
 		    Return True
@@ -159,7 +143,7 @@ Protected Class ZipReader
 		    Dim data As MemoryBlock = zipstream.Read(sz)
 		    If data.Size > 0 Then
 		      If ValidateChecksums Then CRC = PKZip.CRC32(data, CRC)
-		      Destination.Write(data)
+		      WriteTo.Write(data)
 		    End If
 		  Loop Until zipstream.EOF
 		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR Then
@@ -251,7 +235,7 @@ Protected Class ZipReader
 		    
 		    Do Until zr.LastError = ERR_END_ARCHIVE
 		      If log <> Nil Then log.WriteLine("Attempting: " + zr.CurrentName + "(" + Str(zr.CurrentIndex) + "/" + Str(zr.mStream.Position) + ")")
-		      Dim f As FolderItem = CreateTree(root, zr.CurrentName)
+		      Dim f As FolderItem = CreateRelativePath(root, zr.CurrentName)
 		      Dim out As BinaryStream
 		      If Not f.Directory Then out = BinaryStream.Create(f, True)
 		      items.Insert(0, f)
@@ -303,20 +287,17 @@ Protected Class ZipReader
 		  mCurrentEntry.StringValue(True) = ""
 		  mCurrentName = ""
 		  
-		  If mForced Then
-		    mStream.Position = 0
-		    If Not SeekSignature(mStream, ZIP_ENTRY_HEADER_SIGNATURE) Then
-		      mLastError = ERR_NOT_ZIPPED
-		      Return False
-		    End If
-		  Else
+		  If Not mForced Then ' normal mode
+		    ' locate the end-of-directory header
 		    If Not FindDirectoryFooter() Then
 		      mLastError = ERR_NOT_ZIPPED
 		      Return False
 		    End If
 		    
+		    ' read the offset of the central directory
 		    mStream.Position = mDirectoryFooter.Offset
 		    If Not mIsEmpty Then
+		      ' read the first directory header
 		      Dim header As ZipDirectoryHeader
 		      If Not ReadDirectoryHeader(mStream, header) Then
 		        mLastError = ERR_NOT_ZIPPED
@@ -324,8 +305,18 @@ Protected Class ZipReader
 		      End If
 		      mStream.Position = header.Offset ' move to offset of first entry
 		    End If
+		    
+		  Else ' forced mode
+		    ' start at the beginning and scan forward until we find something
+		    ' that looks like an entry
+		    mStream.Position = 0
+		    If Not SeekSignature(mStream, ZIP_ENTRY_HEADER_SIGNATURE) Then
+		      mLastError = ERR_NOT_ZIPPED
+		      Return False
+		    End If
 		  End If
 		  
+		  ' skip each entry until we reach the specified Index
 		  Do
 		    If Not Me.MoveNext(Nil) Then Return ((Index = -1 Or mIsEmpty) And mLastError = ERR_END_ARCHIVE)
 		  Loop Until mIndex >= Index And Index > -1
@@ -346,17 +337,22 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' Returns the compression level that was used on the current item.
+			  ' Returns the compression level that was used on the current item. Some archivers do not
+			  ' fill in this information.
+			  
+			  Dim bit1, bit2 As Boolean
+			  bit1 = (BitAnd(mCurrentEntry.Flag, 1) = 1)
+			  bit2 = (BitAnd(mCurrentEntry.Flag, 2) = 2)
 			  
 			  Select Case True
-			  Case BitAnd(mCurrentEntry.Flag, 1) = 1 And BitAnd(mCurrentEntry.Flag, 2) = 2
+			  Case bit1 And bit2
 			    Return 1 ' fastest
-			  Case BitAnd(mCurrentEntry.Flag, 1) = 1 And BitAnd(mCurrentEntry.Flag, 2) <> 2
-			    Return 9 ' best
-			  Case BitAnd(mCurrentEntry.Flag, 1) <> 1 And BitAnd(mCurrentEntry.Flag, 2) <> 2
-			    Return 6 ' normal
-			  Case BitAnd(mCurrentEntry.Flag, 1) <> 1 And BitAnd(mCurrentEntry.Flag, 2) = 2
+			  Case Not bit1 And bit2
 			    Return 3 ' fast
+			  Case Not bit1 And Not bit2
+			    Return 6 ' normal
+			  Case bit1 And Not bit2
+			    Return 9 ' best
 			  Case mCurrentEntry.Method = 0
 			    Return 0 ' none
 			  End Select
@@ -365,6 +361,17 @@ Protected Class ZipReader
 			End Get
 		#tag EndGetter
 		CompressionLevel As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns the number of entries purported to exist in the archive (this can be wrong.)
+			  
+			  Return mDirectoryFooter.ThisRecordCount
+			End Get
+		#tag EndGetter
+		Count As UInt32
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -412,6 +419,17 @@ Protected Class ZipReader
 			End Get
 		#tag EndGetter
 		CurrentUncompressedSize As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' The most recent error while reading the archive. Check this value if MoveNext() or Reset() return False.
+			  
+			  Return mLastError
+			End Get
+		#tag EndGetter
+		LastError As Int32
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21

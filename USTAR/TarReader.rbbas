@@ -45,14 +45,6 @@ Protected Class TarReader
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastError() As Int32
-		  ' The most recent error while reading the archive. Check this value if MoveNext() returns False.
-		  
-		  Return mLastError
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function MoveNext(ExtractTo As Writeable) As Boolean
 		  ' Extract the current item and then read the metadata of the next item, if any.
 		  ' If ExtractTo is Nil then the current item is skipped.
@@ -102,10 +94,10 @@ Protected Class TarReader
 		  ' Returns True on success; check LastError if it returns False.
 		  
 		  Dim total As UInt64
-		  Do Until total = CurrentFileSize
+		  Do Until total = CurrentSize
 		    Dim data As MemoryBlock = ReadBlock()
-		    If total + data.Size > CurrentFileSize Then
-		      Dim diff As UInt64 = total + data.Size - CurrentFileSize
+		    If total + data.Size > CurrentSize Then
+		      Dim diff As UInt64 = total + data.Size - CurrentSize
 		      data.Size = data.Size - diff
 		    End If
 		    total = total + data.Size
@@ -177,7 +169,7 @@ Protected Class TarReader
 			  Return mCurrentSize
 			End Get
 		#tag EndGetter
-		CurrentFileSize As UInt64
+		Attributes( deprecated = "TarReader.CurrentSize" ) CurrentFileSize As UInt64
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -228,10 +220,30 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return mCurrentSize
+			End Get
+		#tag EndGetter
+		CurrentSize As UInt64
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  return mCurrentType
 			End Get
 		#tag EndGetter
 		CurrentType As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' The most recent error while reading the archive. Check this value if MoveNext() returns False.
+			  
+			  Return mLastError
+			End Get
+		#tag EndGetter
+		LastError As Int32
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
