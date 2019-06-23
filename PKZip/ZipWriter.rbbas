@@ -10,7 +10,7 @@ Protected Class ZipWriter
 		  d.Value(META_LENGTH) = Length
 		  If ModifyDate = Nil Then ModifyDate = New Date
 		  d.Value(META_MODTIME) = ModifyDate
-		  If d.Value(META_DIR) = True Then
+		  If d.Value(META_DIR) = True Or Length <= 8 Then
 		    d.Value(META_LEVEL) = 0
 		    d.Value(META_METHOD) = 0
 		  Else
