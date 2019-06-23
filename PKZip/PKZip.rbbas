@@ -125,6 +125,12 @@ Protected Module PKZip
 		    &hBDBDF21C,&hCABAC28A,&h53B39330,&h24B4A3A6,&hBAD03605,&hCDD70693,&h54DE5729,&h23D967BF, _
 		    &hB3667A2E,&hC4614AB8,&h5D681B02,&h2A6F2B94,&hB40BBE37,&hC30C8EA1,&h5A05DF1B,&h2D02EF8D)
 		    
+		    #If Not DebugBuild Then
+		      #pragma BoundsChecking Off
+		      #pragma NilObjectChecking Off
+		      #pragma StackOverflowChecking Off
+		    #endif
+		    
 		    LastCRC = LastCRC XOr &hFFFFFFFF
 		    Dim sz As Integer = Data.Size - 1
 		    For i As Integer = 0 To sz
