@@ -4,7 +4,8 @@ Protected Class TarReader
 		Sub Close()
 		  ' Releases all resources. The TarReader may not be used after calling this method.
 		  
-		  If mStream <> Nil Then mStream = Nil
+		  mStream = Nil
+		  mData = Nil
 		End Sub
 	#tag EndMethod
 
@@ -38,7 +39,7 @@ Protected Class TarReader
 
 	#tag Method, Flags = &h0
 		Sub Constructor(TARStream As Readable)
-		  ' Constructs a TARStream from any Readable object.
+		  ' Constructs a TarReader from any Readable object.
 		  mStream = TARStream
 		  If Not ReadHeader() Then Raise New TARException(mLastError)
 		End Sub
@@ -353,6 +354,12 @@ Protected Class TarReader
 			Group="Position"
 			InitialValue="0"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ValidateChecksums"
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
