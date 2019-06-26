@@ -113,12 +113,6 @@ Implements Readable,Writeable
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Deflater() As zlib.Deflater
-		  Return mDeflater
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
@@ -158,36 +152,6 @@ Implements Readable,Writeable
 		  If Not mDeflater.Deflate(Nil, mDestination, Flushing) Then Raise New zlibException(mDeflater.LastError)
 		  
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Inflater() As zlib.Inflater
-		  Return mInflater
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function IsReadable() As Boolean
-		  ' Returns True if the stream is in decompression mode
-		  Return mInflater <> Nil
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function IsWriteable() As Boolean
-		  ' Returns True if the stream is in compression mode
-		  Return mDeflater <> Nil
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function LastError() As Int32
-		  If mInflater <> Nil Then
-		    Return mInflater.LastError
-		  ElseIf mDeflater <> Nil Then
-		    Return mDeflater.LastError
-		  End IF
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -454,6 +418,15 @@ Implements Readable,Writeable
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return mDeflater
+			End Get
+		#tag EndGetter
+		Deflater As zlib.Deflater
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  If mDeflater <> Nil Then
 			    Return mDeflater.Dictionary
 			  ElseIf mInflater <> Nil Then
@@ -481,6 +454,48 @@ Implements Readable,Writeable
 			End Get
 		#tag EndGetter
 		Encoding As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mInflater
+			End Get
+		#tag EndGetter
+		Inflater As zlib.Inflater
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns True if the stream is in decompression mode
+			  Return mInflater <> Nil
+			End Get
+		#tag EndGetter
+		IsReadable As Boolean
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns True if the stream is in compression mode
+			  Return mDeflater <> Nil
+			End Get
+		#tag EndGetter
+		IsWriteable As Boolean
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mInflater <> Nil Then
+			    Return mInflater.LastError
+			  ElseIf mDeflater <> Nil Then
+			    Return mDeflater.LastError
+			  End IF
+			End Get
+		#tag EndGetter
+		LastError As Int32
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
