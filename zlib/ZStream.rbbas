@@ -328,6 +328,7 @@ Implements Readable,Writeable
 		Sub Reset()
 		  If mDeflater <> Nil Then mDeflater.Reset
 		  If mInflater <> Nil Then mInflater.Reset
+		  mReadBuffer = ""
 		End Sub
 	#tag EndMethod
 
