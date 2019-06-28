@@ -267,7 +267,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function ReadError() As Boolean
 		  // Part of the Readable interface.
-		  Return mSource.ReadError Or (mInflater <> Nil And mInflater.LastError <> 0)
+		  If mSource <> Nil Then Return mSource.ReadError Or (mInflater <> Nil And mInflater.LastError <> 0)
 		End Function
 	#tag EndMethod
 
@@ -376,7 +376,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function WriteError() As Boolean
 		  // Part of the Writeable interface.
-		  Return mDestination.WriteError Or (mDeflater <> Nil And mDeflater.LastError <> 0)
+		  If mDestination <> Nil Then Return mDestination.WriteError Or (mDeflater <> Nil And mDeflater.LastError <> 0)
 		End Function
 	#tag EndMethod
 
