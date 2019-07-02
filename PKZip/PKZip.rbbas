@@ -109,7 +109,7 @@ Protected Module PKZip
 		  Case ERR_NOT_ZIPPED
 		    Return DefineEncoding("The archive is not zipped.", Encoding)
 		  Case ERR_UNSUPPORTED_COMPRESSION
-		    Return DefineEncoding("The archive entry uses a non-standard compression algorithm.", Encoding)
+		    Return DefineEncoding("The archive entry uses an unsupported compression algorithm.", Encoding)
 		  Case ERR_CHECKSUM_MISMATCH
 		    Return DefineEncoding("The archive entry failed verification.", Encoding)
 		  Case ERR_INVALID_NAME
