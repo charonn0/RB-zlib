@@ -439,6 +439,11 @@ Protected Module PKZip
 		 Except as contained in this notice, the name of a copyright holder shall not
 		 be used in advertising or otherwise to promote the sale, use or other dealings
 		 in this Software without prior written authorization of the copyright holder.
+		
+		-----
+		
+		PKZIP is a registered trademark of PKWARE, Inc. in the United States and elsewhere.
+		https://support.pkware.com/display/PKZIP/APPNOTE
 	#tag EndNote
 
 
