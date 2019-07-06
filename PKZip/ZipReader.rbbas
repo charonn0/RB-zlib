@@ -110,7 +110,7 @@ Protected Class ZipReader
 		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR And mCurrentEntry.CompressedSize = 0 Then ' descriptor follows
 		    Dim datastart As UInt64 = mStream.Position
 		    Dim footer As ZipEntryFooter
-		    If Not FindEntryFooter(mStream, footer) Then
+		    If Not ReadEntryFooter(mStream, footer) Then
 		      mLastError = ERR_INVALID_ENTRY
 		      Return False
 		    End If
@@ -120,14 +120,6 @@ Protected Class ZipReader
 		    mStream.Position = datastart
 		  End If
 		  Return True
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Function FindEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
-		  If Not SeekSignature(Stream, ZIP_ENTRY_FOOTER_SIGNATURE) Then Return False
-		  If Not ReadEntryFooter(Stream, Footer) Then Return False
-		  Return footer.CompressedSize > 0
 		End Function
 	#tag EndMethod
 
@@ -256,12 +248,14 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h21
 		Private Shared Function ReadEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
+		  If Not SeekSignature(Stream, ZIP_ENTRY_FOOTER_SIGNATURE) Then Return False
+		  
 		  Footer.Signature = Stream.ReadUInt32
 		  Footer.CRC32 = Stream.ReadUInt32
 		  Footer.CompressedSize = Stream.ReadUInt32
 		  Footer.UncompressedSize = Stream.ReadUInt32
 		  
-		  Return Footer.Signature = ZIP_ENTRY_FOOTER_SIGNATURE
+		  Return Footer.Signature = ZIP_ENTRY_FOOTER_SIGNATURE And Footer.CompressedSize > 0
 		  
 		End Function
 	#tag EndMethod
