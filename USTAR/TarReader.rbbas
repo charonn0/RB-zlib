@@ -16,7 +16,6 @@ Protected Class TarReader
 		  #If USE_ZLIB Then
 		    If TarStream.IsGZipped Then
 		      Me.Constructor(zlib.ZStream.Open(TarStream))
-		      Return
 		    Else
 		  #endif
 		  
