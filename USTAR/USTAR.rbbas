@@ -222,7 +222,7 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h21
 		Private Function HeaderName(Extends mb As MemoryBlock) As String
-		  Return ReplaceAllB(mb.StringValue(0, 100), Chr(0), "")
+		  Return mb.HeaderNamePrefix + ReplaceAllB(mb.StringValue(0, 100), Chr(0), "")
 		End Function
 	#tag EndMethod
 
@@ -230,6 +230,14 @@ Protected Module USTAR
 		Private Sub HeaderName(Extends mb As MemoryBlock, Assigns NewName As String)
 		  mb.StringValue(0, 100) = LeftB(NewName, 100)
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderNamePrefix(Extends mb As MemoryBlock) As String
+		  Dim prefix As String = ReplaceAllB(mb.StringValue(345, 155), Chr(0), "")
+		  If prefix <> "" Then prefix = prefix + "/"
+		  Return prefix
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -420,7 +428,10 @@ Protected Module USTAR
 		  Do
 		    If bs <> Nil Then bs.Close
 		    bs = Nil
-		    Dim g As FolderItem = CreateRelativePath(ExtractTo, tar.CurrentName)
+		    Dim name As String = tar.CurrentName
+		    Dim type As String = tar.CurrentType
+		    If type = DIRTYPE And Right(name, 1) <> "/" Then name = name + "/"
+		    Dim g As FolderItem = CreateRelativePath(ExtractTo, name)
 		    If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
 		    fs.Append(g)
 		  Loop Until Not tar.MoveNext(bs)
