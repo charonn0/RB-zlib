@@ -32,7 +32,19 @@ Protected Class TarReader
 		  ' Construct a TarReader from the TarData.
 		  
 		  mData = TarData
+		  
+		  #If USE_ZLIB Then
+		    If TarData.IsGZipped Then
+		      Me.Constructor(New zlib.ZStream(mData))
+		    Else
+		  #endif
+		  
 		  Me.Constructor(New BinaryStream(mData))
+		  
+		  #If USE_ZLIB Then
+		    End If
+		  #endif
+		  
 		End Sub
 	#tag EndMethod
 
