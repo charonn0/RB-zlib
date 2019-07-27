@@ -132,7 +132,7 @@ Protected Class ZipReader
 		  If Not ReadDirectoryFooter(mStream, mDirectoryFooter) Then Return False
 		  mArchiveComment = mStream.Read(mDirectoryFooter.CommentLength)
 		  mIsEmpty = (mStream.Length = MIN_ARCHIVE_SIZE + mDirectoryFooter.CommentLength)
-		  Return mDirectoryFooter.Offset > UInt32(MIN_ARCHIVE_SIZE) Or mIsEmpty
+		  Return mDirectoryFooter.Offset > CType(MIN_ARCHIVE_SIZE, UInt32) Or mIsEmpty
 		End Function
 	#tag EndMethod
 
