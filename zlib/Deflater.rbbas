@@ -99,6 +99,7 @@ Inherits FlateEngine
 		    
 		    Do
 		      ' provide more output space
+		      If outbuff.Size <> CHUNK_SIZE Then outbuff.Size = CHUNK_SIZE
 		      Me.next_out = outbuff
 		      Me.avail_out = outbuff.Size
 		      mLastError = deflate_(zstruct, Flushing)
