@@ -507,6 +507,15 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return mCurrentEntry.Method
+			End Get
+		#tag EndGetter
+		CurrentMethod As UInt32
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  If mIndex = -1 Then Return Nil
 			  
 			  Return ConvertDate(mCurrentEntry.ModDate, mCurrentEntry.ModTime)
