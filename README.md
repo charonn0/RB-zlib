@@ -12,7 +12,7 @@ The minimum supported zlib version is 1.2.8. The minimum supported Xojo version 
 * Supports gzip, deflate, and raw deflate compressed streams
 
 ## Getting started
-The following section covers using zlib for general purpose compression. Refer to the [PKZip](https://github.com/charonn0/RB-zlib/wiki/PKZip) and [USTAR](https://github.com/charonn0/RB-zlib/wiki/PKZip) modules for information on working with archives.
+The following section covers using zlib for general purpose compression. Refer to the [PKZip](https://github.com/charonn0/RB-zlib/wiki/PKZip) and [USTAR](https://github.com/charonn0/RB-zlib/wiki/USTAR) modules for information on working with archives.
 
 ### Utility methods
 The zlib module provides several utility methods for basic compression or decompression of data:
