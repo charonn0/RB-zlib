@@ -4,9 +4,10 @@ Protected Class ZipReader
 		Sub Close()
 		  ' Releases all resources. The ZipReader may not be used after calling this method.
 		  
-		  If mStream <> Nil Then mStream.Close
+		  If mStream <> Nil And (mData <> Nil Or mDataFile <> Nil) Then mStream.Close
 		  mStream = Nil
 		  mData = Nil
+		  mDataFile = Nil
 		End Sub
 	#tag EndMethod
 
@@ -37,6 +38,7 @@ Protected Class ZipReader
 		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
 		  ' Forible reading can yield a performance boost on well-formed archives.
 		  
+		  mDataFile = ZipStream
 		  Me.Constructor(BinaryStream.Open(ZipStream), Force)
 		End Sub
 	#tag EndMethod
@@ -569,6 +571,10 @@ Protected Class ZipReader
 
 	#tag Property, Flags = &h21
 		Private mData As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mDataFile As FolderItem
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
