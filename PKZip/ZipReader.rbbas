@@ -213,6 +213,9 @@ Protected Class ZipReader
 		  If WriteTo = Nil Or mCurrentEntry.CompressedSize = 0 Then
 		    ' skip the current item
 		    mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
+		    If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR Then
+		      mStream.Position = mStream.Position + ZIP_ENTRY_FOOTER_SIZE
+		    End If
 		    Return True
 		  End If
 		  
