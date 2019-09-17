@@ -353,6 +353,24 @@ Protected Module USTAR
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function ListTar(TarFile As FolderItem) As String()
+		  ' Returns a list of file names (with paths relative to the archive root) but does not extract anything.
+		  
+		  Dim tar As New TarReader(TarFile)
+		  Dim ret() As String
+		  
+		  Do Until tar.LastError <> 0
+		    ret.Append(tar.CurrentName)
+		  Loop Until Not tar.MoveNext(Nil)
+		  tar.Close
+		  Return ret
+		  
+		Exception
+		  Return ret
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function NormalizeFilename(Name As String) As String
 		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
