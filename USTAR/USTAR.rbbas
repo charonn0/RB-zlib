@@ -466,6 +466,40 @@ Protected Module USTAR
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function TestTar(TarFile As FolderItem) As Boolean
+		  ' Tests a TAR file
+		  
+		  Dim ts As Readable
+		  #If USE_ZLIB Then
+		    If TarFile.IsGZipped Then ts = zlib.ZStream.Open(TarFile, zlib.GZIP_ENCODING)
+		  #endif
+		  #If USE_BZIP Then
+		    If ts = Nil And TarFile.IsBZipped Then ts = BZip2.BZ2Stream.Open(TarFile)
+		  #endif
+		  If ts = Nil Then ts = BinaryStream.Open(TarFile)
+		  Dim tar As New TarReader(ts)
+		  Dim mb As New MemoryBlock(0)
+		  Dim nullstream As New BinaryStream(mb)
+		  nullstream.Close
+		  Do Until tar.LastError <> 0
+		  Loop Until Not tar.MoveNext(nullstream)
+		  If ts IsA BinaryStream Then BinaryStream(ts).Close
+		  #If USE_ZLIB Then
+		    If ts IsA zlib.ZStream Then zlib.ZStream(ts).Close
+		  #endif
+		  #If USE_BZIP Then
+		    If ts IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(ts).Close
+		  #endif
+		  
+		  Return tar.LastError = ERR_END_ARCHIVE
+		  
+		Exception err As TARException
+		  Return False
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function TraverseTree(Root As Dictionary, Path As String, CreateChildren As Boolean) As Dictionary
 		  Dim s() As String = Split(Path, "/")
