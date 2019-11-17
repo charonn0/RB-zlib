@@ -291,7 +291,7 @@ Implements Readable,Writeable
 		      EOL = EndOfLine.Windows
 		    #ElseIf TargetMacOS Then
 		      EOL = EndOfLine.Macintosh
-		    #Else Then
+		    #Else
 		      EOL = EndOfLine.UNIX
 		    #endif
 		  End If
