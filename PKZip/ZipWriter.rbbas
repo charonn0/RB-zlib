@@ -365,6 +365,11 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h21
 		Private Shared Function TraverseTree(Root As Dictionary, Path As String, CreateChildren As Boolean) As Dictionary
+		  ' Given the root of a nested Dictionary and a file path, this method traverses from the root to the
+		  ' item referred to by the path and returns a reference to the item as a Dictionary. If CreateChildren is
+		  ' true then missing elements in the path are created, otherwise this method returns Nil to indicate
+		  ' the path is not found.
+		  
 		  Dim s() As String = Split(Path, "/")
 		  Dim bound As Integer = UBound(s)
 		  Dim parent As Dictionary = Root
