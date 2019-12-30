@@ -1,6 +1,16 @@
 #tag Module
 Protected Module PKZip
 	#tag Method, Flags = &h21
+		Private Function AbsolutePath_(Extends f As FolderItem) As String
+		  #If RBVersion > 2019 Then
+		    Return f.NativePath
+		  #Else
+		    Return f.AbsolutePath
+		  #endif
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = - 1) As UInt32
 		  ' Calculate the CRC32 checksum for the Data. Pass back the returned value
 		  ' to continue processing.
@@ -185,9 +195,9 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
-		  If Root = Nil Or Root.AbsolutePath = Item.AbsolutePath Then Return Item.Name
+		  If Root = Nil Or Root.AbsolutePath_ = Item.AbsolutePath_ Then Return Item.Name
 		  Dim s() As String
-		  Do Until Item.AbsolutePath = Root.AbsolutePath
+		  Do Until Item.AbsolutePath_ = Root.AbsolutePath_
 		    s.Insert(0, Item.Name)
 		    Item = Item.Parent
 		  Loop Until Item = Nil

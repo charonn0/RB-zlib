@@ -1,6 +1,16 @@
 #tag Module
 Protected Module USTAR
 	#tag Method, Flags = &h21
+		Private Function AbsolutePath_(Extends f As FolderItem) As String
+		  #If RBVersion > 2019 Then
+		    Return f.NativePath
+		  #Else
+		    Return f.AbsolutePath
+		  #endif
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Variant, ByRef DirectoryStatus() As Boolean, ByRef Modes() As Permissions)
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
@@ -102,7 +112,7 @@ Protected Module USTAR
 		Private Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
 		  If Root = Nil Then Return Item.Name
 		  Dim s() As String
-		  Do Until Item.AbsolutePath = Root.AbsolutePath
+		  Do Until Item.AbsolutePath_ = Root.AbsolutePath_
 		    s.Insert(0, Item.Name)
 		    Item = Item.Parent
 		  Loop Until Item = Nil

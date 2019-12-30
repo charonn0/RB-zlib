@@ -119,6 +119,13 @@ Implements Readable,Writeable
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function EndOfFile() As Boolean
+		  // Part of the Readable interface as of 2019r2
+		  Return Me.EOF()
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function EOF() As Boolean
 		  // Part of the Readable interface.

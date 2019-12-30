@@ -330,17 +330,17 @@ Protected Class ZipReader
 		  Dim reccount, errcount As Integer
 		  Dim log As TextOutputStream
 		  If LogFile <> Nil Then log = TextOutputStream.Create(LogFile)
-		  If log <> Nil Then log.WriteLine("Beginning recovery of: " + ZipFile.AbsolutePath)
+		  If log <> Nil Then log.WriteLine("Beginning recovery of: " + ZipFile.AbsolutePath_)
 		  If RecoveryFile.Directory Then
 		    root = RecoveryFile
-		    If log <> Nil Then log.WriteLine("Extract to " + root.AbsolutePath)
+		    If log <> Nil Then log.WriteLine("Extract to " + root.AbsolutePath_)
 		  Else
 		    Static uniq As Integer = Ticks
 		    root = SpecialFolder.Temporary.Child(ZipFile.Name + "_extract" + Hex(uniq))
 		    uniq = uniq + 1
 		    cleanup = True
 		    root.CreateAsFolder
-		    If log <> Nil Then log.WriteLine("Recover to " + RecoveryFile.AbsolutePath)
+		    If log <> Nil Then log.WriteLine("Recover to " + RecoveryFile.AbsolutePath_)
 		  End If
 		  
 		  Dim items() As FolderItem

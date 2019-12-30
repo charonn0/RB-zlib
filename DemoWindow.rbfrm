@@ -494,7 +494,7 @@ End
 		  Else
 		    encoding = zlib.DEFLATE_ENCODING
 		  End If
-		  mResult = zlib.Deflate(mSource, mDestination, CompressionLevel.Value, False, encoding)
+		  mResult = zlib.Deflate(mSource, mDestination, mLevel, False, encoding)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
@@ -522,7 +522,7 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunGZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = zlib.GZip(mSource, mDestination, CompressionLevel.Value)
+		  mResult = zlib.GZip(mSource, mDestination, mLevel)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
@@ -557,7 +557,7 @@ End
 		Private Sub RunTAR(Sender As Thread)
 		  #pragma Unused Sender
 		  Dim level As Integer
-		  If mOption Then level = CompressionLevel.Value
+		  If mOption Then level = mLevel
 		  mResult = USTAR.WriteTar(mSource, mDestination, False, level)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
@@ -620,7 +620,7 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = PKZip.WriteZip(mSource, mDestination, False, CompressionLevel.Value)
+		  mResult = PKZip.WriteZip(mSource, mDestination, False, mLevel)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
@@ -718,6 +718,10 @@ End
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private mLevel As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private mLockUI As Boolean
 	#tag EndProperty
 
@@ -751,7 +755,11 @@ End
 		    If Not mResult Then Call MsgBox("Error number " + Str(mErrorCode) + ": " + mErrorMsg, 16, "Error") Else MsgBox("Success!")
 		    
 		  Else
-		    MsgBox("Extracted " + Format(UBound(mUnzipped) + 1, "###,##0") + " items to " + mDestination.AbsolutePath)
+		    #If RBVersion > 2019 Then
+		      MsgBox("Extracted " + Format(UBound(mUnzipped) + 1, "###,##0") + " items to " + mDestination.NativePath)
+		    #Else
+		      MsgBox("Extracted " + Format(UBound(mUnzipped) + 1, "###,##0") + " items to " + mDestination.AbsolutePath)
+		    #endif
 		  End If
 		  mWorker = Nil
 		  ReDim mUnzipped(-1)
@@ -789,6 +797,7 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationXCompress, mSource.Name + ".z")
 		  If mDestination = Nil Then Return
+		  mLevel = CompressionLevel.Value
 		  ToggleLockUI()
 		  mOption = UseRawChkBx.Value
 		  Self.Title = "Deflating..."
@@ -824,6 +833,7 @@ End
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationXGzip, mSource.Name + ".gz")
 		  If mDestination = Nil Then Return
+		  mLevel = CompressionLevel.Value
 		  Self.Title = "GZipping..."
 		  ToggleLockUI()
 		  Self.Title = "zlib Demo - GZipping..."
@@ -874,6 +884,7 @@ End
 		  mSource = SelectFolder()
 		  If mSource = Nil Then Return
 		  mDestination = GetSaveFolderItem(FileTypes1.ApplicationZip, mSource.Name + ".zip")
+		  mLevel = CompressionLevel.Value
 		  If mDestination = Nil Then Return
 		  ToggleLockUI()
 		  Self.Title = "zlib Demo - Zipping..."
@@ -899,6 +910,7 @@ End
 		  If UseGZipChkBx.Value Then
 		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationTarGzip, mSource.Name + ".tgz")
 		    mOption = True
+		    mLevel = CompressionLevel.Value
 		  Else
 		    mDestination = GetSaveFolderItem(FileTypes1.ApplicationXTar, mSource.Name + ".tar")
 		    mOption = False
