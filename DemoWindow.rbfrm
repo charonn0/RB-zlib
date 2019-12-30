@@ -7,7 +7,7 @@ Begin Window DemoWindow
    Frame           =   0
    FullScreen      =   False
    HasBackColor    =   False
-   Height          =   1.33e+2
+   Height          =   1.51e+2
    ImplicitInstance=   True
    LiveResize      =   True
    MacProcID       =   0
@@ -40,7 +40,7 @@ Begin Window DemoWindow
       AutoDeactivate  =   True
       Bold            =   ""
       Enabled         =   True
-      Height          =   133
+      Height          =   132
       HelpTag         =   ""
       Index           =   -2147483648
       InitialParent   =   ""
@@ -441,6 +441,34 @@ Begin Window DemoWindow
          Width           =   97
       End
    End
+   Begin Slider CompressionLevel
+      AutoDeactivate  =   True
+      Enabled         =   True
+      Height          =   23
+      HelpTag         =   "Compression level (0-9)"
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Left            =   14
+      LineStep        =   1
+      LiveScroll      =   ""
+      LockBottom      =   ""
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   ""
+      LockTop         =   True
+      Maximum         =   9
+      Minimum         =   0
+      PageStep        =   20
+      Scope           =   0
+      TabIndex        =   1
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TickStyle       =   0
+      Top             =   128
+      Value           =   6
+      Visible         =   True
+      Width           =   193
+   End
 End
 #tag EndWindow
 
@@ -466,7 +494,7 @@ End
 		  Else
 		    encoding = zlib.DEFLATE_ENCODING
 		  End If
-		  mResult = zlib.Deflate(mSource, mDestination, zlib.Z_DEFAULT_COMPRESSION, False, encoding)
+		  mResult = zlib.Deflate(mSource, mDestination, CompressionLevel.Value, False, encoding)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
@@ -494,7 +522,7 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunGZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = zlib.GZip(mSource, mDestination)
+		  mResult = zlib.GZip(mSource, mDestination, CompressionLevel.Value)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
@@ -528,9 +556,9 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunTAR(Sender As Thread)
 		  #pragma Unused Sender
-		  Dim compressionlevel As Integer
-		  If mOption Then compressionlevel = 6
-		  mResult = USTAR.WriteTar(mSource, mDestination, False, compressionlevel)
+		  Dim level As Integer
+		  If mOption Then level = CompressionLevel.Value
+		  mResult = USTAR.WriteTar(mSource, mDestination, False, level)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
@@ -592,7 +620,7 @@ End
 	#tag Method, Flags = &h21
 		Private Sub RunZip(Sender As Thread)
 		  #pragma Unused Sender
-		  mResult = PKZip.WriteZip(mSource, mDestination)
+		  mResult = PKZip.WriteZip(mSource, mDestination, False, CompressionLevel.Value)
 		  CompletionTimer.Mode = Timer.ModeSingle
 		  
 		Exception err As zlib.zlibException
