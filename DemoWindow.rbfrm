@@ -63,7 +63,7 @@ Begin Window DemoWindow
       TextUnit        =   0
       Top             =   -1
       Underline       =   ""
-      Value           =   3
+      Value           =   0
       Visible         =   True
       Width           =   221
       Begin PushButton InflateFileBtn
@@ -450,7 +450,7 @@ Begin Window DemoWindow
       InitialParent   =   ""
       Left            =   14
       LineStep        =   1
-      LiveScroll      =   ""
+      LiveScroll      =   True
       LockBottom      =   ""
       LockedInPosition=   False
       LockLeft        =   True
@@ -463,11 +463,45 @@ Begin Window DemoWindow
       TabIndex        =   1
       TabPanelIndex   =   0
       TabStop         =   True
-      TickStyle       =   0
+      TickStyle       =   2
       Top             =   128
       Value           =   6
       Visible         =   True
-      Width           =   193
+      Width           =   177
+   End
+   Begin Label CompressionLevelTxt
+      AutoDeactivate  =   True
+      Bold            =   ""
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   ""
+      Left            =   195
+      LockBottom      =   ""
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   ""
+      LockTop         =   True
+      Multiline       =   ""
+      Scope           =   0
+      Selectable      =   False
+      TabIndex        =   2
+      TabPanelIndex   =   0
+      Text            =   6
+      TextAlign       =   1
+      TextColor       =   &h000000
+      TextFont        =   "System"
+      TextSize        =   0
+      TextUnit        =   0
+      Top             =   131
+      Transparent     =   True
+      Underline       =   ""
+      Visible         =   True
+      Width           =   26
    End
 End
 #tag EndWindow
@@ -954,6 +988,13 @@ End
 		  mWorker = New Thread
 		  AddHandler mWorker.Run, WeakAddressOf RunZipTest
 		  mWorker.Run
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events CompressionLevel
+	#tag Event
+		Sub ValueChanged()
+		  CompressionLevelTxt.Text = Str(CompressionLevel.Value)
 		End Sub
 	#tag EndEvent
 #tag EndEvents
