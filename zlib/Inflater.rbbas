@@ -90,6 +90,7 @@ Inherits FlateEngine
 		    count = count + chunk.Size
 		    Do
 		      ' provide more output space
+		      If outbuff.Size <> CHUNK_SIZE Then outbuff.Size = CHUNK_SIZE
 		      Me.next_out = outbuff
 		      Me.avail_out = outbuff.Size
 		      mLastError = inflate(zstruct, Z_NO_FLUSH)

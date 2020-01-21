@@ -12,10 +12,10 @@ The minimum supported zlib version is 1.2.8. The minimum supported Xojo version 
 * Supports gzip, deflate, and raw deflate compressed streams
 
 ## Getting started
-This project provides several different ways to use zlib. 
+The following section covers using zlib for general purpose compression. Refer to the [PKZip](https://github.com/charonn0/RB-zlib/wiki/PKZip) and [USTAR](https://github.com/charonn0/RB-zlib/wiki/USTAR) modules for information on working with archives.
 
 ### Utility methods
-The easiest way to use this project are the utility methods in the zlib module: 
+The zlib module provides several utility methods for basic compression or decompression of data:
 
 * [**`Deflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate)
 * [**`Inflate`**](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate)
@@ -37,7 +37,7 @@ where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements t
 Additional optional arguments may be passed, to control the compression level, strategy, dictionary, and encoding. For example, `GZip` and `GUnZip` are just wrappers around `Deflate` and `Inflate` with options that specify the gzip format.
 
 ### ZStream class
-The second way to use zlib is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike, and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
+The second way to compress or decompress data is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike, and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
 
 Instances of `ZStream` can be created from MemoryBlocks, FolderItems, and objects that implement the `Readable` and/or `Writeable` interfaces. For example, creating an in-memory compression stream from a zero-length MemoryBlock and writing a string to it:
 
@@ -55,7 +55,7 @@ The string will be processed through the compressor and written to the `output` 
 ```
 
 ### Inflater and Deflater classes
-The third and final way to use this project is through the [Inflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater) and [Deflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater) classes. These classes provide a low-level wrapper to the zlib API. All compression and decompression done using the `ZStream` class or the utility methods is ultimately carried out by an instance of `Deflater` and `Inflater`, respectively.
+The third and final way to use zlib is through the [Inflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater) and [Deflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater) classes. These classes provide a low-level wrapper to the zlib API. All compression and decompression done using the `ZStream` class or the utility methods is ultimately carried out by an instance of `Deflater` and `Inflater`, respectively.
 
 ```vbnet
   Dim d As New zlib.Deflater()

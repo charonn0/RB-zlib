@@ -1,6 +1,16 @@
 #tag Module
 Protected Module USTAR
 	#tag Method, Flags = &h21
+		Private Function AbsolutePath_(Extends f As FolderItem) As String
+		  #If RBVersion > 2019 Then
+		    Return f.NativePath
+		  #Else
+		    Return f.AbsolutePath
+		  #endif
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Variant, ByRef DirectoryStatus() As Boolean, ByRef Modes() As Permissions)
 		  For Each key As Variant In Root.Keys
 		    If Root.Value(key) IsA Dictionary Then
@@ -27,7 +37,7 @@ Protected Module USTAR
 		  
 		  For i As Integer = 0 To bound - 1
 		    Dim name As String = NormalizeFilename(s(i))
-		    If name = "" Then Continue
+		    If name = "" Or name = "." Then Continue
 		    root = root.TrueChild(name)
 		    If Root.Exists Then
 		      If Not Root.Directory Then
@@ -102,7 +112,7 @@ Protected Module USTAR
 		Private Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
 		  If Root = Nil Then Return Item.Name
 		  Dim s() As String
-		  Do Until Item.AbsolutePath = Root.AbsolutePath
+		  Do Until Item.AbsolutePath_ = Root.AbsolutePath_
 		    s.Insert(0, Item.Name)
 		    Item = Item.Parent
 		  Loop Until Item = Nil
@@ -222,7 +232,7 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h21
 		Private Function HeaderName(Extends mb As MemoryBlock) As String
-		  Return ReplaceAllB(mb.StringValue(0, 100), Chr(0), "")
+		  Return mb.HeaderNamePrefix + ReplaceAllB(mb.StringValue(0, 100), Chr(0), "")
 		End Function
 	#tag EndMethod
 
@@ -230,6 +240,14 @@ Protected Module USTAR
 		Private Sub HeaderName(Extends mb As MemoryBlock, Assigns NewName As String)
 		  mb.StringValue(0, 100) = LeftB(NewName, 100)
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function HeaderNamePrefix(Extends mb As MemoryBlock) As String
+		  Dim prefix As String = ReplaceAllB(mb.StringValue(345, 155), Chr(0), "")
+		  If prefix <> "" Then prefix = prefix + "/"
+		  Return prefix
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -345,6 +363,24 @@ Protected Module USTAR
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function ListTar(TarFile As FolderItem) As String()
+		  ' Returns a list of file names (with paths relative to the archive root) but does not extract anything.
+		  
+		  Dim tar As New TarReader(TarFile)
+		  Dim ret() As String
+		  
+		  Do Until tar.LastError <> 0
+		    ret.Append(tar.CurrentName)
+		  Loop Until Not tar.MoveNext(Nil)
+		  tar.Close
+		  Return ret
+		  
+		Exception
+		  Return ret
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function NormalizeFilename(Name As String) As String
 		  ' This method takes a file name from an archive and transforms it (if necessary) to abide by
@@ -420,7 +456,10 @@ Protected Module USTAR
 		  Do
 		    If bs <> Nil Then bs.Close
 		    bs = Nil
-		    Dim g As FolderItem = CreateRelativePath(ExtractTo, tar.CurrentName)
+		    Dim name As String = tar.CurrentName
+		    Dim type As String = tar.CurrentType
+		    If type = DIRTYPE And Right(name, 1) <> "/" Then name = name + "/"
+		    Dim g As FolderItem = CreateRelativePath(ExtractTo, name)
 		    If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
 		    fs.Append(g)
 		  Loop Until Not tar.MoveNext(bs)
@@ -434,6 +473,40 @@ Protected Module USTAR
 		  #endif
 		  
 		  Return fs
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function TestTar(TarFile As FolderItem) As Boolean
+		  ' Tests a TAR file
+		  
+		  Dim ts As Readable
+		  #If USE_ZLIB Then
+		    If TarFile.IsGZipped Then ts = zlib.ZStream.Open(TarFile, zlib.GZIP_ENCODING)
+		  #endif
+		  #If USE_BZIP Then
+		    If ts = Nil And TarFile.IsBZipped Then ts = BZip2.BZ2Stream.Open(TarFile)
+		  #endif
+		  If ts = Nil Then ts = BinaryStream.Open(TarFile)
+		  Dim tar As New TarReader(ts)
+		  Dim mb As New MemoryBlock(0)
+		  Dim nullstream As New BinaryStream(mb)
+		  nullstream.Close
+		  Do Until tar.LastError <> 0
+		  Loop Until Not tar.MoveNext(nullstream)
+		  If ts IsA BinaryStream Then BinaryStream(ts).Close
+		  #If USE_ZLIB Then
+		    If ts IsA zlib.ZStream Then zlib.ZStream(ts).Close
+		  #endif
+		  #If USE_BZIP Then
+		    If ts IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(ts).Close
+		  #endif
+		  
+		  Return tar.LastError = ERR_END_ARCHIVE
+		  
+		Exception err As TARException
+		  Return False
+		  
 		End Function
 	#tag EndMethod
 

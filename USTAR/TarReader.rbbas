@@ -4,7 +4,8 @@ Protected Class TarReader
 		Sub Close()
 		  ' Releases all resources. The TarReader may not be used after calling this method.
 		  
-		  If mStream <> Nil Then mStream = Nil
+		  mStream = Nil
+		  mData = Nil
 		End Sub
 	#tag EndMethod
 
@@ -15,7 +16,6 @@ Protected Class TarReader
 		  #If USE_ZLIB Then
 		    If TarStream.IsGZipped Then
 		      Me.Constructor(zlib.ZStream.Open(TarStream))
-		      Return
 		    Else
 		  #endif
 		  
@@ -32,13 +32,25 @@ Protected Class TarReader
 		  ' Construct a TarReader from the TarData.
 		  
 		  mData = TarData
+		  
+		  #If USE_ZLIB Then
+		    If TarData.IsGZipped Then
+		      Me.Constructor(New zlib.ZStream(mData))
+		    Else
+		  #endif
+		  
 		  Me.Constructor(New BinaryStream(mData))
+		  
+		  #If USE_ZLIB Then
+		    End If
+		  #endif
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor(TARStream As Readable)
-		  ' Constructs a TARStream from any Readable object.
+		  ' Constructs a TarReader from any Readable object.
 		  mStream = TARStream
 		  If Not ReadHeader() Then Raise New TARException(mLastError)
 		End Sub
@@ -353,6 +365,12 @@ Protected Class TarReader
 			Group="Position"
 			InitialValue="0"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ValidateChecksums"
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

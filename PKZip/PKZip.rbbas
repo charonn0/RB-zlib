@@ -1,75 +1,12 @@
 #tag Module
 Protected Module PKZip
 	#tag Method, Flags = &h21
-		Private Sub CollapseTree(Root As Dictionary, ByRef Paths() As String, ByRef Lengths() As UInt32, ByRef ModTimes() As Date, ByRef Sources() As Variant, ByRef Comments() As String, ByRef Extras() As MemoryBlock, ByRef DirectoryStatus() As Boolean, ByRef Levels() As UInt32, ByRef Methods() As UInt32)
-		  ' This method takes the zip archive modelled by the Root parameter and uses it to populate the other parameters.
-		  
-		  For Each key As Variant In Root.Keys
-		    If Root.Value(key) IsA Dictionary Then
-		      Dim item As Dictionary = Root.Value(key)
-		      If item.Lookup(META_DIR, False) Then CollapseTree(item, Paths, Lengths, ModTimes, Sources, Comments, Extras, DirectoryStatus, Levels, Methods)
-		      Paths.Append(GetTreeParentPath(item))
-		      Lengths.Append(item.Lookup(META_LENGTH, 0))
-		      ModTimes.Append(item.Value(META_MODTIME))
-		      Sources.Append(item.Value(META_STREAM))
-		      DirectoryStatus.Append(item.Value(META_DIR))
-		      Extras.Append(item.Lookup(META_EXTRA, Nil))
-		      Comments.Append(item.Lookup(META_COMMENT, ""))
-		      Levels.Append(item.Lookup(META_LEVEL, 6))
-		      If USE_ZLIB Then
-		        Methods.Append(item.Lookup(META_METHOD, METHOD_DEFLATED))
-		      Else
-		        Methods.Append(item.Lookup(META_METHOD, METHOD_NONE))
-		      End If
-		    End If
-		  Next
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function ConvertDate(NewDate As Date) As Pair
-		  ' Convert the passed Date object into MS-DOS style datestamp and timestamp (16 bits each)
-		  ' The DOS format has a resolution of two seconds, no concept of time zones, and is valid
-		  ' for dates between 1/1/1980 and 12/31/2107
-		  
-		  Dim h, m, s, dom, mon, year As UInt32
-		  Dim dt, tm As UInt16
-		  h = NewDate.Hour
-		  m = NewDate.Minute
-		  s = NewDate.Second
-		  dom = NewDate.Day
-		  mon = NewDate.Month
-		  year = NewDate.Year - 1980
-		  
-		  If year > 127 Then Raise New OutOfBoundsException
-		  
-		  dt = dom
-		  dt = dt Or ShiftLeft(mon, 5)
-		  dt = dt Or ShiftLeft(year, 9)
-		  
-		  tm = s \ 2
-		  tm = tm Or ShiftLeft(m, 5)
-		  tm = tm Or ShiftLeft(h, 11)
-		  
-		  Return dt:tm
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function ConvertDate(Dt As UInt16, tm As UInt16) As Date
-		  ' Convert the passed MS-DOS style date and time into a Date object.
-		  ' The DOS format has a resolution of two seconds, no concept of time zones,
-		  ' and is valid for dates between 1/1/1980 and 12/31/2107
-		  
-		  Dim h, m, s, dom, mon, year As Integer
-		  h = ShiftRight(tm, 11)
-		  m = ShiftRight(tm, 5) And &h3F
-		  s = (tm And &h1F) * 2
-		  dom = dt And &h1F
-		  mon = ShiftRight(dt, 5) And &h0F
-		  year = (ShiftRight(dt, 9) And &h7F) + 1980
-		  
-		  Return New Date(year, mon, dom, h, m, s)
+		Private Function AbsolutePath_(Extends f As FolderItem) As String
+		  #If RBVersion > 2019 Then
+		    Return f.NativePath
+		  #Else
+		    Return f.AbsolutePath
+		  #endif
 		End Function
 	#tag EndMethod
 
@@ -125,6 +62,12 @@ Protected Module PKZip
 		    &hBDBDF21C,&hCABAC28A,&h53B39330,&h24B4A3A6,&hBAD03605,&hCDD70693,&h54DE5729,&h23D967BF, _
 		    &hB3667A2E,&hC4614AB8,&h5D681B02,&h2A6F2B94,&hB40BBE37,&hC30C8EA1,&h5A05DF1B,&h2D02EF8D)
 		    
+		    #If Not DebugBuild Then
+		      #pragma BoundsChecking Off
+		      #pragma NilObjectChecking Off
+		      #pragma StackOverflowChecking Off
+		    #endif
+		    
 		    LastCRC = LastCRC XOr &hFFFFFFFF
 		    Dim sz As Integer = Data.Size - 1
 		    For i As Integer = 0 To sz
@@ -165,35 +108,6 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function FindDirectoryFooter(Stream As BinaryStream) As Boolean
-		  Stream.Position = Max(0, Stream.Length - MAX_COMMENT_SIZE - MIN_ARCHIVE_SIZE)
-		  Dim last As UInt64
-		  ' a zip archive can contain other zip archives, in which case it's possible
-		  ' for there to be more than one Central Directory Footer in the file. We only
-		  ' want the "outermost" directory footer, i.e. the last one.
-		  Do Until Stream.EOF
-		    If Not SeekSignature(Stream, ZIP_DIRECTORY_FOOTER_SIGNATURE) Then
-		      If last = 0 And Stream.Length >= MIN_ARCHIVE_SIZE + MAX_COMMENT_SIZE Then Return False
-		      Stream.Position = last
-		      Return True
-		    Else
-		      last = Stream.Position
-		      Stream.Position = Stream.Position + 4
-		    End If
-		  Loop Until Stream.Position + MAX_COMMENT_SIZE + MIN_ARCHIVE_SIZE <= Stream.Length
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function FindEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
-		  If Not SeekSignature(Stream, ZIP_ENTRY_FOOTER_SIGNATURE) Then Return False
-		  If Not ReadEntryFooter(Stream, Footer) Then Return False
-		  Return footer.CompressedSize > 0
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1
 		Protected Function FormatError(ErrorCode As Integer, Optional Encoding As TextEncoding) As String
 		  If Encoding = Nil Then Encoding = Encodings.UTF8
@@ -205,7 +119,7 @@ Protected Module PKZip
 		  Case ERR_NOT_ZIPPED
 		    Return DefineEncoding("The archive is not zipped.", Encoding)
 		  Case ERR_UNSUPPORTED_COMPRESSION
-		    Return DefineEncoding("The archive entry uses a non-standard compression algorithm.", Encoding)
+		    Return DefineEncoding("The archive entry uses an unsupported compression algorithm.", Encoding)
 		  Case ERR_CHECKSUM_MISMATCH
 		    Return DefineEncoding("The archive entry failed verification.", Encoding)
 		  Case ERR_INVALID_NAME
@@ -281,33 +195,13 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetRelativePath(Root As FolderItem, Item As FolderItem) As String
-		  If Root = Nil Or Root.AbsolutePath = Item.AbsolutePath Then Return Item.Name
+		  If Root = Nil Or Root.AbsolutePath_ = Item.AbsolutePath_ Then Return Item.Name
 		  Dim s() As String
-		  Do Until Item.AbsolutePath = Root.AbsolutePath
+		  Do Until Item.AbsolutePath_ = Root.AbsolutePath_
 		    s.Insert(0, Item.Name)
 		    Item = Item.Parent
 		  Loop Until Item = Nil
 		  If Item = Nil Then Return s.Pop ' not relative
-		  Return Join(s, "/")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function GetTreeParentPath(Child As Dictionary) As String
-		  Dim s() As String
-		  If Child.Value(META_DIR) = True Then
-		    s.Append("")
-		  End If
-		  Do Until Child = Nil Or Child.Value(META_PATH) = "$ROOT"
-		    s.Insert(0, Child.Value(META_PATH))
-		    Dim w As WeakRef = Child.Value(META_PARENT)
-		    If w = Nil Or w.Value = Nil Then
-		      Child = Nil
-		    Else
-		      Child = Dictionary(w.Value)
-		    End If
-		  Loop
-		  
 		  Return Join(s, "/")
 		End Function
 	#tag EndMethod
@@ -407,84 +301,6 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function ReadDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter) As Boolean
-		  Footer.Signature = Stream.ReadUInt32
-		  Footer.ThisDisk = Stream.ReadUInt16
-		  Footer.FirstDisk = Stream.ReadUInt16
-		  Footer.ThisRecordCount = Stream.ReadUInt16
-		  Footer.TotalRecordCount = Stream.ReadUInt16
-		  Footer.DirectorySize = Stream.ReadUInt32
-		  Footer.Offset = Stream.ReadUInt32
-		  Footer.CommentLength = Stream.ReadUInt16
-		  
-		  If Footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE And _
-		    Stream.Position + Footer.CommentLength = Stream.Length And _
-		    Footer.TotalRecordCount >= Footer.ThisRecordCount And _
-		    Footer.ThisDisk >= Footer.FirstDisk And _
-		    Stream.Position - MIN_ARCHIVE_SIZE - Footer.DirectorySize = Footer.Offset Then
-		    Return True
-		  End If
-		  
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function ReadDirectoryHeader(Stream As BinaryStream, ByRef Header As ZipDirectoryHeader) As Boolean
-		  Header.Signature = Stream.ReadUInt32
-		  Header.Version = Stream.ReadUInt16
-		  Header.VersionNeeded = Stream.ReadUInt16
-		  Header.Flag = Stream.ReadUInt16
-		  Header.Method = Stream.ReadUInt16
-		  Header.ModTime = Stream.ReadUInt16
-		  Header.ModDate = Stream.ReadUInt16
-		  Header.CRC32 = Stream.ReadUInt32
-		  Header.CompressedSize = Stream.ReadUInt32
-		  Header.UncompressedSize = Stream.ReadUInt32
-		  Header.FilenameLength = Stream.ReadUInt16
-		  Header.ExtraLength = Stream.ReadUInt16
-		  Header.CommentLength = Stream.ReadUInt16
-		  Header.DiskNumber = Stream.ReadUInt16
-		  Header.InternalAttributes = Stream.ReadUInt16
-		  Header.ExternalAttributes = Stream.ReadUInt32
-		  Header.Offset = Stream.ReadUInt32
-		  
-		  Return Header.Signature = ZIP_DIRECTORY_HEADER_SIGNATURE
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function ReadEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
-		  Footer.Signature = Stream.ReadUInt32
-		  Footer.CRC32 = Stream.ReadUInt32
-		  Footer.CompressedSize = Stream.ReadUInt32
-		  Footer.UncompressedSize = Stream.ReadUInt32
-		  
-		  Return Footer.Signature = ZIP_ENTRY_FOOTER_SIGNATURE
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function ReadEntryHeader(Stream As BinaryStream, ByRef Header As ZipEntryHeader) As Boolean
-		  Header.Signature = Stream.ReadUInt32
-		  Header.Version = Stream.ReadUInt16
-		  Header.Flag = Stream.ReadUInt16
-		  Header.Method = Stream.ReadUInt16
-		  Header.ModTime = Stream.ReadUInt16
-		  Header.ModDate = Stream.ReadUInt16
-		  Header.CRC32 = Stream.ReadUInt32
-		  Header.CompressedSize = Stream.ReadUInt32
-		  Header.UncompressedSize = Stream.ReadUInt32
-		  Header.FilenameLength = Stream.ReadUInt16
-		  Header.ExtraLength = Stream.ReadUInt16
-		  
-		  Return Header.Signature = ZIP_ENTRY_HEADER_SIGNATURE
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False, VerifyCRC As Boolean = True) As FolderItem()
 		  ' Extracts a ZIP file to the ExtractTo directory
@@ -569,44 +385,6 @@ Protected Module PKZip
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function TraverseTree(Root As Dictionary, Path As String, CreateChildren As Boolean) As Dictionary
-		  Dim s() As String = Split(Path, "/")
-		  Dim bound As Integer = UBound(s)
-		  Dim parent As Dictionary = Root
-		  For i As Integer = 0 To bound - 1
-		    Dim name As String = NormalizeFilename(s(i))
-		    If name = "" Then Continue
-		    Dim child As Dictionary = parent.Lookup(name, Nil)
-		    If child = Nil Then
-		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary
-		      child.Value(META_PATH) = name
-		      child.Value(META_DIR) = True
-		      child.Value(META_PARENT) = New WeakRef(parent)
-		      child.Value(META_MODTIME) = New Date
-		      child.Value(META_STREAM) = Nil
-		    Else
-		      child.Value(META_DIR) = True
-		    End If
-		    parent.Value(name) = child
-		    parent = child
-		  Next
-		  
-		  Dim name As String = NormalizeFilename(s(bound))
-		  If name <> "" Then
-		    Dim child As Dictionary = parent.Lookup(name, Nil)
-		    If child = Nil Then
-		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary(META_PATH:name, META_DIR:false, META_PARENT:New WeakRef(parent), META_MODTIME:New Date, META_STREAM:Nil)
-		    End If
-		    parent.Value(name) = child
-		    parent = child
-		  End If
-		  Return parent
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1
 		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
 		  Dim writer As New ZipWriter
@@ -671,6 +449,11 @@ Protected Module PKZip
 		 Except as contained in this notice, the name of a copyright holder shall not
 		 be used in advertising or otherwise to promote the sale, use or other dealings
 		 in this Software without prior written authorization of the copyright holder.
+		
+		-----
+		
+		PKZIP is a registered trademark of PKWARE, Inc. in the United States and elsewhere.
+		https://support.pkware.com/display/PKZIP/APPNOTE
 	#tag EndNote
 
 

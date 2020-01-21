@@ -113,16 +113,17 @@ Implements Readable,Writeable
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Deflater() As zlib.Deflater
-		  Return mDeflater
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  Me.Close()
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function EndOfFile() As Boolean
+		  // Part of the Readable interface as of 2019r2
+		  Return Me.EOF()
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -158,36 +159,6 @@ Implements Readable,Writeable
 		  If Not mDeflater.Deflate(Nil, mDestination, Flushing) Then Raise New zlibException(mDeflater.LastError)
 		  
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Inflater() As zlib.Inflater
-		  Return mInflater
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function IsReadable() As Boolean
-		  ' Returns True if the stream is in decompression mode
-		  Return mInflater <> Nil
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function IsWriteable() As Boolean
-		  ' Returns True if the stream is in compression mode
-		  Return mDeflater <> Nil
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function LastError() As Int32
-		  If mInflater <> Nil Then
-		    Return mInflater.LastError
-		  ElseIf mDeflater <> Nil Then
-		    Return mDeflater.LastError
-		  End IF
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -303,7 +274,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function ReadError() As Boolean
 		  // Part of the Readable interface.
-		  Return mSource.ReadError Or (mInflater <> Nil And mInflater.LastError <> 0)
+		  If mSource <> Nil Then Return mSource.ReadError Or (mInflater <> Nil And mInflater.LastError <> 0)
 		End Function
 	#tag EndMethod
 
@@ -327,7 +298,7 @@ Implements Readable,Writeable
 		      EOL = EndOfLine.Windows
 		    #ElseIf TargetMacOS Then
 		      EOL = EndOfLine.Macintosh
-		    #Else Then
+		    #Else
 		      EOL = EndOfLine.UNIX
 		    #endif
 		  End If
@@ -364,6 +335,7 @@ Implements Readable,Writeable
 		Sub Reset()
 		  If mDeflater <> Nil Then mDeflater.Reset
 		  If mInflater <> Nil Then mInflater.Reset
+		  mReadBuffer = ""
 		End Sub
 	#tag EndMethod
 
@@ -412,7 +384,7 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h0
 		Function WriteError() As Boolean
 		  // Part of the Writeable interface.
-		  Return mDestination.WriteError Or (mDeflater <> Nil And mDeflater.LastError <> 0)
+		  If mDestination <> Nil Then Return mDestination.WriteError Or (mDeflater <> Nil And mDeflater.LastError <> 0)
 		End Function
 	#tag EndMethod
 
@@ -454,6 +426,15 @@ Implements Readable,Writeable
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return mDeflater
+			End Get
+		#tag EndGetter
+		Deflater As zlib.Deflater
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  If mDeflater <> Nil Then
 			    Return mDeflater.Dictionary
 			  ElseIf mInflater <> Nil Then
@@ -481,6 +462,48 @@ Implements Readable,Writeable
 			End Get
 		#tag EndGetter
 		Encoding As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return mInflater
+			End Get
+		#tag EndGetter
+		Inflater As zlib.Inflater
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns True if the stream is in decompression mode
+			  Return mInflater <> Nil
+			End Get
+		#tag EndGetter
+		IsReadable As Boolean
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns True if the stream is in compression mode
+			  Return mDeflater <> Nil
+			End Get
+		#tag EndGetter
+		IsWriteable As Boolean
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mInflater <> Nil Then
+			    Return mInflater.LastError
+			  ElseIf mDeflater <> Nil Then
+			    Return mDeflater.LastError
+			  End IF
+			End Get
+		#tag EndGetter
+		LastError As Int32
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
