@@ -242,7 +242,7 @@ Private Class FlateEngine
 	#tag ComputedProperty, Flags = &h1
 		#tag Getter
 			Get
-			  return mData.Size
+			  If mData <> Nil Then return mData.Size
 			End Get
 		#tag EndGetter
 		Protected Size As Integer
