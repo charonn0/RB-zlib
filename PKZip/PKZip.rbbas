@@ -186,6 +186,10 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h21
 		Private Function GetCompressor(Method As UInt32, Stream As Writeable, CompressionLevel As UInt32) As Writeable
+		  #If Not USE_ZLIB And Not USE_BZIP2 Then
+		    #pragma Unused CompressionLevel
+		  #endif
+		  
 		  Select Case Method
 		  Case METHOD_NONE
 		    Return Stream
