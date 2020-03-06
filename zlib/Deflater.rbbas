@@ -185,8 +185,8 @@ Inherits FlateEngine
 		#tag EndGetter
 		#tag Setter
 			Set
-			  ' Sets the compression dictionary from the given byte sequence without producing any compressed output. Must be 
-			  ' set immediately after the constructor or a call to Reset(), but before the first call to deflate. The compressor 
+			  ' Sets the compression dictionary from the given byte sequence without producing any compressed output. Must be
+			  ' set immediately after the Constructor() or a call to Reset(), but before the first call to Deflate(). The compressor
 			  ' and decompressor must use exactly the same dictionary (see Inflater.Dictionary).
 			  
 			  If value = Nil Or Not IsOpen Then Return

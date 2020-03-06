@@ -188,7 +188,7 @@ Inherits FlateEngine
 		#tag Setter
 			Set
 			  ' Sets the compression dictionary from the given uncompressed byte sequence. Must be set immediately after the
-			  ' constructor or a call to Reset(), but before the first call to inflate. The compressor and decompressor must
+			  ' Constructor() or a call to Reset(), but before the first call to Inflate(). The compressor and decompressor must
 			  ' use exactly the same dictionary (see Deflater.Dictionary).
 			  
 			  If value = Nil Or Not IsOpen Then Return
