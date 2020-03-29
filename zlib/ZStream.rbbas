@@ -2,6 +2,12 @@
 Protected Class ZStream
 Implements Readable,Writeable
 	#tag Method, Flags = &h0
+		Sub AddBookmark(Optional Tag As Variant)
+		  mBookmarks.Append(New Dictionary("z":mInflater.CurrentState, "v":Tag, "p":TotalIn))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Close()
 		  ' End the stream. If the stream is being written/compressed then all pending output is flushed.
 		  ' If the stream is being read/decompressed then all pending output is discarded; check EOF to
@@ -368,6 +374,46 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function SyncToBookmark(Tag As Variant) As Boolean
+		  For i As Integer = 0 To UBound(mBookmarks)
+		    Dim book As Dictionary = mBookmarks(i)
+		    If book = Nil Then Continue
+		    Dim t As Variant = book.Lookup("v", Nil)
+		    If t Is Nil Then Continue
+		    If tag = t Then Return SyncToPosition(book.Value("p"))
+		  Next
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function SyncToPosition(Position As UInt64) As Boolean
+		  Dim last As UInt64
+		  Dim laststate As MemoryBlock
+		  mReadBuffer = ""
+		  For i As Integer = 0 To UBound(mBookmarks)
+		    Dim book As Dictionary = mBookmarks(i)
+		    Dim offset As UInt64 = book.Value("p")
+		    Dim state As MemoryBlock = book.Value("z")
+		    If offset < Position Then
+		      last = offset
+		      laststate = state
+		    ElseIf offset = Position Then ' perfect
+		      mInflater.CurrentState = state
+		      BinaryStream(mSource).Position = offset
+		      Return True
+		    ElseIf laststate <> Nil Then ' too far
+		      mInflater.CurrentState = laststate
+		      BinaryStream(mSource).Position = last
+		      Dim old As Boolean = mBufferedReading
+		      If mBufferedReading Then mBufferedReading = False
+		      Call Read(Position - last)
+		      mBufferedReading = old
+		    End If
+		  Next
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Write(Data As String)
 		  // Part of the Writeable interface.
 		  ' Write Data to the compressed stream. 
@@ -519,6 +565,10 @@ Implements Readable,Writeable
 		#tag EndSetter
 		Level As Integer
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private mBookmarks() As Dictionary
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mBufferedReading As Boolean = True

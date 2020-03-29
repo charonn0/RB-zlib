@@ -150,6 +150,13 @@ Inherits FlateEngine
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Sub Reset(ExistingState As MemoryBlock)
+		  Me.Destructor()
+		  Super.Reset(ExistingState)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function SetHeader(HeaderStruct As zlib.gz_headerp) As Boolean
 		  ' Provides gzip header information for when a gzip stream is requested. This method may be called after the constructor

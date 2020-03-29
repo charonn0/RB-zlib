@@ -143,6 +143,13 @@ Inherits FlateEngine
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Sub Reset(ExistingState As MemoryBlock)
+		  Me.Destructor()
+		  Super.Reset(ExistingState)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function SyncToNextFlush(ReadFrom As Readable, MaxCount As Integer = - 1) As Boolean
 		  ' Reads compressed bytes from ReadFrom until a possible full flush point is detected. If a flush point

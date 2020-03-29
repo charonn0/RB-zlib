@@ -168,6 +168,14 @@ Private Class FlateEngine
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Sub Reset(ExistingState As MemoryBlock)
+		  If ExistingState.Size <> mData.Size Then Raise New zlibException(Z_STREAM_ERROR)
+		  mData = ExistingState
+		  zstruct = mData
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Total_In() As UInt32
 		  Select Case Me.Size
@@ -194,6 +202,20 @@ Private Class FlateEngine
 		End Function
 	#tag EndMethod
 
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  If mData <> Nil Then Return mData.StringValue(0, mData.Size)
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Me.Reset(value)
+			End Set
+		#tag EndSetter
+		CurrentState As MemoryBlock
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -227,8 +249,8 @@ Private Class FlateEngine
 		IsOpen As Boolean
 	#tag EndComputedProperty
 
-	#tag Property, Flags = &h21
-		Private mData As MemoryBlock
+	#tag Property, Flags = &h1
+		Protected mData As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
