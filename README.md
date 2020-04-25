@@ -3,13 +3,15 @@
 
 **RB-zlib** is a zlib [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects.
 
-The minimum supported zlib version is 1.2.8. The minimum supported Xojo version is RS2009R3.
+The minimum supported zlib version is 1.2.8. The minimum supported Xojo version is RS2009R3. 
 
 ## Hilights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
 * [Read](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader) and [write](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipWriter) zip archives (.zip)
 * [Read](https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader) and [write](https://github.com/charonn0/RB-zlib/wiki/USTAR.TarWriter) tape archives (.tar), with or without gzip compression.
 * Supports gzip, deflate, and raw deflate compressed streams
+* Supports Windows, Linux, and OS X.
+* 64-bit ready.
 
 ## Getting started
 The following section covers using zlib for general purpose compression. Refer to the [PKZip](https://github.com/charonn0/RB-zlib/wiki/PKZip) and [USTAR](https://github.com/charonn0/RB-zlib/wiki/USTAR) modules for information on working with archives.
