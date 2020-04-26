@@ -27,6 +27,14 @@ Protected Module PKZip
 		  #Else
 		    If DataSize = -1 Then DataSize = Data.Size
 		    If DataSize = -1 Then Raise New ZipException(ERR_SIZE_REQUIRED)
+		    
+		    ' Windows has an optimized C implementation too.
+		    If System.IsFunctionAvailable("RtlComputeCrc32", "ntdll") Then
+		      Soft Declare Function RtlComputeCrc32 Lib "ntdll" (LastCRC As UInt32, Data As Ptr, DataSize As Integer) As Integer
+		      Return RtlComputeCrc32(LastCRC, Data, Data.Size)
+		    End If
+		    
+		    ' fall back on a plain Xojo implementation
 		    #If Target64Bit Then
 		      Static CRCTable(255) As UInt64 = Array( _
 		      &h00000000,&h77073096,&hEE0E612C,&h990951BA,&h076DC419,&h706AF48F,&hE963A535,&h9E6495A3, _
@@ -105,7 +113,7 @@ Protected Module PKZip
 		    #endif
 		    
 		    LastCRC = LastCRC XOr &hFFFFFFFF
-		    Dim sz As Integer = Data.Size - 1
+		    Dim sz As Integer = DataSize - 1
 		    Dim datap As Ptr = Data
 		    For i As Integer = 0 To sz
 		      LastCRC = ShiftRight(LastCRC, 8) XOr CRCTable((LastCRC XOr datap.UInt8(i)) And &hFF)
