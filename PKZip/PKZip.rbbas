@@ -338,12 +338,17 @@ Protected Module PKZip
 		  
 		  For Each char As String In Name.Split("")
 		    If reservedchars.IndexOf(char) > -1 Then name = ReplaceAll(name, char, "_")
+		    #If TargetWin32 Then
+		      If Asc(char) < 32 Then name = ReplaceAll(name, char, "_")
+		    #endif
 		  Next
 		  
 		  If reservednames.IndexOf(name) > -1 Then name = "_" + name
 		  #If TargetWin32 Then
 		    ' Windows doesn't like it even if the reserved name is used with an extension, e.g. 'aux.c' is illegal.
 		    If reservednames.IndexOf(NthField(name, ".", 1)) > -1 Then name = "_" + name
+		    ' nor does Windows like it if the name ends in "." or " "
+		    If Right(Name, 1) = "." Or Right(Name, 1) = " " Then Name = Left(Name, Name.Len - 1)
 		  #endif
 		  
 		  Return name
