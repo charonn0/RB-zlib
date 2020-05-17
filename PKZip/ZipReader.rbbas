@@ -143,7 +143,7 @@ Protected Class ZipReader
 		  ' Extract the current item and then read the metadata of the next item, if any.
 		  ' If ExtractTo is Nil then the current item is skipped.
 		  ' Returns True if the current item was extracted and the next item is ready. Check LastError
-		  ' for details if this method returns False; in particulur the error ERR_END_ARCHIVE
+		  ' for details if this method returns False; in particulur the error ERR_END_ARCHIVE(-202)
 		  ' means that extraction was successful but there are no further entries.
 		  
 		  If Not mForced And mStream.Position >= mDirectoryFooter.Offset Then
