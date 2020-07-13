@@ -19,7 +19,7 @@ Protected Class ZipReader
 		  '  * The central directory is ignored
 		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
 		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
-		  ' Forible reading can yield a performance boost on well-formed archives.
+		  ' Forcible reading can yield a performance boost on well-formed archives.
 		  
 		  mStream = ZipStream
 		  mStream.LittleEndian = True
@@ -36,7 +36,7 @@ Protected Class ZipReader
 		  '  * The central directory is ignored
 		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
 		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
-		  ' Forible reading can yield a performance boost on well-formed archives.
+		  ' Forcible reading can yield a performance boost on well-formed archives.
 		  
 		  mDataFile = ZipStream
 		  Me.Constructor(BinaryStream.Open(ZipStream), Force)
@@ -51,7 +51,7 @@ Protected Class ZipReader
 		  '  * The central directory is ignored
 		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
 		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
-		  ' Forible reading can yield a performance boost on well-formed archives.
+		  ' Forcible reading can yield a performance boost on well-formed archives.
 		  
 		  mData = ZipData
 		  Me.Constructor(New BinaryStream(mData), Force)
