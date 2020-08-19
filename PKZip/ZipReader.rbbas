@@ -303,11 +303,11 @@ Protected Class ZipReader
 		    Return False
 		  End If
 		  
-		  mCurrentName = mStream.Read(mCurrentEntry.FilenameLength).Trim
+		  mCurrentName = mStream.Read(mCurrentEntry.FilenameLength)
 		  If BitAnd(mCurrentEntry.Flag, FLAG_NAME_ENCODING) = FLAG_NAME_ENCODING Then ' UTF8 names
-		    mCurrentName = DefineEncoding(mCurrentName, Encodings.UTF8)
+		    mCurrentName = DefineEncoding(mCurrentName, Encodings.UTF8).Trim
 		  Else ' CP437 names
-		    mCurrentName = DefineEncoding(mCurrentName, Encodings.DOSLatinUS)
+		    mCurrentName = DefineEncoding(mCurrentName, Encodings.DOSLatinUS).Trim
 		  End If
 		  
 		  mCurrentExtra = mStream.Read(mCurrentEntry.ExtraLength)
