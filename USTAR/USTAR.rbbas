@@ -448,6 +448,9 @@ Protected Module USTAR
 		  #If USE_BZIP Then
 		    If ts = Nil And TarFile.IsBZipped Then ts = BZip2.BZ2Stream.Open(TarFile)
 		  #endif
+		  #If USE_LZMA Then
+		    If ts = Nil And TarFile.IsXZCompressed Then ts = LZMA.LZMAStream.Open(TarFile)
+		  #endif
 		  If ts = Nil Then ts = BinaryStream.Open(TarFile)
 		  Dim tar As New TarReader(ts)
 		  If Not ExtractTo.Exists Then ExtractTo.CreateAsFolder()
@@ -555,9 +558,14 @@ Protected Module USTAR
 		  Next
 		  Dim t As Writeable
 		  If CompressionLevel > 0 And CompressionLevel < 10 Then
-		    If NthField(OutputFile.Name, ".", CountFields(OutputFile.Name, ".")) = "bz2" Then
+		    Dim ext As String = NthField(OutputFile.Name, ".", CountFields(OutputFile.Name, "."))
+		    If ext  = "bz2" Then
 		      #If USE_BZIP Then
 		        t = BZip2.BZ2Stream.Create(OutputFile, CompressionLevel)
+		      #endif
+		    ElseIf ext = "xz" Then
+		      #If USE_LZMA Then
+		        t = LZMA.LZMAStream.Create(OutputFile, CompressionLevel)
 		      #endif
 		    Else
 		      #If USE_ZLIB Then
@@ -573,6 +581,9 @@ Protected Module USTAR
 		  #endif
 		  #If USE_BZIP Then
 		    If t IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(t).Close
+		  #endif
+		  #If USE_LZMA Then
+		    If t IsA LZMA.LZMAStream Then LZMA.LZMAStream(t).Close
 		  #endif
 		  
 		  Return True
@@ -720,6 +731,9 @@ Protected Module USTAR
 	#tag EndConstant
 
 	#tag Constant, Name = USE_BZIP, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = USE_LZMA, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = USE_ZLIB, Type = Boolean, Dynamic = False, Default = \"True", Scope = Private
