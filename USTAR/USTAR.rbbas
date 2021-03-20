@@ -561,11 +561,11 @@ Protected Module USTAR
 		    Dim ext As String = NthField(OutputFile.Name, ".", CountFields(OutputFile.Name, "."))
 		    If ext  = "bz2" Then
 		      #If USE_BZIP Then
-		        t = BZip2.BZ2Stream.Create(OutputFile, CompressionLevel)
+		        t = BZip2.BZ2Stream.Create(OutputFile, CompressionLevel, Overwrite)
 		      #endif
 		    ElseIf ext = "xz" Then
 		      #If USE_LZMA Then
-		        t = LZMA.LZMAStream.Create(OutputFile, CompressionLevel)
+		        t = LZMA.LZMAStream.Create(OutputFile, CompressionLevel, LZMA.ChecksumType.CRC32, Overwrite)
 		      #endif
 		    Else
 		      #If USE_ZLIB Then
