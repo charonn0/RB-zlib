@@ -301,6 +301,9 @@ Protected Module USTAR
 		    #If USE_BZIP Then
 		      If bs = Nil And TargetFile.IsBZipped Then bs = BZip2.BZ2Stream.Open(TargetFile)
 		    #endif
+		    #If USE_LZMA Then
+		      If bs = Nil And TargetFile.IsXZCompressed Then bs = LZMA.LZMAStream.Open(TargetFile)
+		    #endif
 		    If bs = Nil Then bs = BinaryStream.Open(TargetFile)
 		    IsTAR = bs.IsTarred
 		    
@@ -315,6 +318,9 @@ Protected Module USTAR
 		      #If USE_BZIP Then
 		        If bs IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(bs).Close
 		      #endif
+		      #If USE_LZMA Then
+		        If bs IsA LZMA.LZMAStream Then LZMA.LZMAStream(bs).Close
+		      #endif
 		      
 		    End If
 		  End Try
@@ -324,7 +330,7 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h0
 		Function IsTarred(Extends Target As MemoryBlock) As Boolean
-		  //CReturns True if the Target is likely a tape archive
+		  //Returns True if the Target is likely a tape archive
 		  
 		  If Target.Size = -1 Then Return False
 		  Dim bs As Readable
@@ -335,6 +341,9 @@ Protected Module USTAR
 		    #endif
 		    #If USE_BZIP Then
 		      If bs = Nil And Target.IsBZipped Then bs = New BZip2.BZ2Stream(Target)
+		    #endif
+		    #If USE_LZMA Then
+		      If bs = Nil And Target.IsXZCompressed Then bs = New LZMA.LZMAStream(Target)
 		    #endif
 		    If bs = Nil Then bs = New BinaryStream(Target)
 		    IsTAR = bs.IsTarred()
@@ -348,7 +357,9 @@ Protected Module USTAR
 		    #If USE_BZIP Then
 		      If bs IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(bs).Close
 		    #endif
-		    
+		    #If USE_LZMA Then
+		      If bs IsA LZMA.LZMAStream Then LZMA.LZMAStream(bs).Close
+		    #endif
 		  End Try
 		  Return IsTAR
 		End Function
@@ -473,6 +484,9 @@ Protected Module USTAR
 		  #endif
 		  #If USE_BZIP Then
 		    If ts IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(ts).Close
+		  #endif
+		  #If USE_LZMA Then
+		    If ts IsA LZMA.LZMAStream Then LZMA.LZMAStream(ts).Close
 		  #endif
 		  
 		  Return fs
