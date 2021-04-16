@@ -1,11 +1,11 @@
 ## Introduction
-[zlib](http://www.zlib.net/) is the reference implementation for the [deflate](https://en.wikipedia.org/wiki/DEFLATE) compression algorithm. Deflate is the algorithm used by the [gzip](https://tools.ietf.org/html/rfc1952) container format, the the [zip](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT) archive format, and [HTTP compression](https://tools.ietf.org/html/rfc7694).
+[zlib](http://www.zlib.net/) is the reference implementation for the [deflate](https://en.wikipedia.org/wiki/DEFLATE) compression algorithm. Deflate is the algorithm used by the [gzip](https://tools.ietf.org/html/rfc1952) container format, the [zip](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT) archive format, and [HTTP compression](https://tools.ietf.org/html/rfc7694).
 
 **RB-zlib** is a zlib [binding](http://en.wikipedia.org/wiki/Language_binding) for Realbasic and Xojo projects.
 
 The minimum supported zlib version is 1.2.8. The minimum supported Xojo version is RS2009R3. 
 
-## Hilights
+## Highlights
 * Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
 * [Read](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader) and [write](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipWriter) zip archives (.zip)
 * [Read](https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader) and [write](https://github.com/charonn0/RB-zlib/wiki/USTAR.TarWriter) tape archives (.tar), with or without gzip compression.
@@ -34,12 +34,12 @@ or this signature:
  function(source, options[...]) As MemoryBlock
 ```
 
-where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements the `Readable` interface; and `destination` (when provided) is a `FolderItem` or an object which implements the `Writeable` interface. Methods which do not have a `Destination` parameter return output as a `MemoryBlock` instead. Refer to the [examples](https://github.com/charonn0/RB-zlib/wiki#more-examples) below for demonstrations of some of these functions.
+where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements the `Readable` interface; and `destination` (when provided) is a `FolderItem` or an object which implements the `Writeable` interface. Methods that do not have a `Destination` parameter return output as a `MemoryBlock` instead. Refer to the [examples](https://github.com/charonn0/RB-zlib/wiki#more-examples) below for demonstrations of some of these functions.
 
 Additional optional arguments may be passed, to control the compression level, strategy, dictionary, and encoding. For example, `GZip` and `GUnZip` are just wrappers around `Deflate` and `Inflate` with options that specify the gzip format.
 
 ### ZStream class
-The second way to compress or decompress data is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike, and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
+The second way to compress or decompress data is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
 
 Instances of `ZStream` can be created from MemoryBlocks, FolderItems, and objects that implement the `Readable` and/or `Writeable` interfaces. For example, creating an in-memory compression stream from a zero-length MemoryBlock and writing a string to it:
 
