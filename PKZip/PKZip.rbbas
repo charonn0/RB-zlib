@@ -204,7 +204,7 @@ Protected Module PKZip
 		    
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
-		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, zlib.RAW_ENCODING)
+		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.RAW_ENCODING)
 		    #endif
 		    
 		  Case METHOD_BZIP2

@@ -583,7 +583,7 @@ Protected Module USTAR
 		      #endif
 		    Else
 		      #If USE_ZLIB Then
-		        t = zlib.ZStream.Create(OutputFile, CompressionLevel, zlib.Z_DEFAULT_STRATEGY, Overwrite, zlib.GZIP_ENCODING)
+		        t = zlib.ZStream.Create(OutputFile, CompressionLevel, Overwrite, zlib.GZIP_ENCODING)
 		      #endif
 		    End If
 		  End If
