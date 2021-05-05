@@ -248,9 +248,14 @@ Private Class FlateEngine
 		Protected Size As Integer
 	#tag EndComputedProperty
 
-	#tag Property, Flags = &h1
+	#tag ComputedProperty, Flags = &h1
+		#tag Getter
+			Get
+			  return mData
+			End Get
+		#tag EndGetter
 		Protected zstruct As Ptr
-	#tag EndProperty
+	#tag EndComputedProperty
 
 
 	#tag Constant, Name = STRUCT_32_1, Type = Double, Dynamic = False, Default = \"56", Scope = Protected
