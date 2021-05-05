@@ -70,7 +70,7 @@ Private Class FlateEngine
 		  If Not zlib.IsAvailable Then Raise New PlatformNotSupportedException
 		  Dim sz As Integer = GetStructSize()
 		  mData = New MemoryBlock(sz)
-		  zstruct = mData
+		  
 		End Sub
 	#tag EndMethod
 
