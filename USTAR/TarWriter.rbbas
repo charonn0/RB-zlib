@@ -43,7 +43,7 @@ Protected Class TarWriter
 		Sub AppendEntry(Path As String, Data As MemoryBlock, ModifyDate As Date = Nil)
 		  Dim bs As New BinaryStream(Data)
 		  AppendEntry(Path, bs, bs.Length, ModifyDate)
-		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Raise New TarException(ERR_INVALID_NAME)
 		  d.Value(META_MEMORY) = Data
 		End Sub
