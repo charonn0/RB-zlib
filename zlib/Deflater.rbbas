@@ -53,7 +53,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Attributes( deprecated )  Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
+		Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
 		  ' Compresses Data and returns it as a new MemoryBlock, or Nil on error.
 		  ' Check LastError for details if there was an error.
 		  
