@@ -619,7 +619,7 @@ Protected Module USTAR
 	#tag Note, Name = Copying
 		RB-USTAR (https://github.com/charonn0/RB-zlib)
 		
-		Copyright (c)2018-19 Andrew Lambert, all rights reserved.
+		Copyright (c)2018-21 Andrew Lambert, all rights reserved.
 		
 		 Permission to use, copy, modify, and distribute this software for any purpose
 		 with or without fee is hereby granted, provided that the above copyright
