@@ -494,7 +494,7 @@ Protected Class ZipWriter
 		  Stream.WriteUInt32(ZIP_ENTRY_HEADER_SIGNATURE)
 		  DirectoryHeader.Signature = ZIP_DIRECTORY_HEADER_SIGNATURE
 		  
-		  Stream.WriteUInt16(20) ' version
+		  Stream.WriteUInt16(10) ' version
 		  DirectoryHeader.Version = 20
 		  DirectoryHeader.VersionNeeded = 10
 		  
