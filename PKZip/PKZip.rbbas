@@ -488,14 +488,15 @@ Protected Module PKZip
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.WriteZip
 		  
-		  Dim stream As BinaryStream = BinaryStream.Create(OutputFile, Overwrite)
+		  Dim stream As BinaryStream
 		  Dim ok As Boolean
 		  Try
+		    stream = BinaryStream.Create(OutputFile, Overwrite)
 		    ok = WriteZip(ToArchive, stream, RelativeRoot, CompressionLevel, CompressionMethod)
 		  Catch
 		    ok = False
 		  Finally
-		    stream.Close
+		    If stream <> Nil Then stream.Close()
 		  End Try
 		  Return ok
 		End Function
