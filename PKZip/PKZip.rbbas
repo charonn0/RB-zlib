@@ -28,12 +28,23 @@ Protected Module PKZip
 		    If DataSize = -1 Then DataSize = Data.Size
 		    If DataSize = -1 Then Raise New ZipException(ERR_SIZE_REQUIRED)
 		    
+		    #If TargetMacOS Then
+		      Const zlib1 = "/usr/lib/libz.dylib"
+		    #ElseIf TargetLinux Then
+		      Const zlib1 = "libz.so.1"
+		    #Else
+		      Const zlib1 = "zlib1.dll"
+		    #EndIf
+		    
+		    Static zlibavailanyway As Boolean = System.IsFunctionAvailable("crc32", zlib1)
+		    Static rtlavail As Boolean = System.IsFunctionAvailable("RtlComputeCrc32", "ntdll")
+		    
 		    Select Case True
-		    Case System.IsFunctionAvailable("crc32", zlib)
+		    Case zlibavailanyway
 		      ' even if we're not using the RB-zlib module zlib itself may be available.
-		      Soft Declare Function _crc32 Lib zlib Alias "crc32" (LastCRC As UInt32, Buffer As Ptr, BufferSize As UInt32) As UInt32
+		      Soft Declare Function _crc32 Lib zlib1 Alias "crc32" (LastCRC As UInt32, Buffer As Ptr, BufferSize As UInt32) As UInt32
 		      Return _crc32(LastCRC, Data, DataSize)
-		    Case System.IsFunctionAvailable("RtlComputeCrc32", "ntdll")
+		    Case rtlavail
 		      ' Windows has an optimized C implementation too.
 		      Soft Declare Function RtlComputeCrc32 Lib "ntdll" (LastCRC As UInt32, Data As Ptr, DataSize As Integer) As Integer
 		      Return RtlComputeCrc32(LastCRC, Data, DataSize)
