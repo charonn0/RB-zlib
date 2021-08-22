@@ -440,7 +440,15 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputStream As BinaryStream, RelativeRoot As FolderItem, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		  ' Creates an archive in the OutputStream containing the files specified by ToArchive.
+		  ' If RelativeRoot is specified then it is used to generate relative paths for items
+		  ' in the ToArchive parameter; if no relative root is specified then all the items are
+		  ' stored in the root of the archive.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.WriteZip
+		  
 		  Dim writer As New ZipWriter
 		  #If DebugBuild Then
 		    writer.ArchiveComment = "Made with RB-zlib"
@@ -461,7 +469,7 @@ Protected Module PKZip
 		    Call writer.AppendEntry(ToArchive(i), RelativeRoot)
 		  Next
 		  Try
-		    writer.Commit(OutputFile, Overwrite)
+		    writer.Commit(OutputStream)
 		  Catch
 		    Return False
 		  End Try
@@ -471,7 +479,54 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		  ' Creates an archive in the OutputFile containing the files specified by ToArchive.
+		  ' If RelativeRoot is specified then it is used to generate relative paths for items
+		  ' in the ToArchive parameter; if no relative root is specified then all the items are
+		  ' stored in the root of the archive.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.WriteZip
+		  
+		  Dim stream As BinaryStream = BinaryStream.Create(OutputFile, Overwrite)
+		  Dim ok As Boolean
+		  Try
+		    ok = WriteZip(ToArchive, stream, RelativeRoot, CompressionLevel, CompressionMethod)
+		  Catch
+		    ok = False
+		  Finally
+		    stream.Close
+		  End Try
+		  Return ok
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function WriteZip(ToArchive As FolderItem, OutputStream As BinaryStream, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		  ' Creates an archive in the OutputStream containing the files contained within ToArchive.
+		  ' The tree structure of ToArchive is preserved.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.WriteZip
+		  
+		  Dim items() As FolderItem
+		  If ToArchive.Directory Then
+		    GetChildren(ToArchive, items)
+		  Else
+		    items.Append(ToArchive)
+		  End If
+		  Return WriteZip(items, OutputStream, ToArchive, CompressionLevel, CompressionMethod)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		  ' Creates an archive in the OutputFile containing the files contained within ToArchive.
+		  ' The tree structure of ToArchive is preserved.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.WriteZip
+		  
 		  Dim items() As FolderItem
 		  If ToArchive.Directory Then
 		    GetChildren(ToArchive, items)
