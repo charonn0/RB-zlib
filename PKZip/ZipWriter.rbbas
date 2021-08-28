@@ -488,34 +488,46 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h21
 		Private Shared Sub WriteEntryHeader(Stream As BinaryStream, Name As String, Length As UInt32, Source As Readable, ModDate As Date, ByRef DirectoryHeader As ZipDirectoryHeader, ExtraData As MemoryBlock, Level As UInt32, Method As UInt32)
+		  ' This method writes a single file/directory entry to the output BinaryStream and populates
+		  ' the DirectoryHeader parameter with the same info.
+		  
 		  If Not USE_ZLIB And Not USE_BZIP2 Then Level = 0
 		  If Length = 0 Or Level = 0 Then method = 0
 		  
-		  DirectoryHeader.Offset = Stream.Position
+		  DirectoryHeader.Offset = Stream.Position ' offset in the output at which the entry begins
 		  Dim crcoff, compszoff, dataoff As UInt64
 		  Stream.WriteUInt32(ZIP_ENTRY_HEADER_SIGNATURE)
 		  DirectoryHeader.Signature = ZIP_DIRECTORY_HEADER_SIGNATURE
 		  
-		  Stream.WriteUInt16(10) ' version
-		  DirectoryHeader.Version = 20
+		  Stream.WriteUInt16(10) ' version needed to extract
+		  DirectoryHeader.Version = 20 ' version made by
 		  DirectoryHeader.VersionNeeded = 10
 		  
+		  ' Zip file names default to DosLatin. If FLAG_NAME_ENCODING is set then UTF8 is used instead.
 		  If Name.Encoding = Encodings.UTF8 Then
-		    DirectoryHeader.Flag = FLAG_NAME_ENCODING
+		    DirectoryHeader.Flag = DirectoryHeader.Flag Or FLAG_NAME_ENCODING
 		  End If
 		  #If Not OUTPUT_SEEKABLE Then
+		    ' If FLAG_DESRIPTOR is set then the crc and compressed size are given in a footer
+		    ' instead of  the header.
 		    If Length > 0 Then DirectoryHeader.Flag = DirectoryHeader.Flag Or FLAG_DESCRIPTOR
 		  #endif
-		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flag
+		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flags
 		  
-		  Stream.WriteUInt16(method) ' method
+		  Stream.WriteUInt16(method) ' the compression method used on this entry
 		  DirectoryHeader.Method = method
-		  Dim modtim As Pair = ConvertDate(ModDate)
-		  Stream.WriteUInt16(modtim.Right) ' modtime
-		  Stream.WriteUInt16(modtim.Left) ' moddate
-		  DirectoryHeader.ModDate = modtim.Left
-		  DirectoryHeader.ModTime = modtim.Right
 		  
+		  Dim modtim As Pair = ConvertDate(ModDate)
+		  Stream.WriteUInt16(modtim.Right) ' the last modified time of this entry in DOS format
+		  Stream.WriteUInt16(modtim.Left) ' the last modified date of this entry in DOS format
+		  DirectoryHeader.ModTime = modtim.Right
+		  DirectoryHeader.ModDate = modtim.Left
+		  
+		  ' the crc and compressed size fields will be filled after the file data has been
+		  ' compressed. This requires seeking backwards in the output stream. Alternatively,
+		  ' the crc and compressed size can be given in an optional footer following the compressed
+		  ' data. Set OUTPUT_SEEKABLE to False to have the ZipWriter use the footer instead of 
+		  ' seeking backwards.
 		  crcoff = Stream.Position
 		  Stream.WriteUInt32(0) ' crc32; to be filled later
 		  
@@ -528,6 +540,7 @@ Protected Class ZipWriter
 		  DirectoryHeader.FilenameLength = Name.LenB
 		  Stream.WriteUInt16(Name.LenB) ' name length
 		  
+		  ' Up to 16KB of arbitrary data can be included in the entry header
 		  If ExtraData = Nil Then
 		    ExtraData = ""
 		  ElseIf ExtraData.Size > MAX_EXTRA_SIZE Then
@@ -539,7 +552,7 @@ Protected Class ZipWriter
 		  Stream.Write(Name) ' name
 		  Stream.Write(ExtraData) ' extra
 		  
-		  dataoff = Stream.Position
+		  dataoff = Stream.Position ' end of header/start of data position
 		  Dim crc As UInt32
 		  If Source <> Nil And Length > 0 Then
 		    Dim z As Writeable = GetCompressor(Method, Stream, Level)
@@ -556,18 +569,21 @@ Protected Class ZipWriter
 		      If z IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(z).Close
 		    #endif
 		  End If
+		  
 		  If Length > 0 Then
 		    Dim endoff As UInt64 = Stream.Position
 		    Dim compsz As UInt32 = endoff - dataoff
 		    DirectoryHeader.CompressedSize = compsz
 		    DirectoryHeader.CRC32 = crc
 		    #If OUTPUT_SEEKABLE Then
+		      ' seek backwards to fill in the crc and compressed size fields in the header
 		      Stream.Position = compszoff
 		      Stream.WriteUInt32(compsz)
 		      Stream.Position = crcoff
 		      Stream.WriteUInt32(crc)
 		      Stream.Position = endoff
 		    #Else
+		      ' write the crc and compressed size fields in a footer.
 		      WriteEntryFooter(Stream, crc, compsz, Length)
 		    #EndIf
 		  End If
@@ -583,7 +599,6 @@ Protected Class ZipWriter
 		The number of files in a single archive is technically limited to 65535, however this class does
 		not enforce the limit. Most zip readers (including the ZipReader class) ignore this limit and
 		can handle archives with any number of files.
-		
 	#tag EndNote
 
 
