@@ -113,6 +113,8 @@ Protected Class ZipWriter
 		      Levels.Append(item.Lookup(META_LEVEL, 6))
 		      If USE_ZLIB Then
 		        Methods.Append(item.Lookup(META_METHOD, METHOD_DEFLATED))
+		      ElseIf USE_BZIP2 Then
+		        Methods.Append(item.Lookup(META_METHOD, METHOD_BZIP2))
 		      Else
 		        Methods.Append(item.Lookup(META_METHOD, METHOD_NONE))
 		      End If
