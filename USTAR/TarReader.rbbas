@@ -187,6 +187,8 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the GID of the current entry, if available.
+			  
 			  Return mCurrentGroup
 			End Get
 		#tag EndGetter
@@ -219,6 +221,8 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the last-modified date of the current entry, if available.
+			  
 			  Return mCurrentModTime
 			End Get
 		#tag EndGetter
@@ -228,6 +232,8 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the full path of the current entry. 
+			  
 			  return mCurrentName
 			End Get
 		#tag EndGetter
@@ -237,6 +243,8 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the UID of the current entry, if available.
+			  
 			  Return mCurrentOwner
 			End Get
 		#tag EndGetter
@@ -246,6 +254,8 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the length of the current entry. Directories and links have a length of zero.
+			  
 			  Return mCurrentSize
 			End Get
 		#tag EndGetter
