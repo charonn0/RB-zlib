@@ -509,7 +509,7 @@ Protected Class ZipWriter
 		  End If
 		  #If Not OUTPUT_SEEKABLE Then
 		    ' If FLAG_DESRIPTOR is set then the crc and compressed size are given in a footer
-		    ' instead of  the header.
+		    ' instead of the header.
 		    If Length > 0 Then DirectoryHeader.Flag = DirectoryHeader.Flag Or FLAG_DESCRIPTOR
 		  #endif
 		  Stream.WriteUInt16(DirectoryHeader.Flag) ' flags
