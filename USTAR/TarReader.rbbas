@@ -196,6 +196,20 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' If the CurrentType is SYMTYPE then this property will return the path of the
+			  ' file or directory being symlinked to.
+			  
+			  return mCurrentLinkName
+			End Get
+		#tag EndGetter
+		CurrentLinkTarget As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ' Returns the Unix-style permissions of the current entry, if available.
+			  
 			  Return mCurrentMode
 			End Get
 		#tag EndGetter
@@ -241,10 +255,25 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  return mCurrentType
+			  Select Case mCurrentType
+			  Case REGTYPE
+			    Return EntryType.File
+			  Case DIRTYPE
+			    Return EntryType.Directory
+			  Case LNKTYPE
+			    Return EntryType.Link
+			  Case SYMTYPE
+			    Return EntryType.Symlink
+			  Case FIFOTYPE
+			    Return EntryType.FIFO
+			  Case BLKTYPE
+			    Return EntryType.Block
+			  Else
+			    Return EntryType.Unknown
+			  End Select
 			End Get
 		#tag EndGetter
-		CurrentType As String
+		CurrentType As USTAR.EntryType
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0

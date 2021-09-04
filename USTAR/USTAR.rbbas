@@ -471,8 +471,8 @@ Protected Module USTAR
 		    If bs <> Nil Then bs.Close
 		    bs = Nil
 		    Dim name As String = tar.CurrentName
-		    Dim type As String = tar.CurrentType
-		    If type = DIRTYPE And Right(name, 1) <> "/" Then name = name + "/"
+		    Dim type As EntryType = tar.CurrentType
+		    If type = EntryType.Directory And Right(name, 1) <> "/" Then name = name + "/"
 		    Dim g As FolderItem = CreateRelativePath(ExtractTo, name)
 		    If Not g.Directory Then bs = BinaryStream.Create(g, Overwrite)
 		    fs.Append(g)
@@ -758,6 +758,17 @@ Protected Module USTAR
 
 	#tag Constant, Name = XHDTYPE, Type = String, Dynamic = False, Default = \"x", Scope = Private
 	#tag EndConstant
+
+
+	#tag Enum, Name = EntryType, Type = Integer, Flags = &h1
+		File
+		  Directory
+		  Link
+		  Symlink
+		  Block
+		  FIFO
+		Unknown
+	#tag EndEnum
 
 
 	#tag ViewBehavior
