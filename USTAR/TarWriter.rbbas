@@ -14,6 +14,13 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendDirectory(Entry As FolderItem, RelativeRoot As FolderItem = Nil)
+		  ' Adds the directory represented by the Entry parameter to the archive.
+		  ' If RelativeRoot is specified then the entry and all subdirectories and
+		  ' files within it will be stored as a sub directory (named as Entry.Name)
+		  ' of the archive root. If RelativeRoot is not specified then all
+		  ' subdirectories and files within the Entry directory are added to the
+		  ' archive root rather than in a subdirectory.
+		  
 		  If Not Entry.Directory Then
 		    Call AppendEntry(Entry, RelativeRoot)
 		    Return
@@ -31,6 +38,12 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Function AppendEntry(Entry As FolderItem, Optional RelativeRoot As FolderItem) As String
+		  ' Adds the file represented by the Entry parameter to the archive.
+		  ' If RelativeRoot is specified then the entry will be stored using
+		  ' the relative path; if the Entry is not contained within RelativeRoot
+		  ' then the file is added to the root of the archive. Returns a path
+		  ' which can be used with the SetEntry* methods to modify the entry.
+		  
 		  Dim path As String = GetRelativePath(RelativeRoot, Entry)
 		  If Entry.Directory Then path = path + "/"
 		  Dim p As New Permissions(Entry.Permissions)
@@ -41,6 +54,12 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As MemoryBlock, ModifyDate As Date = Nil)
+		  ' Adds the raw file data represented by the Data parameter to the archive using
+		  ' the specifed Path (or filename). The Path is relative to the root of the archive
+		  ' and is delimited by the "/" character. e.g. "dir1/dir2/file.txt". File names without
+		  ' a path are placed in the root of the archive.
+		  ' If the ModifyDate parameter is not specified then the current date and time are used.
+		  
 		  Dim bs As New BinaryStream(Data)
 		  AppendEntry(Path, bs, bs.Length, ModifyDate)
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
@@ -51,6 +70,17 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendEntry(Path As String, Data As Readable, Length As UInt32, ModifyDate As Date = Nil, Mode As Permissions = Nil)
+		  ' Adds the raw file data represented by the Data parameter to the archive using
+		  ' the specifed Path (or filename). The Path is relative to the root of the archive
+		  ' and is delimited by the "/" character. e.g. "dir1/dir2/file.txt". File names without
+		  ' a path are placed in the root of the archive.
+		  ' The Length parameter specifies how many bytes long the Data is supposed to be. Be aware
+		  ' that this value is used only to fill in the archive header--it does not control how
+		  ' many bytes will be read from the Data stream. If the Length parameter is wrong then
+		  ' archive readers will report the wrong compression ratio and possibly other side effects
+		  ' will ensue.
+		  ' If the ModifyDate parameter is not specified then the current date and time are used.
+		  
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, True)
 		  If d = Nil Then Raise New TARException(ERR_INVALID_NAME)
 		  d.Value(META_STREAM) = Data
@@ -63,14 +93,20 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Sub Commit(WriteTo As FolderItem, Overwrite As Boolean = False)
+		  ' Writes the zip archive to the file specified by WriteTo.
+		  ' If Overwrite is True then WriteTo will be overwritten if it exists.
+		  
 		  If WriteTo = Nil Or WriteTo.Directory Then Return
 		  Dim bs As BinaryStream = BinaryStream.Create(WriteTo, Overwrite)
 		  Commit(bs)
+		  bs.Close()
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Commit(WriteTo As Writeable)
+		  ' Writes the archive to a file or memory stream.
+		  
 		  Dim paths() As String
 		  Dim lengths() As UInt32
 		  Dim sources() As Variant
@@ -105,12 +141,19 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
+		  ' Constructs the unnamed root directory in the archive's directory model.
+		  
 		  mEntries = New Dictionary(META_PATH:"$ROOT", META_PARENT:Nil, META_DIR:True)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub DeleteEntry(Path As String)
+		  ' Removes the archive entry specified by the Path.
+		  ' If the entry represents a directory then all entries
+		  ' within that directory are removed as well.
+		  ' If Path is "/" then *all* entries are removed.
+		  
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
 		  Dim n As String = d.Lookup(META_PATH, "$INVALID")
@@ -125,6 +168,9 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Sub SetEntryModificationDate(Path As String, ModDate As Date)
+		  ' Sets the "last modified" date for the entry.
+		  ' Set it to Nil to use the current date and time.
+		  
 		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
 		  If d = Nil Then Return
 		  d.Value(META_MODTIME) = ModDate
