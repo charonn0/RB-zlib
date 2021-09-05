@@ -678,31 +678,31 @@ Protected Module USTAR
 	#tag Constant, Name = LONGNAMETYPE, Type = String, Dynamic = False, Default = \"L", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_DIR, Type = String, Dynamic = False, Default = \"$d", Scope = Private
+	#tag Constant, Name = META_DIR, Type = String, Dynamic = False, Default = \"$isDirectory", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_LENGTH, Type = String, Dynamic = False, Default = \"$s", Scope = Private
+	#tag Constant, Name = META_LENGTH, Type = String, Dynamic = False, Default = \"$datasize", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_LEVEL, Type = String, Dynamic = False, Default = \"$l", Scope = Private
+	#tag Constant, Name = META_LEVEL, Type = String, Dynamic = False, Default = \"$compressionlvl", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_MEMORY, Type = String, Dynamic = False, Default = \"$rr", Scope = Private
+	#tag Constant, Name = META_MEMORY, Type = String, Dynamic = False, Default = \"$buffer", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_MODE, Type = String, Dynamic = False, Default = \"$m", Scope = Private
+	#tag Constant, Name = META_MODE, Type = String, Dynamic = False, Default = \"$permissions", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_MODTIME, Type = String, Dynamic = False, Default = \"$t", Scope = Private
+	#tag Constant, Name = META_MODTIME, Type = String, Dynamic = False, Default = \"$lastmodified", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_PARENT, Type = String, Dynamic = False, Default = \"$p", Scope = Private
+	#tag Constant, Name = META_PARENT, Type = String, Dynamic = False, Default = \"$parent", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_PATH, Type = String, Dynamic = False, Default = \"$n", Scope = Private
+	#tag Constant, Name = META_PATH, Type = String, Dynamic = False, Default = \"$pathname", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = META_STREAM, Type = String, Dynamic = False, Default = \"$r", Scope = Private
+	#tag Constant, Name = META_STREAM, Type = String, Dynamic = False, Default = \"$readable", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = REGTYPE, Type = String, Dynamic = False, Default = \"0", Scope = Private
