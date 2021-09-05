@@ -8,6 +8,7 @@ Protected Class TarWriter
 		  d.Value(META_LENGTH) = Length
 		  If ModifyDate = Nil Then ModifyDate = New Date
 		  d.Value(META_MODTIME) = ModifyDate
+		  If Mode = Nil Then Mode = New Permissions(&o644)
 		  d.Value(META_MODE) = Mode
 		End Sub
 	#tag EndMethod
@@ -163,6 +164,16 @@ Protected Class TarWriter
 		    Dim p As Dictionary = Dictionary(w.Value)
 		    p.Remove(n)
 		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SetEntryMode(Path As String, Mode As Permissions)
+		  ' Sets the Unix-style permissions for the entry.
+		  
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  d.Value(META_MODE) = Mode
 		End Sub
 	#tag EndMethod
 
