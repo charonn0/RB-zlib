@@ -266,7 +266,7 @@ Protected Class TarReader
 		#tag Getter
 			Get
 			  Select Case mCurrentType
-			  Case REGTYPE
+			  Case REGTYPE, CONTIGTYPE
 			    Return EntryType.File
 			  Case DIRTYPE
 			    Return EntryType.Directory
@@ -278,6 +278,8 @@ Protected Class TarReader
 			    Return EntryType.FIFO
 			  Case BLKTYPE
 			    Return EntryType.Block
+			  Case CHRTYPE
+			    Return EntryType.Character
 			  Else
 			    Return EntryType.Unknown
 			  End Select

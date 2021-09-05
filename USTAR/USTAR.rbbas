@@ -648,6 +648,9 @@ Protected Module USTAR
 	#tag Constant, Name = CHRTYPE, Type = String, Dynamic = False, Default = \"3", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = CONTIGTYPE, Type = String, Dynamic = False, Default = \"7", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = DIRTYPE, Type = String, Dynamic = False, Default = \"5", Scope = Private
 	#tag EndConstant
 
@@ -766,6 +769,7 @@ Protected Module USTAR
 		  Link
 		  Symlink
 		  Block
+		  Character
 		  FIFO
 		Unknown
 	#tag EndEnum
