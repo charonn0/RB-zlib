@@ -179,11 +179,14 @@ Protected Class ZipWriter
 		  If WriteTo = Nil Or WriteTo.Directory Then Return
 		  Dim bs As BinaryStream = BinaryStream.Create(WriteTo, Overwrite)
 		  Commit(bs)
+		  bs.Close()
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
+		  ' Constructs the unnamed root directory in the archive's directory model.
+		  
 		  mEntries = New Dictionary(META_PATH:"$ROOT", META_PARENT:Nil, META_DIR:True)
 		  #If USE_ZLIB Then
 		    CompressionLevel = zlib.Z_DEFAULT_COMPRESSION
