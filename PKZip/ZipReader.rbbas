@@ -211,18 +211,14 @@ Protected Class ZipReader
 		  ' read the headers of the next entry.
 		  
 		  If WriteTo = Nil Or mCurrentEntry.CompressedSize = 0 Then
-		    ' skip the current item
-		    mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
-		    If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR Then
-		      mStream.Position = mStream.Position + ZIP_ENTRY_FOOTER_SIZE
-		    End If
+		    SkipEntryData()
 		    Return True
 		  End If
 		  
 		  Dim zipstream As Readable = GetDecompressor(mCurrentEntry.Method, mStream)
 		  If zipstream = Nil Then
 		    mLastError = ERR_UNSUPPORTED_COMPRESSION
-		    mStream.Position = mStream.Position + mCurrentEntry.CompressedSize
+		    SkipEntryData()
 		    Return False Or mForced
 		  End If
 		  
@@ -238,9 +234,7 @@ Protected Class ZipReader
 		      WriteTo.Write(data)
 		    End If
 		  Loop Until zipstream.EOF
-		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR Then
-		    mStream.Position = mStream.Position + ZIP_ENTRY_FOOTER_SIZE
-		  End If
+		  SkipEntryData(mStream.Position - startpos) ' skip the footer
 		  
 		  If ValidateChecksums And (CRC <> mCurrentEntry.CRC32) Then
 		    mLastError = ERR_CHECKSUM_MISMATCH
@@ -446,6 +440,18 @@ Protected Class ZipReader
 		  Loop Until mIndex >= Index And Index > -1
 		  Return True
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub SkipEntryData(BytesReadSoFar As UInt32 = 0)
+		  ' Skips the remaining portion of the file data plus footer (if present), aligning
+		  ' the stream to read the headers of the next entry.
+		  
+		  mStream.Position = mStream.Position + mCurrentEntry.CompressedSize - BytesReadSoFar
+		  If BitAnd(mCurrentEntry.Flag, FLAG_DESCRIPTOR) = FLAG_DESCRIPTOR Then
+		    mStream.Position = mStream.Position + ZIP_ENTRY_FOOTER_SIZE
+		  End If
+		End Sub
 	#tag EndMethod
 
 
