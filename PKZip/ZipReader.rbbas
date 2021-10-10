@@ -155,6 +155,29 @@ Protected Class ZipReader
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function MoveToPath(PathName As String, Index As Integer = 0) As Boolean
+		  ' Finds the PathName in the archive and positions the reader to extract it.
+		  ' Returns True if the PathName was found. If the archive contains more than
+		  ' one item that matches the PathName then you may use the Index property to
+		  ' access them all.
+		  
+		  Dim i, old As Integer
+		  old = CurrentIndex
+		  If Not Me.Reset(0) Then Raise New ZipException(LastError)
+		  Do
+		    If CurrentName = PathName Then
+		      If i = Index Then Return True
+		      i = i + 1
+		    End If
+		  Loop Until Not MoveNext(Nil)
+		  
+		  If Not Me.Reset(old) Then Raise New ZipException(LastError)
+		  Return False
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Shared Function ReadDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter) As Boolean
 		  Footer.Signature = Stream.ReadUInt32
