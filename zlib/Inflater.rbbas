@@ -63,7 +63,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(ReadFrom As Readable, WriteTo As Writeable, ReadCount As Integer = - 1) As Boolean
+		Function Inflate(ReadFrom As Readable, WriteTo As Writeable, ReadCount As Integer = -1) As Boolean
 		  ' Reads compressed bytes from ReadFrom and writes all decompressed output to WriteTo. If
 		  ' ReadCount is specified then exactly ReadCount compressed bytes are read; otherwise
 		  ' compressed bytes will continue to be read until ReadFrom.EOF. If ReadFrom represents more 
@@ -144,7 +144,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function SyncToNextFlush(ReadFrom As Readable, MaxCount As Integer = - 1) As Boolean
+		Function SyncToNextFlush(ReadFrom As Readable, MaxCount As Integer = -1) As Boolean
 		  ' Reads compressed bytes from ReadFrom until a possible full flush point is detected. If a flush point
 		  ' is detected then this method returns True and the Total_In property will reflect the point in the input
 		  ' where it was detected.
