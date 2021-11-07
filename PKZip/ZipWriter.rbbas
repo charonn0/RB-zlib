@@ -384,12 +384,7 @@ Protected Class ZipWriter
 		    Dim child As Dictionary = parent.Lookup(name, Nil)
 		    If child = Nil Then
 		      If Not CreateChildren Then Return Nil
-		      child = New Dictionary
-		      child.Value(META_PATH) = name
-		      child.Value(META_DIR) = True
-		      child.Value(META_PARENT) = New WeakRef(parent)
-		      child.Value(META_MODTIME) = New Date
-		      child.Value(META_STREAM) = Nil
+		      child = New Dictionary(META_PATH:name, META_DIR:True, META_PARENT:New WeakRef(parent), META_MODTIME:New Date, META_STREAM:Nil)
 		    Else
 		      child.Value(META_DIR) = True
 		    End If
