@@ -11,7 +11,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = - 1) As UInt32
+		Private Function CRC32(Data As MemoryBlock, LastCRC As UInt32 = 0, DataSize As Integer = -1) As UInt32
 		  ' Calculate the CRC32 checksum for the Data. Pass back the returned value
 		  ' to continue processing.
 		  '    Dim crc As UInt32
@@ -469,7 +469,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputStream As BinaryStream, RelativeRoot As FolderItem, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputStream As BinaryStream, RelativeRoot As FolderItem, CompressionLevel As Integer = 6, CompressionMethod As Integer = -1) As Boolean
 		  ' Creates an archive in the OutputStream containing the files specified by ToArchive.
 		  ' If RelativeRoot is specified then it is used to generate relative paths for items
 		  ' in the ToArchive parameter; if no relative root is specified then all the items are
@@ -508,7 +508,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		Protected Function WriteZip(ToArchive() As FolderItem, OutputFile As FolderItem, RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = -1) As Boolean
 		  ' Creates an archive in the OutputFile containing the files specified by ToArchive.
 		  ' If RelativeRoot is specified then it is used to generate relative paths for items
 		  ' in the ToArchive parameter; if no relative root is specified then all the items are
@@ -532,7 +532,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputStream As BinaryStream, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputStream As BinaryStream, CompressionLevel As Integer = 6, CompressionMethod As Integer = -1) As Boolean
 		  ' Creates an archive in the OutputStream containing the files contained within ToArchive.
 		  ' The tree structure of ToArchive is preserved.
 		  '
@@ -550,7 +550,7 @@ Protected Module PKZip
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = - 1) As Boolean
+		Protected Function WriteZip(ToArchive As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 6, CompressionMethod As Integer = -1) As Boolean
 		  ' Creates an archive in the OutputFile containing the files contained within ToArchive.
 		  ' The tree structure of ToArchive is preserved.
 		  '
