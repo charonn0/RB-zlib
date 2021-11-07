@@ -69,7 +69,7 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH, ReadCount As Integer = - 1) As Boolean
+		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH, ReadCount As Integer = -1) As Boolean
 		  ' Reads uncompressed bytes from ReadFrom and writes all compressed output to WriteTo. If
 		  ' ReadCount is specified then exactly ReadCount uncompressed bytes are read; otherwise
 		  ' uncompressed bytes will continue to be read until ReadFrom.EOF. If ReadFrom represents 
