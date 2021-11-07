@@ -1,7 +1,7 @@
 #tag Module
 Protected Module zlib
 	#tag Method, Flags = &h1
-		Protected Function Adler32(NewData As MemoryBlock, LastAdler As UInt32 = 0, NewDataSize As Integer = - 1) As UInt32
+		Protected Function Adler32(NewData As MemoryBlock, LastAdler As UInt32 = 0, NewDataSize As Integer = -1) As UInt32
 		  ' Calculate the Adler32 checksum for the NewData. Pass back the returned value
 		  ' to continue processing.
 		  '    Dim adler As UInt32
@@ -33,7 +33,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Attributes( deprecated = "zlib.Deflate" ) Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = - 1) As MemoryBlock
+		Attributes( deprecated = "zlib.Deflate" ) Protected Function Compress(Data As MemoryBlock, CompressionLevel As Integer = Z_DEFAULT_COMPRESSION, DataSize As Integer = -1) As MemoryBlock
 		  ' Compress memory in one operation using deflate. If Data.Size is not known (-1) then specify the size as DataSize
 		  ' Use Uncompress to reverse.
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Compress
@@ -81,7 +81,7 @@ Protected Module zlib
 	#tag EndExternalMethod
 
 	#tag Method, Flags = &h1
-		Protected Function CRC32(NewData As MemoryBlock, LastCRC As UInt32 = 0, NewDataSize As Integer = - 1) As UInt32
+		Protected Function CRC32(NewData As MemoryBlock, LastCRC As UInt32 = 0, NewDataSize As Integer = -1) As UInt32
 		  ' Calculate the CRC32 checksum for the NewData. Pass back the returned value
 		  ' to continue processing.
 		  '    Dim crc As UInt32
@@ -812,7 +812,7 @@ Protected Module zlib
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Attributes( deprecated = "zlib.Inflate" ) Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = - 1, DataSize As Integer = - 1) As MemoryBlock
+		Attributes( deprecated = "zlib.Inflate" ) Protected Function Uncompress(Data As MemoryBlock, ExpandedSize As Integer = -1, DataSize As Integer = -1) As MemoryBlock
 		  ' Decompress memory in one operation using deflate. If Data.Size is not known (-1) then specify the size as DataSize
 		  ' If the size of the decompressed data is known then pass it as ExpandedSize. Reverses the Compress method
 		  
