@@ -409,7 +409,7 @@ Implements Readable,Writeable
 		Function Sync(MaxCount As Integer = - 1) As Boolean
 		  ' Reads compressed bytes from the input stream until a possible full flush point is detected.
 		  ' A full flush point is made when the compression stream is flushed with the Z_FULL_FLUSH parameter.
-		  ' If a flush point was found then decompressor switches to RAW_ENCODING, the Position
+		  ' If a flush point was found then the decompressor switches to RAW_ENCODING, the Position
 		  ' property of the Source BinaryStream is moved to the flush point, and this method returns True.
 		  
 		  If mInflater = Nil Or Not mSource IsA BinaryStream Then Return False
