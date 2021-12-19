@@ -121,6 +121,7 @@ Protected Class ZipReader
 		    mCurrentEntry.CRC32 = footer.CRC32
 		    mStream.Position = datastart
 		  End If
+		  mCurrentDataOffset = mStream.Position
 		  Return True
 		End Function
 	#tag EndMethod
@@ -530,6 +531,18 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns the offset in the stream where the current item's compressed data begins.
+			  ' Combined with the CurrentSize property you could decompress an entry directly.
+			  
+			  return mCurrentDataOffset
+			End Get
+		#tag EndGetter
+		CurrentDataOffset As UInt64
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  Return mIndex
 			End Get
 		#tag EndGetter
@@ -596,6 +609,10 @@ Protected Class ZipReader
 
 	#tag Property, Flags = &h21
 		Private mArchiveComment As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mCurrentDataOffset As UInt64
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
