@@ -493,7 +493,6 @@ Protected Class ZipWriter
 		  If Length = 0 Or Level = 0 Then method = 0
 		  
 		  DirectoryHeader.Offset = Stream.Position ' offset in the output at which the entry begins
-		  Dim crcoff, compszoff, dataoff As UInt64
 		  Stream.WriteUInt32(ZIP_ENTRY_HEADER_SIGNATURE)
 		  DirectoryHeader.Signature = ZIP_DIRECTORY_HEADER_SIGNATURE
 		  
@@ -526,10 +525,8 @@ Protected Class ZipWriter
 		  ' the crc and compressed size can be given in an optional footer following the compressed
 		  ' data. Set OUTPUT_SEEKABLE to False to have the ZipWriter use the footer instead of 
 		  ' seeking backwards.
-		  crcoff = Stream.Position
+		  Dim crcoffset As UInt64 = Stream.Position
 		  Stream.WriteUInt32(0) ' crc32; to be filled later
-		  
-		  compszoff = Stream.Position
 		  Stream.WriteUInt32(0) ' compressed size; to be filled later
 		  
 		  DirectoryHeader.UncompressedSize = Length
@@ -550,14 +547,13 @@ Protected Class ZipWriter
 		  Stream.Write(Name) ' name
 		  Stream.Write(ExtraData) ' extra
 		  
-		  dataoff = Stream.Position ' end of header/start of data position
-		  Dim crc As UInt32
+		  Dim filedataoffset As UInt64 = Stream.Position ' end of header/start of data position
 		  If Source <> Nil And Length > 0 Then
 		    Dim z As Writeable = GetCompressor(Method, Stream, Level)
 		    If z = Nil Then Raise New ZipException(ERR_UNSUPPORTED_COMPRESSION)
 		    Do Until Source.EOF
 		      Dim data As MemoryBlock = Source.Read(CHUNK_SIZE)
-		      crc = PKZip.CRC32(data, crc)
+		      DirectoryHeader.CRC32 = PKZip.CRC32(data, DirectoryHeader.CRC32)
 		      z.Write(data)
 		    Loop
 		    #If USE_ZLIB Then
@@ -570,19 +566,16 @@ Protected Class ZipWriter
 		  
 		  If Length > 0 Then
 		    Dim endoff As UInt64 = Stream.Position
-		    Dim compsz As UInt32 = endoff - dataoff
-		    DirectoryHeader.CompressedSize = compsz
-		    DirectoryHeader.CRC32 = crc
+		    DirectoryHeader.CompressedSize = endoff - filedataoffset
 		    #If OUTPUT_SEEKABLE Then
 		      ' seek backwards to fill in the crc and compressed size fields in the header
-		      Stream.Position = compszoff
-		      Stream.WriteUInt32(compsz)
-		      Stream.Position = crcoff
-		      Stream.WriteUInt32(crc)
+		      Stream.Position = crcoffset
+		      Stream.WriteUInt32(DirectoryHeader.CRC32)
+		      Stream.WriteUInt32(DirectoryHeader.CompressedSize)
 		      Stream.Position = endoff
 		    #Else
 		      ' write the crc and compressed size fields in a footer.
-		      WriteEntryFooter(Stream, crc, compsz, Length)
+		      WriteEntryFooter(Stream, DirectoryHeader.CRC32, DirectoryHeader.CompressedSize, Length)
 		    #EndIf
 		  End If
 		End Sub
