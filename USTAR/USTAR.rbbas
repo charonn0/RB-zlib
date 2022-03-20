@@ -516,6 +516,9 @@ Protected Module USTAR
 		  #If USE_BZIP Then
 		    If ts = Nil And TarFile.IsBZipped Then ts = BZip2.BZ2Stream.Open(TarFile)
 		  #endif
+		  #If USE_LZMA Then
+		    If ts = Nil And TarFile.IsXZCompressed Then ts = LZMA.LZMAStream.Open(TarFile)
+		  #endif
 		  If ts = Nil Then ts = BinaryStream.Open(TarFile)
 		  Dim tar As New TarReader(ts)
 		  Dim mb As New MemoryBlock(0)
@@ -529,6 +532,9 @@ Protected Module USTAR
 		  #endif
 		  #If USE_BZIP Then
 		    If ts IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(ts).Close
+		  #endif
+		  #If USE_LZMA Then
+		    If ts IsA LZMA.LZMAStream Then LZMA.LZMAStream(ts).Close
 		  #endif
 		  
 		  Return tar.LastError = ERR_END_ARCHIVE
