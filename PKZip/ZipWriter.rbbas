@@ -22,6 +22,13 @@ Protected Class ZipWriter
 
 	#tag Method, Flags = &h0
 		Sub AppendDirectory(Entry As FolderItem, RelativeRoot As FolderItem = Nil)
+		  Dim s As String
+		  s = AppendDirectory(Entry, RelativeRoot)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function AppendDirectory(Entry As FolderItem, RelativeRoot As FolderItem = Nil) As String
 		  ' Adds the directory represented by the Entry parameter to the archive.
 		  ' If RelativeRoot is specified then the entry and all subdirectories and
 		  ' files within it will be stored as a sub directory (named as Entry.Name)
@@ -29,19 +36,21 @@ Protected Class ZipWriter
 		  ' subdirectories and files within the Entry directory are added to the
 		  ' archive root rather than in a subdirectory.
 		  
-		  If Not Entry.Directory Then
-		    Call AppendEntry(Entry, RelativeRoot)
-		    Return
-		  End If
+		  If Not Entry.Directory Then Return AppendEntry(Entry, RelativeRoot)
 		  
-		  If RelativeRoot = Nil Then RelativeRoot = Entry
+		  Dim rooted As Boolean
+		  If RelativeRoot = Nil Then
+		    RelativeRoot = Entry
+		    rooted = True
+		  End If
 		  Dim entries() As FolderItem
 		  GetChildren(Entry, entries)
 		  Dim c As Integer = UBound(entries)
 		  For i As Integer = 0 To c
 		    Call AppendEntry(entries(i), RelativeRoot)
 		  Next
-		End Sub
+		  If c > -1 And Not rooted Then Return GetRelativePath(RelativeRoot, Entry)
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -374,6 +383,8 @@ Protected Class ZipWriter
 		  ' item referred to by the path and returns a reference to the item as a Dictionary. If CreateChildren is
 		  ' true then missing elements in the path are created, otherwise this method returns Nil to indicate
 		  ' the path is not found.
+		  
+		  If Path.Trim = "" Then Return Nil
 		  
 		  Dim s() As String = Split(Path, "/")
 		  Dim bound As Integer = UBound(s)
