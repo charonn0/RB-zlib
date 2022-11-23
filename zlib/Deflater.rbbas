@@ -69,10 +69,9 @@ Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
 		  ' Processes the uncompressed bytes in the Data parameter into the compressor and
-		  ' returns any compressed output. If this method returns True then all uncompressed
-		  ' bytes were processed and the compressor is ready for more input. Depending on the
-		  ' state of the compressor and the Flushing parameter, compressed output might not be
-		  ' written until a subsequent call to this method.
+		  ' returns any compressed output. Depending on the state of the compressor and the
+		  ' Flushing parameter, compressed output might not be emitted until a subsequent
+		  ' call to this method.
 		  '
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Deflate

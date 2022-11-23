@@ -55,9 +55,8 @@ Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Function Inflate(Data As MemoryBlock) As MemoryBlock
 		  ' Processes the compressed bytes in the Data parameter into the decompressor and returns
-		  ' any decompressed output. If this method returns True then all compressed bytes were
-		  ' processed and the decompressor is ready for more input. Check LastError to determine
-		  ' whether there was an error while decompressing.
+		  ' any decompressed output. Check LastError to determine whether there was an error while
+		  ' decompressing.
 		  '
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Inflate
