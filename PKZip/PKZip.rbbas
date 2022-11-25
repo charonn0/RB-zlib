@@ -396,11 +396,14 @@ Protected Module PKZip
 		  ' the ZipFile is preserved and missing subdirectories of the ExtractTo directory will be
 		  ' created automatically. Returns an array of zero or more FolderItems corresponding to the
 		  ' extracted files & directories.
+		  ' The zip archive format does not forbid having two or more entries with identical names. If
+		  ' Overwrite is False (the default), then an IOException will be raised when a duplicate entry
+		  ' is encountered. If Overwrite is True then no exception is raised and each subsequent duplicate
+		  ' overwrites the previous one. To correctly process an archive with duplicate entries use the
+		  ' ZipReader class.
 		  '
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ReadZip
-		  
-		  The zip archive format does not forbid having two or more entries with identical names. If Overwrite is False (the default), then an IOException will be raised when a duplicate entry is encountered. If Overwrite is True then no exception is raised and each subsequent duplicate overwrites the previous one. To correctly process an archive with duplicate entries use the ZipReader class.
 		  
 		  Dim zip As New ZipReader(ZipFile)
 		  zip.ValidateChecksums = VerifyCRC
