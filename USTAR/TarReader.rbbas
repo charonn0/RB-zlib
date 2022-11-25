@@ -3,6 +3,9 @@ Protected Class TarReader
 	#tag Method, Flags = &h0
 		Sub Close()
 		  ' Releases all resources. The TarReader may not be used after calling this method.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.Close
 		  
 		  mStream = Nil
 		  mData = Nil
@@ -12,6 +15,9 @@ Protected Class TarReader
 	#tag Method, Flags = &h0
 		Sub Constructor(TarStream As FolderItem)
 		  ' Construct a TarReader from the TarStream file.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.Constructor
 		  
 		  #If USE_ZLIB Then
 		    If TarStream.IsGZipped Then
@@ -30,6 +36,9 @@ Protected Class TarReader
 	#tag Method, Flags = &h0
 		Sub Constructor(TarData As MemoryBlock)
 		  ' Construct a TarReader from the TarData.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.Constructor
 		  
 		  mData = TarData
 		  
@@ -51,6 +60,10 @@ Protected Class TarReader
 	#tag Method, Flags = &h0
 		Sub Constructor(TARStream As Readable)
 		  ' Constructs a TarReader from any Readable object.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.Constructor
+		  
 		  mStream = TARStream
 		  If Not ReadHeader() Then Raise New TARException(mLastError)
 		End Sub
@@ -63,6 +76,9 @@ Protected Class TarReader
 		  ' Returns True if the current item was extracted and the next item is ready. Check LastError
 		  ' for details if this method returns False; in particulur the error ERR_END_ARCHIVE
 		  ' means that extraction was successful but there are no further entries.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.MoveNext
 		  
 		  Return ReadEntry(ExtractTo) And ReadHeader()
 		End Function
@@ -178,6 +194,12 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' This property has been deprecated in favor of TarReader.CurrentSize.
+			  ' Gets the uncompressed size of the current entry.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentFileSize
+			  
 			  Return mCurrentSize
 			End Get
 		#tag EndGetter
@@ -188,6 +210,9 @@ Protected Class TarReader
 		#tag Getter
 			Get
 			  ' Returns the GID of the current entry, if available.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentGroup
 			  
 			  Return mCurrentGroup
 			End Get
@@ -198,8 +223,11 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' If the CurrentType is SYMTYPE then this property will return the path of the
-			  ' file or directory being symlinked to.
+			  ' If the CurrentType is EntryType.Symlink then this property will return the
+			  ' path of the file or directory being symlinked to.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentLinkTarget
 			  
 			  return mCurrentLinkName
 			End Get
@@ -211,6 +239,9 @@ Protected Class TarReader
 		#tag Getter
 			Get
 			  ' Returns the Unix-style permissions of the current entry, if available.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentMode
 			  
 			  Return mCurrentMode
 			End Get
@@ -222,6 +253,9 @@ Protected Class TarReader
 		#tag Getter
 			Get
 			  ' Returns the last-modified date of the current entry, if available.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentModificationDate
 			  
 			  Return mCurrentModTime
 			End Get
@@ -232,7 +266,10 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' Returns the full path of the current entry. 
+			  ' Returns the full path of the current entry.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentName
 			  
 			  return mCurrentName
 			End Get
@@ -244,6 +281,9 @@ Protected Class TarReader
 		#tag Getter
 			Get
 			  ' Returns the UID of the current entry, if available.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentOwner
 			  
 			  Return mCurrentOwner
 			End Get
@@ -254,7 +294,11 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' Returns the length of the current entry. Directories and links have a length of zero.
+			  ' Gets the uncompressed size of the current entry. Directories and links have
+			  ' a size of zero.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentSize
 			  
 			  Return mCurrentSize
 			End Get
@@ -265,6 +309,12 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Returns a member of the EntryType enum, indicating the type of entry (file, 
+			  ' directory, symlink, etc.)
+			  ' 
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentType
+			  
 			  Select Case mCurrentType
 			  Case REGTYPE, CONTIGTYPE
 			    Return EntryType.File
@@ -291,7 +341,11 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' The most recent error while reading the archive. Check this value if MoveNext() returns False.
+			  ' The most recent error while reading the archive. Check this value if the 
+			  ' MoveNext() method returns False.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.LastError
 			  
 			  Return mLastError
 			End Get
@@ -348,6 +402,12 @@ Protected Class TarReader
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		#tag Note
+			If True (default), then the TAR header checksums of entries will validated during extraction.
+			
+			See:
+			https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.ValidateChecksums
+		#tag EndNote
 		ValidateChecksums As Boolean = True
 	#tag EndProperty
 

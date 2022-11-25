@@ -308,6 +308,9 @@ Protected Module PKZip
 		Function IsZipped(Extends TargetFile As FolderItem, ScanStructure As Boolean = False) As Boolean
 		  ' Checks the pkzip magic number. Returns True if the TargetFile is likely a zip archive.
 		  ' If ScanStructure is True then the archive structure is checked for consistency.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.IsZipped
 		  
 		  If TargetFile = Nil Or Not TargetFile.Exists Or TargetFile.Directory Then Return False
 		  Dim bs As BinaryStream
@@ -332,7 +335,10 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h1
 		Protected Function ListZip(ZipFile As FolderItem) As String()
-		  ' Returns a list of file names (with paths relative to the zip root) but does not extract anything.
+		  ' This method enumerates the specified zip archive and returns a list of file paths.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ListZip
 		  
 		  Dim zip As New ZipReader(ZipFile)
 		  Dim ret() As String
@@ -386,7 +392,15 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h1
 		Protected Function ReadZip(ZipFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False, VerifyCRC As Boolean = True) As FolderItem()
-		  ' Extracts a ZIP file to the ExtractTo directory
+		  ' This method extracts the ZipFile into the ExtractTo directory. The directory structure of
+		  ' the ZipFile is preserved and missing subdirectories of the ExtractTo directory will be
+		  ' created automatically. Returns an array of zero or more FolderItems corresponding to the
+		  ' extracted files & directories.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ReadZip
+		  
+		  The zip archive format does not forbid having two or more entries with identical names. If Overwrite is False (the default), then an IOException will be raised when a duplicate entry is encountered. If Overwrite is True then no exception is raised and each subsequent duplicate overwrites the previous one. To correctly process an archive with duplicate entries use the ZipReader class.
 		  
 		  Dim zip As New ZipReader(ZipFile)
 		  zip.ValidateChecksums = VerifyCRC
@@ -411,6 +425,13 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h1
 		Protected Function RepairZip(ZipFile As FolderItem, RecoveryFile As FolderItem, Optional LogFile As FolderItem) As Boolean
+		  ' This method will attempt to recover the uncorrupted portion(s) of a damaged archive. If the
+		  ' RecoveryFile is a directory then the archive is extracted to that directory. Otherwise the
+		  ' archive is extracted to a temporary folder and then re-zipped into RecoveryFile.
+		  ' 
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.RepairZip
+		  
 		  Return ZipReader.RepairZip(ZipFile, RecoveryFile, LogFile)
 		End Function
 	#tag EndMethod
@@ -445,7 +466,11 @@ Protected Module PKZip
 
 	#tag Method, Flags = &h1
 		Protected Function TestZip(ZipFile As FolderItem) As Boolean
-		  ' Tests a ZIP file
+		  ' Extracts the archive while discarding all output. If the operation completes without
+		  ' error then the archive is not corrupt.
+		  '
+		  ' See:https://github.com/charonn0/RB-zlib/wiki/PKZip.TestZip
+		  ' 
 		  
 		  Dim zip As ZipReader
 		  Try
@@ -571,7 +596,7 @@ Protected Module PKZip
 	#tag Note, Name = Copying
 		RB-PKZip (https://github.com/charonn0/RB-zlib)
 		
-		Copyright (c)2018-21 Andrew Lambert, all rights reserved.
+		Copyright (c)2018-22 Andrew Lambert, all rights reserved.
 		
 		 Permission to use, copy, modify, and distribute this software for any purpose
 		 with or without fee is hereby granted, provided that the above copyright

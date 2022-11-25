@@ -3,6 +3,9 @@ Protected Class ZipReader
 	#tag Method, Flags = &h0
 		Sub Close()
 		  ' Releases all resources. The ZipReader may not be used after calling this method.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.Close
 		  
 		  If mStream <> Nil And (mData <> Nil Or mDataFile <> Nil) Then mStream.Close
 		  mStream = Nil
@@ -20,6 +23,9 @@ Protected Class ZipReader
 		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
 		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
 		  ' Forcible reading can yield a performance boost on well-formed archives.
+		  ' 
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.Constructor
 		  
 		  mStream = ZipStream
 		  mStream.LittleEndian = True
@@ -37,6 +43,9 @@ Protected Class ZipReader
 		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
 		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
 		  ' Forcible reading can yield a performance boost on well-formed archives.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.Constructor
 		  
 		  mDataFile = ZipStream
 		  Me.Constructor(BinaryStream.Open(ZipStream), Force)
@@ -52,6 +61,9 @@ Protected Class ZipReader
 		  '  * Invalid entries are skipped by scanning forward until the next entry is found (slow)
 		  '  * Checksum mismatches will not cause MoveNext() to return False (LastError is updated correctly, though)
 		  ' Forcible reading can yield a performance boost on well-formed archives.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.Constructor
 		  
 		  mData = ZipData
 		  Me.Constructor(New BinaryStream(mData), Force)
@@ -146,6 +158,9 @@ Protected Class ZipReader
 		  ' Returns True if the current item was extracted and the next item is ready. Check LastError
 		  ' for details if this method returns False; in particulur the error ERR_END_ARCHIVE(-202)
 		  ' means that extraction was successful but there are no further entries.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.MoveNext
 		  
 		  If Not mForced And mStream.Position >= mDirectoryFooter.Offset Then
 		    mLastError = ERR_END_ARCHIVE
@@ -158,10 +173,14 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Function MoveToPath(PathName As String, Index As Integer = 0) As Boolean
-		  ' Finds the PathName in the archive and positions the reader to extract it.
-		  ' Returns True if the PathName was found. If the archive contains more than
-		  ' one item that matches the PathName then you may use the Index property to
-		  ' access them all.
+		  ' Finds the PathName in the archive and positions the reader to extract it. Returns True if
+		  ' the PathName was found. If the archive contains more than one item that matches the
+		  ' PathName then you may use the Index parameter to access them all. If the PathName was not
+		  ' found then the reader's position is returned to where it started and this method returns
+		  ' False.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.MoveToPath
 		  
 		  Dim i, old As Integer
 		  old = CurrentIndex
@@ -341,6 +360,9 @@ Protected Class ZipReader
 		  ' appropriate path and name. If the RevoveryFile points to a file then the recovered files
 		  ' will be re-Zipped as a new archive in that file. If the RecoveryFile is a directory then
 		  ' the recovered contents will be extracted to that directory.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.RepairZip
 		  
 		  Dim root As FolderItem
 		  Dim cleanup As Boolean
@@ -418,11 +440,13 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h0
 		Function Reset(Index As Integer) As Boolean
-		  ' Repositions the "current" item to the specified Index. The first item is
-		  ' at index zero. Pass -1 to perform a consistency check on the file
-		  ' structure; this check verifies that the file appears to be a properly
-		  ' formatted zip file, but doesn't verify the integrity of the files stored
-		  ' within (See PKZip.TestZip for that.)
+		  ' Repositions the "current" item to the specified Index. The first item is at index zero.
+		  ' Pass -1 to perform a consistency check on the file structure; this check verifies that
+		  ' the file appears to be a properly formatted zip file, but doesn't verify the integrity
+		  ' of the files stored within (See PKZip.TestZip for that.)
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.Reset
 		  
 		  mIndex = -1
 		  mCurrentExtra = Nil
@@ -482,6 +506,11 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' The comment for the whole archive, if one exists.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.ArchiveComment
+			  
 			  return mArchiveComment
 			End Get
 		#tag EndGetter
@@ -493,6 +522,9 @@ Protected Class ZipReader
 			Get
 			  ' Returns the compression level that was used on the current item. Some archivers do not
 			  ' fill in this information.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.CompressionLevel
 			  
 			  Dim bit1, bit2 As Boolean
 			  bit1 = (BitAnd(mCurrentEntry.Flag, 1) = 1)
@@ -521,6 +553,9 @@ Protected Class ZipReader
 		#tag Getter
 			Get
 			  ' Returns the number of entries purported to exist in the archive (this can be wrong.)
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.Count
 			  
 			  Return mDirectoryFooter.ThisRecordCount
 			End Get
@@ -533,6 +568,9 @@ Protected Class ZipReader
 			Get
 			  ' Returns the offset in the stream where the current item's compressed data begins.
 			  ' Combined with the CurrentSize property you could decompress an entry directly.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.CurrentDataOffset
 			  
 			  return mCurrentDataOffset
 			End Get
@@ -543,6 +581,11 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' Gets the index of the current entry.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.CurrentIndex
+			  
 			  Return mIndex
 			End Get
 		#tag EndGetter
@@ -552,6 +595,11 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' The compression method of the current entry. Typically METHOD_DEFLATE(8) or METHOD_NONE (0).
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.CurrentMethod
+			  
 			  Return mCurrentEntry.Method
 			End Get
 		#tag EndGetter
@@ -561,6 +609,11 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' The modification date of the current entry.
+			  ' 
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.CurrentModificationDate
+			  
 			  If mIndex = -1 Then Return Nil
 			  
 			  Return ConvertDate(mCurrentEntry.ModDate, mCurrentEntry.ModTime)
@@ -572,6 +625,11 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' The file path of the current entry.
+			  ' 
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.CurrentName
+			  
 			  If mIndex > -1 Then Return mCurrentName
 			End Get
 		#tag EndGetter
@@ -581,6 +639,11 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' The compressed size of the current entry.
+			  ' 
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.CurrentSize
+			  
 			  If mIndex > -1 Then Return mCurrentEntry.CompressedSize Else Return 0
 			End Get
 		#tag EndGetter
@@ -590,6 +653,11 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  ' The original size of the current entry.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.CurrentUncompressedSize
+			  
 			  If mIndex > -1 Then Return mCurrentEntry.UncompressedSize Else Return 0
 			End Get
 		#tag EndGetter
@@ -599,7 +667,11 @@ Protected Class ZipReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' The most recent error while reading the archive. Check this value if MoveNext() or Reset() return False.
+			  ' The most recent error while reading the archive. Check this value if the MoveNext()
+			  ' or Reset() methods return False.
+			  '
+			  ' See:
+			  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.LastError
 			  
 			  Return mLastError
 			End Get
@@ -660,6 +732,12 @@ Protected Class ZipReader
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		#tag Note
+			If True (default), then the CRC32 checksum of file entries will validated during extraction.
+			
+			See:
+			https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader.ValidateChecksums
+		#tag EndNote
 		ValidateChecksums As Boolean = True
 	#tag EndProperty
 

@@ -300,7 +300,10 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h0
 		Function IsTarred(Extends TargetFile As FolderItem) As Boolean
-		  //Returns True if the TargetFile is likely a tape archive
+		  ' Returns True if the TargetFile is likely a tape archive.
+		  ' 
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.IsTarred
 		  
 		  If Not TargetFile.Exists Then Return False
 		  If TargetFile.Directory Then Return False
@@ -342,7 +345,10 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h0
 		Function IsTarred(Extends Target As MemoryBlock) As Boolean
-		  //Returns True if the Target is likely a tape archive
+		  ' Returns True if the Target memory block is likely a tape archive.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.IsTarred
 		  
 		  If Target.Size = -1 Then Return False
 		  Dim bs As Readable
@@ -388,7 +394,10 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h1
 		Protected Function ListTar(TarFile As FolderItem) As String()
-		  ' Returns a list of file names (with paths relative to the archive root) but does not extract anything.
+		  ' This method enumerates the specified tar archive and returns a list of file paths.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.ListTar
 		  
 		  Dim tar As New TarReader(TarFile)
 		  Dim ret() As String
@@ -463,7 +472,12 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h1
 		Protected Function ReadTar(TarFile As FolderItem, ExtractTo As FolderItem, Overwrite As Boolean = False) As FolderItem()
-		  ' Extracts a TAR file to the ExtractTo directory
+		  ' Extracts the TarFile into the ExtractTo directory. Returns an array of FolderItems
+		  ' corresponding to the extracted files.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.ReadTar
+		  
 		  Dim ts As Readable
 		  #If USE_ZLIB Then
 		    If TarFile.IsGZipped Then ts = zlib.ZStream.Open(TarFile, zlib.GZIP_ENCODING)
@@ -507,7 +521,11 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h1
 		Protected Function TestTar(TarFile As FolderItem) As Boolean
-		  ' Tests a TAR file
+		  ' Extracts the archive while discarding all output. If the operation completes without
+		  ' error then the archive is not corrupt.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TestTar
 		  
 		  Dim ts As Readable
 		  #If USE_ZLIB Then
@@ -583,7 +601,14 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h1
 		Protected Function WriteTar(ToArchive() As FolderItem, OutputFile As FolderItem, Optional RelativeRoot As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 0) As Boolean
-		  ' Creates/appends a TAR file with the ToArchive FolderItems
+		  ' Creates a tape archive in the OutputFile and adds the files in ToArchive to it.
+		  ' If RelativeRoot is specified then it is used to generate relative paths for the
+		  ' items in ToArchive. If CompressionLevel is between 1 and 9 then gzip compression
+		  ' is used.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.WriteTar
+		  
 		  Dim tar As New TARWriter
 		  For i As Integer = 0 To UBound(ToArchive)
 		    Call tar.AppendEntry(ToArchive(i), RelativeRoot)
@@ -624,7 +649,12 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h1
 		Protected Function WriteTar(RootDirectory As FolderItem, OutputFile As FolderItem, Overwrite As Boolean = False, CompressionLevel As Integer = 0) As Boolean
-		  ' Creates/appends a TAR file with the ToArchive FolderItems
+		  ' Creates a Tape archive in the OutputFile that mirrors the RootDirectory.
+		  ' If CompressionLevel is between 1 and 9 then gzip compression is used.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.WriteTar
+		  
 		  Dim items() As FolderItem
 		  GetChildren(RootDirectory, items)
 		  Return WriteTar(items, OutputFile, RootDirectory, Overwrite, CompressionLevel)
@@ -637,7 +667,7 @@ Protected Module USTAR
 	#tag Note, Name = Copying
 		RB-USTAR (https://github.com/charonn0/RB-zlib)
 		
-		Copyright (c)2018-21 Andrew Lambert, all rights reserved.
+		Copyright (c)2018-22 Andrew Lambert, all rights reserved.
 		
 		 Permission to use, copy, modify, and distribute this software for any purpose
 		 with or without fee is hereby granted, provided that the above copyright
