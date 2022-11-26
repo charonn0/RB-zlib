@@ -26,11 +26,11 @@ The zlib module provides several utility methods for basic compression or decomp
 
 All of these methods are overloaded with several useful variations on input and output parameters. All variations follow either this signature:
 
-```xojo
+```realbasic
  function(source, destination, options[...]) As Boolean
 ```
 or this signature:
-```xojo
+```realbasic
  function(source, options[...]) As MemoryBlock
 ```
 
@@ -43,7 +43,7 @@ The second way to compress or decompress data is with the [`ZStream`](https://gi
 
 Instances of `ZStream` can be created from MemoryBlocks, FolderItems, and objects that implement the `Readable` and/or `Writeable` interfaces. For example, creating an in-memory compression stream from a zero-length MemoryBlock and writing a string to it:
 
-```xojo
+```realbasic
   Dim output As New MemoryBlock(0)
   Dim z As New zlib.ZStream(output) ' zero-length creates a compressor
   z.Write("Hello, world!")
@@ -51,7 +51,7 @@ Instances of `ZStream` can be created from MemoryBlocks, FolderItems, and object
 ```
 The string will be processed through the compressor and written to the `output` MemoryBlock. To create a decompressor pass a MemoryBlock whose size is > 0 (continuing from above):
 
-```xojo
+```realbasic
   z = New zlib.ZStream(output) ' output contains the compressed string
   MsgBox(z.ReadAll) ' read the decompressed string
 ```
@@ -59,7 +59,7 @@ The string will be processed through the compressor and written to the `output` 
 ### Inflater and Deflater classes
 The third and final way to use zlib is through the [Inflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater) and [Deflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater) classes. These classes provide a low-level wrapper to the zlib API. All compression and decompression done using the `ZStream` class or the utility methods is ultimately carried out by an instance of `Deflater` and `Inflater`, respectively.
 
-```xojo
+```realbasic
   Dim d As New zlib.Deflater()
   Dim data As MemoryBlock = d.Deflate("H")
   data = data + d.Deflate("el")
@@ -72,14 +72,14 @@ The third and final way to use zlib is through the [Inflater](https://github.com
 
 ## More examples
 This example compresses and decompresses a MemoryBlock using deflate compression:
-```xojo
+```realbasic
   Dim data As MemoryBlock = "Potentially very large MemoryBlock goes here!"
   Dim comp As MemoryBlock = zlib.Deflate(data)
   Dim dcmp As MemoryBlock = zlib.Inflate(comp)
 ```
 
 This example compresses and decompresses a MemoryBlock using GZip:
-```xojo
+```realbasic
   Dim data As MemoryBlock = "Potentially very large MemoryBlock goes here!"
   Dim comp As MemoryBlock = zlib.GZip(data)
   Dim dcmp As MemoryBlock = zlib.GUnZip(comp)
@@ -87,7 +87,7 @@ This example compresses and decompresses a MemoryBlock using GZip:
 
 This example gzips a file:
 
-```xojo
+```realbasic
   Dim src As FolderItem = GetOpenFolderItem("") ' a file to be gzipped
   Dim dst As FolderItem = src.Parent.Child(src.Name + ".gz")
   If zlib.GZip(src, dst) Then 
@@ -98,7 +98,7 @@ This example gzips a file:
 ```
 
 This example opens an existing gzip file and decompresses it into a `MemoryBlock`:
-```xojo
+```realbasic
   Dim f As FolderItem = GetOpenFolderItem("") ' the gzip file to open
   Dim data As MemoryBlock = zlib.GUnZip(f)
   If data <> Nil Then
@@ -109,7 +109,7 @@ This example opens an existing gzip file and decompresses it into a `MemoryBlock
 ```
 
 This example extracts a zip archive into a directory:
-```xojo
+```realbasic
   Dim src As FolderItem = GetOpenFolderItem("") ' a zip file to extract
   Dim dst As FolderItem = SelectFolder() ' the destination directory
   Dim extracted() As FolderItem ' the list of extracted files/folders
@@ -118,7 +118,7 @@ This example extracts a zip archive into a directory:
 
 This example performs an HTTP request that asks for compression, and decompresses the response:
 
-```xojo
+```realbasic
   Dim h As New HTTPSocket
   h.SetRequestHeader("Accept-Encoding", "gzip, deflate")
   Dim page As String = h.Get("http://www.example.com", 10)
@@ -131,7 +131,7 @@ This example performs an HTTP request that asks for compression, and decompresse
 
 This example performs a hand-rolled HTTP request using a TCPSocket, and demonstrates how the ZStream can be used with any object that implements the `Readable` and/or `Writeable` interfaces:
 
-```xojo
+```realbasic
   Static CRLF As String = EndOfLine.Windows
   Dim sock As New TCPSocket
   sock.Address = "www.example.com"
