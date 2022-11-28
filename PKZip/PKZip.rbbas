@@ -472,8 +472,8 @@ Protected Module PKZip
 		  ' Extracts the archive while discarding all output. If the operation completes without
 		  ' error then the archive is not corrupt.
 		  '
-		  ' See:https://github.com/charonn0/RB-zlib/wiki/PKZip.TestZip
-		  ' 
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.TestZip
 		  
 		  Dim zip As ZipReader
 		  Try
