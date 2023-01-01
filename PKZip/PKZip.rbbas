@@ -599,7 +599,7 @@ Protected Module PKZip
 	#tag Note, Name = Copying
 		RB-PKZip (https://github.com/charonn0/RB-zlib)
 		
-		Copyright (c)2018-22 Andrew Lambert, all rights reserved.
+		Copyright (c)2018-23 Andrew Lambert, all rights reserved.
 		
 		 Permission to use, copy, modify, and distribute this software for any purpose
 		 with or without fee is hereby granted, provided that the above copyright
