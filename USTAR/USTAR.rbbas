@@ -99,12 +99,19 @@ Protected Module USTAR
 
 	#tag Method, Flags = &h21
 		Private Sub GetChildren(Root As FolderItem, ByRef Results() As FolderItem)
-		  Dim c As Integer = Root.Count
-		  For i As Integer = 1 To c
-		    Dim item As FolderItem = Root.TrueItem(i)
-		    Results.Append(item)
-		    If item.Directory Then GetChildren(item, Results)
-		  Next
+		  #If RBVersion > 2019.01 Then
+		    For Each child As FolderItem In Root.Children(False)
+		      Results.Append(child)
+		      If child.Directory Then GetChildren(child, Results)
+		    Next
+		  #Else
+		    Dim c As Integer = Root.Count
+		    For i As Integer = 1 To c
+		      Dim item As FolderItem = Root.TrueItem(i)
+		      Results.Append(item)
+		      If item.Directory Then GetChildren(item, Results)
+		    Next
+		  #endif
 		End Sub
 	#tag EndMethod
 
