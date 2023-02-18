@@ -119,12 +119,12 @@ This example extracts a zip archive into a directory:
 This example performs an HTTP request that asks for compression, and decompresses the response:
 
 ```realbasic
-  Dim h As New HTTPSocket
-  h.SetRequestHeader("Accept-Encoding", "gzip, deflate")
-  Dim page As String = h.Get("http://www.example.com", 10)
-  If h.PageHeaders.CommaSeparatedValues("Content-Encoding") = "gzip" Then
+  Dim h As New URLConnection
+  h.RequestHeader("Accept-Encoding") = "gzip, deflate"
+  Dim page As String = h.SendSync("GET", "http://www.example.com", 10)
+  If h.ResponseHeader("Content-Encoding") = "gzip" Then
     page = zlib.GUnZip(page)
-  ElseIf h.PageHeaders.CommaSeparatedValues("Content-Encoding") = "deflate" Then
+  ElseIf h.ResponseHeader("Content-Encoding") = "deflate" Then
     page = zlib.Inflate(page) ' assume DEFLATE_ENCODING; some servers send RAW_ENCODING
   End If
 ```
