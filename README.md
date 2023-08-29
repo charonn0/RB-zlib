@@ -151,11 +151,17 @@ This example performs a hand-rolled HTTP request using a TCPSocket, and demonstr
   z.Close
 ```
 
-## How to incorporate zlib into your Realbasic/Xojo project
-### Import the `zlib`, `USTAR`, and `PKZip` modules
+## How to incorporate these modules into your Realbasic/Xojo project
+### Import the `zlib`, `USTAR`, and/or `PKZip` modules
 1. Download the RB-zlib project either in [ZIP archive format](https://github.com/charonn0/RB-zlib/archive/master.zip) or by cloning the repository with your Git client.
 2. Open the RB-zlib project in REALstudio or Xojo. Open your project in a separate window.
-3. Copy the `zlib`, `USTAR`, and `PKZip` modules into your project and save.
+3. Copy the `zlib`, `USTAR`, and/or `PKZip` modules into your project and save.
+
+The `zlib` module does not depend on either the `PKZip` or `USTAR` modules, and can be used separately.
+
+The `PKZip` and `USTAR` modules do not depend on each other and can be used separately.
+
+The `PKZip` and `USTAR` modules optionally depend on the `zlib` module for compression/decompression. To use them separately for reading and writing *un*compressed archives, set the `PKZip.USE_ZLIB` and/or `USTAR.USE_ZLIB` constants to `False`.
 
 ### Ensure the zlib shared library is installed
 zlib is installed by default on most Unix-like operating systems, including OS X and most Linux distributions, however at least zlib version 1.2.8 is needed.
@@ -163,5 +169,3 @@ zlib is installed by default on most Unix-like operating systems, including OS X
 Windows does not have it installed by default, you will need to ship the DLL with your application. You can use pre-built DLL available [here](http://zlib.net/zlib128-dll.zip) (Win32x86), or you can [build them yourself from source](http://zlib.net/zlib-1.2.8.tar.gz). 
 
 RB-zlib will raise a PlatformNotSupportedException when used if all required DLLs/SOs/DyLibs are not available at runtime. 
-
-The PKZip and USTAR modules may be used independently of the zlib module for reading and writing uncompressed archives. To do so set the `PKZip.USE_ZLIB` and/or `USTAR.USE_ZLIB` constants to `False`.
