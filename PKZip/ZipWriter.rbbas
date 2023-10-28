@@ -398,6 +398,54 @@ Protected Class ZipWriter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub SetEntryContent(Path As String, Content As FolderItem)
+		  ' Sets the contents for the entry, overwriting the previous content. The
+		  ' path of the entry in the archive does not change, only the contents.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipWriter.SetEntryContent
+		  
+		  If Content.Length > MAX_FILE_SIZE Then Raise New ZipException(ERR_TOO_LARGE)
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  d.Value(META_STREAM) = Content
+		  d.Value(META_LENGTH) = Content.Length
+		  If d.HasKey(META_MEMORY) Then d.Remove(META_MEMORY)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SetEntryContent(Path As String, Content As MemoryBlock)
+		  ' Sets the contents for the entry, overwriting the previous content.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipWriter.SetEntryContent
+		  
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  Dim bs As New BinaryStream(Content)
+		  d.Value(META_STREAM) = bs
+		  d.Value(META_LENGTH) = bs.Length
+		  d.Value(META_MEMORY) = Content
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SetEntryContent(Path As String, Content As Readable, Length As UInt32)
+		  ' Sets the contents for the entry, overwriting the previous content.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipWriter.SetEntryContent
+		  
+		  Dim d As Dictionary = TraverseTree(mEntries, Path, False)
+		  If d = Nil Then Return
+		  d.Value(META_STREAM) = Content
+		  d.Value(META_LENGTH) = Length
+		  If d.HasKey(META_MEMORY) Then d.Remove(META_MEMORY)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SetEntryExtraData(Path As String, Extra As MemoryBlock)
 		  ' Sets the platform-specific "extra" data for the entry. Set this to Nil to remove the
 		  ' previous Extra data.
