@@ -979,7 +979,7 @@ Protected Module zlib
 	#tag EndNote
 
 
-	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"67108864", Scope = Private
+	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"65535", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = DEFAULT_MEM_LVL, Type = Double, Dynamic = False, Default = \"8", Scope = Protected

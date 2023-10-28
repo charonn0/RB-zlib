@@ -631,7 +631,7 @@ Protected Module PKZip
 	#tag EndNote
 
 
-	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"67108864", Scope = Private
+	#tag Constant, Name = CHUNK_SIZE, Type = Double, Dynamic = False, Default = \"65535", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = ERR_CHECKSUM_MISMATCH, Type = Double, Dynamic = False, Default = \"-204", Scope = Protected
