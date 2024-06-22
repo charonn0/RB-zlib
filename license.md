@@ -21,4 +21,4 @@ Copyright (c)2015-23 Andrew Lambert, all rights reserved.
 ----
 
 PKZIP is a registered trademark of PKWARE, Inc. in the United States and elsewhere.
-		https://support.pkware.com/display/PKZIP/APPNOTE
+		https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
