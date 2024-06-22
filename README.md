@@ -13,6 +13,9 @@ The minimum supported zlib version is 1.2.8. The minimum supported Xojo version 
 * Supports Windows, Linux, and OS X.
 * 64-bit ready.
 
+## Become a sponsor
+If you use this code in a commercial project, or just want to show your appreciation, please consider sponsoring me through GitHub. https://github.com/sponsors/charonn0
+
 ## Getting started
 The following section covers using zlib for general purpose compression. Refer to the [PKZip](https://github.com/charonn0/RB-zlib/wiki/PKZip) and [USTAR](https://github.com/charonn0/RB-zlib/wiki/USTAR) modules for information on working with archives.
 
