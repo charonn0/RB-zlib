@@ -200,14 +200,15 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h21
 		Private Shared Function ReadDirectoryFooter(Stream As BinaryStream, ByRef Footer As ZipDirectoryFooter) As Boolean
-		  Footer.Signature = Stream.ReadUInt32
-		  Footer.ThisDisk = Stream.ReadUInt16
-		  Footer.FirstDisk = Stream.ReadUInt16
-		  Footer.ThisRecordCount = Stream.ReadUInt16
-		  Footer.TotalRecordCount = Stream.ReadUInt16
-		  Footer.DirectorySize = Stream.ReadUInt32
-		  Footer.Offset = Stream.ReadUInt32
-		  Footer.CommentLength = Stream.ReadUInt16
+		  Dim foot As MemoryBlock = Stream.Read(ZIP_DIRECTORY_FOOTER_SIZE)
+		  Footer.Signature = foot.UInt32Value(0)
+		  Footer.ThisDisk = foot.UInt16Value(4)
+		  Footer.FirstDisk = foot.UInt16Value(6)
+		  Footer.ThisRecordCount = foot.UInt16Value(8)
+		  Footer.TotalRecordCount = foot.UInt16Value(10)
+		  Footer.DirectorySize = foot.UInt32Value(12)
+		  Footer.Offset = foot.UInt32Value(16)
+		  Footer.CommentLength = foot.UInt16Value(20)
 		  
 		  If Footer.Signature = ZIP_DIRECTORY_FOOTER_SIGNATURE And _
 		    Stream.Position + Footer.CommentLength = Stream.Length And _
@@ -223,23 +224,24 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h21
 		Private Shared Function ReadDirectoryHeader(Stream As BinaryStream, ByRef Header As ZipDirectoryHeader) As Boolean
-		  Header.Signature = Stream.ReadUInt32
-		  Header.Version = Stream.ReadUInt16
-		  Header.VersionNeeded = Stream.ReadUInt16
-		  Header.Flag = Stream.ReadUInt16
-		  Header.Method = Stream.ReadUInt16
-		  Header.ModTime = Stream.ReadUInt16
-		  Header.ModDate = Stream.ReadUInt16
-		  Header.CRC32 = Stream.ReadUInt32
-		  Header.CompressedSize = Stream.ReadUInt32
-		  Header.UncompressedSize = Stream.ReadUInt32
-		  Header.FilenameLength = Stream.ReadUInt16
-		  Header.ExtraLength = Stream.ReadUInt16
-		  Header.CommentLength = Stream.ReadUInt16
-		  Header.DiskNumber = Stream.ReadUInt16
-		  Header.InternalAttributes = Stream.ReadUInt16
-		  Header.ExternalAttributes = Stream.ReadUInt32
-		  Header.Offset = Stream.ReadUInt32
+		  Dim head As MemoryBlock = Stream.Read(ZIP_DIRECTORY_HEADER_SIZE)
+		  Header.Signature = head.UInt32Value(0)
+		  Header.Version = head.UInt16Value(4)
+		  Header.VersionNeeded = head.UInt16Value(6)
+		  Header.Flag = head.UInt16Value(8)
+		  Header.Method = head.UInt16Value(10)
+		  Header.ModTime = head.UInt16Value(12)
+		  Header.ModDate = head.UInt16Value(14)
+		  Header.CRC32 = head.UInt32Value(16)
+		  Header.CompressedSize = head.UInt32Value(20)
+		  Header.UncompressedSize = head.UInt32Value(24)
+		  Header.FilenameLength = head.UInt32Value(28)
+		  Header.ExtraLength = head.UInt16Value(30)
+		  Header.CommentLength = head.UInt16Value(32)
+		  Header.DiskNumber = head.UInt16Value(34)
+		  Header.InternalAttributes = head.UInt16Value(36)
+		  Header.ExternalAttributes = head.UInt32Value(38)
+		  Header.Offset = head.UInt32Value(42)
 		  
 		  Return Header.Signature = ZIP_DIRECTORY_HEADER_SIGNATURE
 		  
@@ -292,10 +294,11 @@ Protected Class ZipReader
 		Private Shared Function ReadEntryFooter(Stream As BinaryStream, ByRef Footer As ZipEntryFooter) As Boolean
 		  If Not SeekSignature(Stream, ZIP_ENTRY_FOOTER_SIGNATURE) Then Return False
 		  
-		  Footer.Signature = Stream.ReadUInt32
-		  Footer.CRC32 = Stream.ReadUInt32
-		  Footer.CompressedSize = Stream.ReadUInt32
-		  Footer.UncompressedSize = Stream.ReadUInt32
+		  Dim foot As MemoryBlock = Stream.Read(ZIP_ENTRY_FOOTER_SIZE)
+		  Footer.Signature = foot.UInt32Value(0)
+		  Footer.CRC32 = foot.UInt32Value(4)
+		  Footer.CompressedSize = foot.UInt32Value(8)
+		  Footer.UncompressedSize = foot.UInt32Value(12)
 		  
 		  Return Footer.Signature = ZIP_ENTRY_FOOTER_SIGNATURE And Footer.CompressedSize > 0
 		  
@@ -304,17 +307,18 @@ Protected Class ZipReader
 
 	#tag Method, Flags = &h21
 		Private Shared Function ReadEntryHeader(Stream As BinaryStream, ByRef Header As ZipEntryHeader) As Boolean
-		  Header.Signature = Stream.ReadUInt32
-		  Header.Version = Stream.ReadUInt16
-		  Header.Flag = Stream.ReadUInt16
-		  Header.Method = Stream.ReadUInt16
-		  Header.ModTime = Stream.ReadUInt16
-		  Header.ModDate = Stream.ReadUInt16
-		  Header.CRC32 = Stream.ReadUInt32
-		  Header.CompressedSize = Stream.ReadUInt32
-		  Header.UncompressedSize = Stream.ReadUInt32
-		  Header.FilenameLength = Stream.ReadUInt16
-		  Header.ExtraLength = Stream.ReadUInt16
+		  Dim head As MemoryBlock = Stream.Read(ZIP_ENTRY_HEADER_SIZE)
+		  Header.Signature = head.UInt32Value(0)
+		  Header.Version = head.UInt16Value(4)
+		  Header.Flag = head.UInt16Value(6)
+		  Header.Method = head.UInt16Value(8)
+		  Header.ModTime = head.UInt16Value(10)
+		  Header.ModDate = head.UInt16Value(12)
+		  Header.CRC32 = head.UInt32Value(14)
+		  Header.CompressedSize = head.UInt32Value(18)
+		  Header.UncompressedSize = head.UInt32Value(22)
+		  Header.FilenameLength = head.UInt16Value(26)
+		  Header.ExtraLength = head.UInt16Value(28)
 		  
 		  Return Header.Signature = ZIP_ENTRY_HEADER_SIGNATURE
 		End Function
