@@ -6,15 +6,12 @@
 The minimum supported zlib version is 1.2.8. The minimum supported Xojo version is RS2009R3. 
 
 ## Highlights
-* Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream).
+* Read and write compressed file or memory streams using a simple [BinaryStream work-alike](https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream).
 * [Read](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipReader) and [write](https://github.com/charonn0/RB-zlib/wiki/PKZip.ZipWriter) zip archives (.zip)
 * [Read](https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader) and [write](https://github.com/charonn0/RB-zlib/wiki/USTAR.TarWriter) tape archives (.tar), with or without gzip compression.
 * Supports gzip, deflate, and raw deflate compressed streams
 * Supports Windows, Linux, and OS X.
 * 64-bit ready.
-
-## Become a sponsor
-If you use this code in a commercial project, or just want to show your appreciation, please consider sponsoring me through GitHub. https://github.com/sponsors/charonn0
 
 ## Getting started
 The following section covers using zlib for general purpose compression. Refer to the [PKZip](https://github.com/charonn0/RB-zlib/wiki/PKZip) and [USTAR](https://github.com/charonn0/RB-zlib/wiki/USTAR) modules for information on working with archives.
@@ -41,26 +38,26 @@ where `source` is a `MemoryBlock`, `FolderItem`, or an object which implements t
 
 Additional optional arguments may be passed, to control the compression level, strategy, dictionary, and encoding. For example, `GZip` and `GUnZip` are just wrappers around `Deflate` and `Inflate` with options that specify the gzip format.
 
-### ZStream class
-The second way to compress or decompress data is with the [`ZStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream) class. The `ZStream` is a `BinaryStream` work-alike and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Write) to a `ZStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.ZStream.Read) from a `ZStream` decompresses data from the input stream (another `Readable`).
+### CompressedStream class
+The second way to compress or decompress data is with the [`CompressedStream`](https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream) class. The `CompressedStream` is a `BinaryStream` work-alike and implements both the `Readable` and `Writeable` interfaces. Anything [written](https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Write) to a `CompressedStream` is compressed and emitted to the output stream (another `Writeable`); [reading](https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Read) from a `CompressedStream` decompresses data from the input stream (another `Readable`).
 
-Instances of `ZStream` can be created from MemoryBlocks, FolderItems, and objects that implement the `Readable` and/or `Writeable` interfaces. For example, creating an in-memory compression stream from a zero-length MemoryBlock and writing a string to it:
+Instances of `CompressedStream` can be created from MemoryBlocks, FolderItems, and objects that implement the `Readable` and/or `Writeable` interfaces. For example, creating an in-memory compression stream from a zero-length MemoryBlock and writing a string to it:
 
 ```realbasic
   Dim output As New MemoryBlock(0)
-  Dim z As New zlib.ZStream(output) ' zero-length creates a compressor
+  Dim z As New CompressedStream(output) ' zero-length creates a compressor
   z.Write("Hello, world!")
   z.Close
 ```
 The string will be processed through the compressor and written to the `output` MemoryBlock. To create a decompressor pass a MemoryBlock whose size is > 0 (continuing from above):
 
 ```realbasic
-  z = New zlib.ZStream(output) ' output contains the compressed string
+  z = New CompressedStream(output) ' output contains the compressed string
   MsgBox(z.ReadAll) ' read the decompressed string
 ```
 
 ### Inflater and Deflater classes
-The third and final way to use zlib is through the [Inflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater) and [Deflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater) classes. These classes provide a low-level wrapper to the zlib API. All compression and decompression done using the `ZStream` class or the utility methods is ultimately carried out by an instance of `Deflater` and `Inflater`, respectively.
+The third and final way to use zlib is through the [Inflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater) and [Deflater](https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater) classes. These classes provide a low-level wrapper to the zlib API. All compression and decompression done using the `CompressedStream` class or the utility methods is ultimately carried out by an instance of `Deflater` and `Inflater`, respectively.
 
 ```realbasic
   Dim d As New zlib.Deflater()
@@ -132,7 +129,7 @@ This example performs an HTTP request that asks for compression, and decompresse
   End If
 ```
 
-This example performs a hand-rolled HTTP request using a TCPSocket, and demonstrates how the ZStream can be used with any object that implements the `Readable` and/or `Writeable` interfaces:
+This example performs a hand-rolled HTTP request using a TCPSocket, and demonstrates how the `CompressedStream` can be used with any object that implements the `Readable` and/or `Writeable` interfaces:
 
 ```realbasic
   Static CRLF As String = EndOfLine.Windows
@@ -149,7 +146,7 @@ This example performs a hand-rolled HTTP request using a TCPSocket, and demonstr
   Loop Until Not sock.IsConnected
   
   Dim headers As String = sock.Read(InStrB(sock.Lookahead, CRLF + CRLF) + 3)
-  Dim z As zlib.ZStream = zlib.ZStream.Open(sock)
+  Dim z As CompressedStream = CompressedStream.Open(sock)
   Dim webpage As String = z.ReadAll ' read/decompress from the socket
   z.Close
 ```
