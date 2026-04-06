@@ -665,7 +665,7 @@ Protected Class ZipWriter
 		      z.Write(data)
 		    Loop
 		    #If USE_ZLIB Then
-		      If z IsA zlib.ZStream Then zlib.ZStream(z).Close
+		      If z IsA zlib.CompressedStream Then zlib.CompressedStream(z).Close
 		    #EndIf
 		    #If USE_BZIP2 Then
 		      If z IsA BZip2.BZ2Stream Then BZip2.BZ2Stream(z).Close

@@ -117,8 +117,8 @@ Protected Class TarWriter
 
 	#tag Method, Flags = &h0
 		Sub Commit(WriteTo As Writeable)
-		  ' Writes the TAR archive to the WriteTo stream. Pass an instance of ZStream (typically configured
-		  ' to use GZip encoding) to compress the archive.
+		  ' Writes the TAR archive to the WriteTo stream. Pass an instance of CompressedStream
+		  ' (typically configured to use GZip encoding) to compress the archive.
 		  '
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarWriter.Commit

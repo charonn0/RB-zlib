@@ -264,7 +264,7 @@ Protected Module zlib
 		  '
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate
 		  
-		  Dim z As ZStream = ZStream.Create(Destination, CompressionLevel, Encoding)
+		  Dim z As CompressedStream = CompressedStream.Create(Destination, CompressionLevel, Encoding)
 		  Try
 		    Do Until Source.EOF
 		      z.Write(Source.Read(CHUNK_SIZE))
@@ -681,7 +681,7 @@ Protected Module zlib
 		  '
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Inflate
 		  
-		  Dim z As ZStream = ZStream.Open(Source, Encoding)
+		  Dim z As CompressedStream = CompressedStream.Open(Source, Encoding)
 		  Try
 		    z.BufferedReading = False
 		    z.Dictionary = Dictionary

@@ -202,7 +202,7 @@ Protected Module PKZip
 		    
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
-		      Return zlib.ZStream.Create(Stream, CompressionLevel, zlib.RAW_ENCODING)
+		      Return zlib.CompressedStream.Create(Stream, CompressionLevel, zlib.RAW_ENCODING)
 		    #endif
 		    
 		  Case METHOD_BZIP2
@@ -223,7 +223,7 @@ Protected Module PKZip
 		    
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
-		      Dim z As zlib.ZStream = zlib.ZStream.Open(Stream, zlib.RAW_ENCODING)
+		      Dim z As zlib.CompressedStream = zlib.CompressedStream.Open(Stream, zlib.RAW_ENCODING)
 		      z.BufferedReading = False
 		      Return z
 		    #endif

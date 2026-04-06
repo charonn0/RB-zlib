@@ -21,7 +21,7 @@ Protected Class TarReader
 		  
 		  #If USE_ZLIB Then
 		    If TarStream.IsGZipped Then
-		      Me.Constructor(zlib.ZStream.Open(TarStream))
+		      Me.Constructor(zlib.CompressedStream.Open(TarStream))
 		    Else
 		  #endif
 		  
@@ -44,7 +44,7 @@ Protected Class TarReader
 		  
 		  #If USE_ZLIB Then
 		    If TarData.IsGZipped Then
-		      Me.Constructor(New zlib.ZStream(mData))
+		      Me.Constructor(New zlib.CompressedStream(mData))
 		    Else
 		  #endif
 		  
