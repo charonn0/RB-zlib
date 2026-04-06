@@ -1,5 +1,5 @@
 #tag Class
-Protected Class Deflater
+Protected Class Compressor
 Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Function CompressBound(DataLength As UInt32) As UInt32
@@ -9,7 +9,7 @@ Inherits FlateEngine
 		  ' a worst-case scenario.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.CompressBound
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.CompressBound
 		  
 		  If Not IsOpen Then Return 0
 		  Return deflateBound(zstruct, DataLength)
@@ -18,11 +18,11 @@ Inherits FlateEngine
 
 	#tag Method, Flags = &h0
 		Sub Constructor(CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, CompressionStrategy As Integer = zlib.Z_DEFAULT_STRATEGY, Encoding As Integer = zlib.DEFLATE_ENCODING, MemoryLevel As Integer = zlib.DEFAULT_MEM_LVL)
-		  ' Construct a new Deflater instance using the specified compression options.
+		  ' Construct a new Compressor instance using the specified compression options.
 		  ' If the deflate engine could not be initialized an exception will be raised.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Constructor
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Constructor
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
@@ -46,12 +46,12 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CopyStream As zlib.Deflater)
-		  ' Constructs a Deflater instance by duplicating the internal compression state
+		Sub Constructor(CopyStream As zlib.Compressor)
+		  ' Constructs a Compressor instance by duplicating the internal compression state
 		  ' of the CopyStream
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Constructor
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Constructor
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
@@ -66,29 +66,54 @@ Inherits FlateEngine
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub Destructor()
+		  If IsOpen Then mLastError = deflateEnd(zstruct)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
-		Function Deflate(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
+		Function Prime(Bits As Integer, Value As Integer) As Boolean
+		  ' Inserts bits in the deflate output stream. The intent is that this function
+		  ' is used to start off the deflate output with the bits leftover from a previous
+		  ' deflate stream when appending to it. As such, this function can only be used
+		  ' for raw deflate, and must be used before the first deflate() call (or after
+		  ' Reset). Bits must be less than or equal to 16, and that many of the least
+		  ' significant bits of value will be inserted in the output.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Prime
+		  
+		  If Not IsOpen Then Return False
+		  mLastError = deflatePrime(zstruct, Bits, Value)
+		  Return mLastError = Z_OK
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Process(Data As MemoryBlock, Flushing As Integer = zlib.Z_NO_FLUSH) As MemoryBlock
 		  ' Processes the uncompressed bytes in the Data parameter into the compressor and
 		  ' returns any compressed output. Depending on the state of the compressor and the
 		  ' Flushing parameter, compressed output might not be emitted until a subsequent
 		  ' call to this method.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Deflate
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Compress
 		  
 		  If Not IsOpen Then Return Nil
 		  
 		  Dim ret As New MemoryBlock(0)
 		  Dim retstream As New BinaryStream(ret)
 		  Dim instream As New BinaryStream(Data)
-		  If Not Me.Deflate(instream, retstream, Flushing) Then Return Nil
+		  If Not Me.Process(instream, retstream, Flushing) Then Return Nil
 		  retstream.Close
 		  Return ret
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Deflate(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH, ReadCount As Integer = -1) As Boolean
+		Function Process(ReadFrom As Readable, WriteTo As Writeable, Flushing As Integer = zlib.Z_NO_FLUSH, ReadCount As Integer = - 1) As Boolean
 		  ' Reads uncompressed bytes from ReadFrom and writes all compressed output to
 		  ' WriteTo. If ReadCount is specified then exactly ReadCount uncompressed bytes
 		  ' are read; otherwise uncompressed bytes will continue to be read until
@@ -103,7 +128,7 @@ Inherits FlateEngine
 		  ' call to this method.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Deflate
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Compress
 		  
 		  If Not IsOpen Then Return False
 		  
@@ -144,31 +169,6 @@ Inherits FlateEngine
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub Destructor()
-		  If IsOpen Then mLastError = deflateEnd(zstruct)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Prime(Bits As Integer, Value As Integer) As Boolean
-		  ' Inserts bits in the deflate output stream. The intent is that this function
-		  ' is used to start off the deflate output with the bits leftover from a previous
-		  ' deflate stream when appending to it. As such, this function can only be used
-		  ' for raw deflate, and must be used before the first deflate() call (or after
-		  ' Reset). Bits must be less than or equal to 16, and that many of the least
-		  ' significant bits of value will be inserted in the output.
-		  '
-		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Prime
-		  
-		  If Not IsOpen Then Return False
-		  mLastError = deflatePrime(zstruct, Bits, Value)
-		  Return mLastError = Z_OK
-		  
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Sub Reset()
 		  ' Reinitializes the compressor but does not free and reallocate all the internal
@@ -176,7 +176,7 @@ Inherits FlateEngine
 		  ' attributes that may have been set.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Reset
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Reset
 		  
 		  If IsOpen Then mLastError = deflateReset(zstruct)
 		End Sub
@@ -189,7 +189,7 @@ Inherits FlateEngine
 		  ' the first call to Deflate()
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.SetHeader
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.SetHeader
 		  
 		  If Not IsOpen Then Return False
 		  mLastError = deflateSetHeader(zstruct, HeaderStruct)
@@ -206,7 +206,7 @@ Inherits FlateEngine
 		  ' trying to squeeze out the last compressed bit for their specific input data.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Tune
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Tune
 		  
 		  If Not IsOpen Then Return False
 		  mLastError = deflateTune(zstruct, GoodLength, MaxLazy, NiceLength, MaxChain)
@@ -221,7 +221,7 @@ Inherits FlateEngine
 			  ' Gets the previously set compression dictionary.
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Dictionary
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Dictionary
 			  
 			  Return mDictionary
 			End Get
@@ -231,10 +231,10 @@ Inherits FlateEngine
 			  ' Sets the compression dictionary from the given byte sequence without producing
 			  ' any compressed output. This must be set immediately after the Constructor() or
 			  ' a call to Reset(), but before the first call to Deflate(). The compressor and
-			  ' decompressor must use exactly the same dictionary (see Inflater.Dictionary).
+			  ' decompressor must use exactly the same dictionary (see Decompressor.Dictionary).
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Dictionary
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Dictionary
 			  
 			  If value = Nil Or Not IsOpen Then Return
 			  mLastError = deflateSetDictionary(zstruct, value, value.Size)
@@ -248,10 +248,10 @@ Inherits FlateEngine
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' Gets the compression encoding (gzip, deflate, etc.) for the stream. 
+			  ' Gets the compression encoding (gzip, deflate, etc.) for the stream.
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Encoding
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Encoding
 			  ' https://github.com/charonn0/RB-zlib/wiki/zlib#stream-encoding
 			  
 			  Return mEncoding
@@ -268,7 +268,7 @@ Inherits FlateEngine
 			  ' the new level will take effect only at the next call to deflate().
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Level
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Level
 			  
 			  Return mLevel
 			End Get
@@ -280,7 +280,7 @@ Inherits FlateEngine
 			  ' the new level will take effect only at the next call to deflate().
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Level
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Level
 			  
 			  If Not IsOpen Then Raise New NilObjectException
 			  mLastError = deflateParams(zstruct, value, mStrategy)
@@ -317,7 +317,7 @@ Inherits FlateEngine
 			  ' to fill out a full byte.
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor
 			  
 			  If Not IsOpen Then Return 0.0
 			  Dim bytes As UInt32
@@ -337,7 +337,7 @@ Inherits FlateEngine
 			  ' only at the next call to Deflate().
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Strategy
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Strategy
 			  
 			  Return mStrategy
 			End Get
@@ -348,7 +348,7 @@ Inherits FlateEngine
 			  ' only at the next call to Deflate().
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Deflater.Strategy
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Strategy
 			  
 			  If Not IsOpen Then Raise New NilObjectException
 			  mLastError = deflateParams(zstruct, mLevel, value)
@@ -365,6 +365,11 @@ Inherits FlateEngine
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="Encoding"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true
@@ -389,6 +394,11 @@ Inherits FlateEngine
 			Visible=true
 			Group="ID"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Pending"
+			Group="Behavior"
+			Type="Single"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Strategy"

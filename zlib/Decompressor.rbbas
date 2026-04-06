@@ -1,14 +1,14 @@
 #tag Class
-Protected Class Inflater
+Protected Class Decompressor
 Inherits FlateEngine
 	#tag Method, Flags = &h0
 		Sub Constructor(Encoding As Integer = zlib.DEFLATE_ENCODING)
-		  ' Construct a new Inflater instance using the specified Encoding. Encoding control,
+		  ' Construct a new Decompressor instance using the specified Encoding. Encoding control,
 		  ' among other things, the type of compression being used. (For GZip pass GZIP_ENCODING)
 		  ' If the inflate engine could not be initialized an exception will be raised.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Constructor
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.Constructor
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
@@ -26,14 +26,14 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(CopyStream As zlib.Inflater)
+		Sub Constructor(CopyStream As zlib.Decompressor)
 		  ' Creates a duplicate of the CopyStream and its current state. Duplication can be useful
 		  ' when randomly accessing a long stream. The first pass through the stream can periodically
 		  ' record a duplicate of the inflate state, allowing restarting inflate at those points when
 		  ' randomly accessing the stream.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Constructor
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.Constructor
 		  
 		  // Calling the overridden superclass constructor.
 		  // Constructor() -- From zlib.FlateEngine
@@ -53,27 +53,45 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(Data As MemoryBlock) As MemoryBlock
+		Function InflateMark() As UInt32
+		  ' If the upper 16 bits of the return value is –1 and the lower bits are zero, then
+		  ' inflate() is currently decoding information outside of a block. If the upper value is –1
+		  ' and the lower value is non-zero, then inflate is in the' middle of a stored block, with the
+		  ' lower value equaling the number of bytes from the input remaining to copy. If' the upper
+		  ' value is not –1, then it is the number of bits back from the current bit position in the
+		  ' input of the code (literal or length/distance pair) currently being processed. In that case
+		  ' the lower value is the number of bytes already emitted for that code.
+		  '
+		  ' See:
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.InflateMark
+		  
+		  If Not IsOpen Then Return 0
+		  Return inflateMark(zstruct)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Process(Data As MemoryBlock) As MemoryBlock
 		  ' Processes the compressed bytes in the Data parameter into the decompressor and returns
 		  ' any decompressed output. Check LastError to determine whether there was an error while
 		  ' decompressing.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Inflate
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.Process
 		  
 		  If Not IsOpen Then Return Nil
 		  
 		  Dim ret As New MemoryBlock(0)
 		  Dim retstream As New BinaryStream(ret)
 		  Dim instream As New BinaryStream(Data)
-		  If Not Me.Inflate(instream, retstream, -1) Then Return Nil
+		  If Not Me.Process(instream, retstream, -1) Then Return Nil
 		  retstream.Close
 		  Return ret
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(ReadFrom As Readable, WriteTo As Writeable, ReadCount As Integer = -1) As Boolean
+		Function Process(ReadFrom As Readable, WriteTo As Writeable, ReadCount As Integer = - 1) As Boolean
 		  ' Reads compressed bytes from ReadFrom and writes all decompressed output to WriteTo. If
 		  ' ReadCount is specified then exactly ReadCount compressed bytes are read; otherwise
 		  ' compressed bytes will continue to be read until ReadFrom.EOF. If ReadFrom represents more
@@ -85,7 +103,7 @@ Inherits FlateEngine
 		  ' error while decompressing.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Inflate
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.Process
 		  
 		  If Not IsOpen Then Return False
 		  
@@ -118,29 +136,11 @@ Inherits FlateEngine
 		    
 		  Loop Until (ReadCount > -1 And count >= ReadCount) Or ReadFrom = Nil Or ReadFrom.EOF
 		  
-		  ' Z_BUF_ERROR is non-fatal to the decompression process; you can keep 
+		  ' Z_BUF_ERROR is non-fatal to the decompression process; you can keep
 		  ' providing input to the decompressor in search of a valid deflate block.
 		  
 		  Return mLastError = Z_OK Or mLastError = Z_STREAM_END Or mLastError = Z_BUF_ERROR Or (mLastError = Z_DATA_ERROR And IgnoreChecksums)
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function InflateMark() As UInt32
-		  ' If the upper 16 bits of the return value is –1 and the lower bits are zero, then
-		  ' inflate() is currently decoding information outside of a block. If the upper value is –1
-		  ' and the lower value is non-zero, then inflate is in the' middle of a stored block, with the
-		  ' lower value equaling the number of bytes from the input remaining to copy. If' the upper
-		  ' value is not –1, then it is the number of bits back from the current bit position in the
-		  ' input of the code (literal or length/distance pair) currently being processed. In that case
-		  ' the lower value is the number of bytes already emitted for that code.
-		  '
-		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.InflateMark
-		  
-		  If Not IsOpen Then Return 0
-		  Return inflateMark(zstruct)
 		End Function
 	#tag EndMethod
 
@@ -151,7 +151,7 @@ Inherits FlateEngine
 		  ' the constructor.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Reset
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.Reset
 		  
 		  If Not IsOpen Then Return
 		  If mGZHeader.Done = 1 Then mGZHeader.Done = 0
@@ -165,13 +165,13 @@ Inherits FlateEngine
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function SyncToNextFlush(ReadFrom As Readable, MaxCount As Integer = -1) As Boolean
+		Function SyncToNextFlush(ReadFrom As Readable, MaxCount As Integer = - 1) As Boolean
 		  ' Reads compressed bytes from ReadFrom until a possible full flush point is detected. If a
 		  ' flush point is detected then this method returns True and the Total_In property will
 		  ' reflect the point in the input where it was detected.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.SyncToNextFlush
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.SyncToNextFlush
 		  
 		  If Not IsOpen Then Return False
 		  
@@ -201,7 +201,7 @@ Inherits FlateEngine
 			  ' Returns the sliding dictionary being maintained by inflate().
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Dictionary
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.Dictionary
 			  
 			  If Not IsOpen Then Return Nil
 			  Dim sz As UInt32 = 32768
@@ -217,10 +217,10 @@ Inherits FlateEngine
 			  ' Sets the compression dictionary from the given uncompressed byte sequence. Must be set
 			  ' immediately after the Constructor() or a call to Reset(), but before the first call to
 			  ' Inflate(). The compressor and decompressor must use exactly the same dictionary (see
-			  ' Deflater.Dictionary).
+			  ' Compressor.Dictionary).
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Dictionary
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.Dictionary
 			  
 			  If value = Nil Or Not IsOpen Then Return
 			  mLastError = inflateSetDictionary(zstruct, value, value.Size)
@@ -236,7 +236,7 @@ Inherits FlateEngine
 			  ' Gets the compression encoding (gzip, deflate, etc.) for the stream.
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.Encoding
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.Encoding
 			  
 			  Return mEncoding
 			End Get
@@ -269,7 +269,7 @@ Inherits FlateEngine
 			The default is False, which treats all errors as fatal.
 			
 			See:
-			https://github.com/charonn0/RB-zlib/wiki/zlib.Inflater.IgnoreChecksums
+			https://github.com/charonn0/RB-zlib/wiki/zlib.Decompressor.IgnoreChecksums
 		#tag EndNote
 		IgnoreChecksums As Boolean = False
 	#tag EndProperty
@@ -284,6 +284,22 @@ Inherits FlateEngine
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="Encoding"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="HasHeader"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IgnoreChecksums"
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true

@@ -37,7 +37,7 @@ Implements Readable,Writeable
 		  
 		  If Source.Length = Source.Position Then 'compress into Source
 		    If Encoding = Z_DETECT Then Encoding = DEFLATE_ENCODING
-		    Me.Constructor(New Deflater(CompressionLevel, Z_DEFAULT_STRATEGY, Encoding, DEFAULT_MEM_LVL), Source)
+		    Me.Constructor(New Compressor(CompressionLevel, Z_DEFAULT_STRATEGY, Encoding, DEFAULT_MEM_LVL), Source)
 		  Else ' decompress from Source
 		    If Encoding = Z_DETECT Then
 		      Select Case True
@@ -49,7 +49,7 @@ Implements Readable,Writeable
 		        Encoding = RAW_ENCODING
 		      End Select
 		    End If
-		    Me.Constructor(New Inflater(Encoding), Source)
+		    Me.Constructor(New Decompressor(Encoding), Source)
 		  End If
 		End Sub
 	#tag EndMethod
@@ -73,7 +73,7 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub Constructor(Engine As zlib.Deflater, Destination As Writeable)
+		Protected Sub Constructor(Engine As zlib.Compressor, Destination As Writeable)
 		  ' Construct a compression stream using the Engine and Destination parameters.
 		  '
 		  ' See:
@@ -86,7 +86,7 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub Constructor(Engine As zlib.Inflater, Source As Readable)
+		Protected Sub Constructor(Engine As zlib.Decompressor, Source As Readable)
 		  ' Construct a decompression stream using the Engine and Source parameters.
 		  '
 		  ' See:
@@ -116,7 +116,7 @@ Implements Readable,Writeable
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Create
 		  
-		  Return New CompressedStream(New Deflater(CompressionLevel, Z_DEFAULT_STRATEGY, Encoding, DEFAULT_MEM_LVL), OutputStream)
+		  Return New CompressedStream(New Compressor(CompressionLevel, Z_DEFAULT_STRATEGY, Encoding, DEFAULT_MEM_LVL), OutputStream)
 		  
 		End Function
 	#tag EndMethod
@@ -175,7 +175,7 @@ Implements Readable,Writeable
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Flush
 		  
 		  If mDeflater = Nil Then Raise New IOException
-		  If Not mDeflater.Deflate(Nil, mDestination, Flushing) Then Raise New zlibException(mDeflater.LastError)
+		  If Not mDeflater.Process(Nil, mDestination, Flushing) Then Raise New zlibException(mDeflater.LastError)
 		  
 		End Sub
 	#tag EndMethod
@@ -216,7 +216,7 @@ Implements Readable,Writeable
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Open
 		  
-		  Return New CompressedStream(New Inflater(Encoding), InputStream)
+		  Return New CompressedStream(New Decompressor(Encoding), InputStream)
 		  
 		End Function
 	#tag EndMethod
@@ -259,7 +259,7 @@ Implements Readable,Writeable
 		    End If
 		  End If
 		  If readsz > 0 Then
-		    If Not mInflater.Inflate(mSource, ret, readsz) Then
+		    If Not mInflater.Process(mSource, ret, readsz) Then
 		      Dim err As New zlibException(mInflater.LastError)
 		      If mInflater.Msg <> Nil Then err.Message = err.Message + EndOfLine + "Additional info: " + mInflater.Msg.CString(0)
 		      Raise err
@@ -396,14 +396,14 @@ Implements Readable,Writeable
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Sync
 		  
 		  If mInflater = Nil Or Not mSource IsA BinaryStream Then Return False
-		  Dim raw As New zlib.Inflater(RAW_ENCODING)
+		  Dim raw As New zlib.Decompressor(RAW_ENCODING)
 		  Dim pos As UInt64 = BinaryStream(mSource).Position
 		  If raw.SyncToNextFlush(mSource, MaxCount) Then
 		    Dim mb As New MemoryBlock(0)
 		    Dim tmp As New BinaryStream(mb)
 		    Dim flushpos As UInt64 = raw.Total_In + pos
 		    BinaryStream(mSource).Position = flushpos
-		    If raw.Inflate(mSource, tmp, 1024) Then
+		    If raw.Process(mSource, tmp, 1024) Then
 		      BinaryStream(mSource).Position = flushpos
 		      mInflater.Reset(RAW_ENCODING)
 		      mInflater.IgnoreChecksums = True
@@ -429,7 +429,7 @@ Implements Readable,Writeable
 		  
 		  If mDeflater = Nil Then Raise New IOException
 		  Dim tmp As New BinaryStream(Data)
-		  If Not mDeflater.Deflate(tmp, mDestination) Then Raise New zlibException(mDeflater.LastError)
+		  If Not mDeflater.Process(tmp, mDestination) Then Raise New zlibException(mDeflater.LastError)
 		End Sub
 	#tag EndMethod
 
@@ -511,22 +511,22 @@ Implements Readable,Writeable
 		#tag Getter
 			Get
 			  ' When in compression/write mode, this property will return a reference to the
-			  ' Deflater instance that is actually doing the compression.
+			  ' Compressor instance that is actually doing the compression.
 			  '
 			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Deflater
+			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Compressor
 			  
 			  Return mDeflater
 			End Get
 		#tag EndGetter
-		Deflater As zlib.Deflater
+		Deflater As zlib.Compressor
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' Gets the compression dictionary for the stream. Refer to Deflater.Dictionary
-			  ' and Inflater.Dictionary for details.
+			  ' Gets the compression dictionary for the stream. Refer to Compressor.Dictionary
+			  ' and Decompressor.Dictionary for details.
 			  '
 			  ' See:
 			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Dictionary
@@ -540,7 +540,7 @@ Implements Readable,Writeable
 		#tag EndGetter
 		#tag Setter
 			Set
-			  ' Sets the compression dictionary for the stream. Refer to Deflater.Dictionary
+			  ' Sets the compression dictionary for the stream. Refer to Compressor.Dictionary
 			  ' and Inflater.Dictionary for details.
 			  '
 			  ' See:
@@ -575,7 +575,7 @@ Implements Readable,Writeable
 		#tag Getter
 			Get
 			  ' When in decompression/read mode, this property will return a reference to the
-			  ' Inflater instance that is actually doing the decompression.
+			  ' Decompressor instance that is actually doing the decompression.
 			  '
 			  ' See:
 			  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Inflater
@@ -583,7 +583,7 @@ Implements Readable,Writeable
 			  Return mInflater
 			End Get
 		#tag EndGetter
-		Inflater As zlib.Inflater
+		Inflater As zlib.Decompressor
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -671,7 +671,7 @@ Implements Readable,Writeable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mDeflater As zlib.Deflater
+		Private mDeflater As zlib.Compressor
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -679,7 +679,7 @@ Implements Readable,Writeable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mInflater As zlib.Inflater
+		Private mInflater As zlib.Decompressor
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -730,7 +730,7 @@ Implements Readable,Writeable
 		#tag Setter
 			Set
 			  ' Sets the compression Strategy for the stream. Use Z_DEFAULT_STRATEGY(0) unless you have
-			  ' a good reason not to. Refer to Deflater.Strategy for details on the different
+			  ' a good reason not to. Refer to Compressor.Strategy for details on the different
 			  ' strategies available.
 			  '
 			  ' See:
