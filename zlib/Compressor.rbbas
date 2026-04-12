@@ -99,7 +99,7 @@ Inherits FlateEngine
 		  ' call to this method.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Compress
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Process
 		  
 		  If Not IsOpen Then Return Nil
 		  
@@ -128,7 +128,7 @@ Inherits FlateEngine
 		  ' call to this method.
 		  '
 		  ' See:
-		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Compress
+		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.Compressor.Process
 		  
 		  If Not IsOpen Then Return False
 		  
