@@ -27,7 +27,7 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(Source As BinaryStream, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As Integer = zlib.Z_DETECT)
+		Sub Constructor(Source As BinaryStream, Encoding As Integer = zlib.Z_DETECT)
 		  ' Constructs a CompressedStream from the Source BinaryStream. If the Source's current position is
 		  ' equal to its length then compressed output will be appended, otherwise the Source will
 		  ' be used as input to be decompressed.
@@ -37,7 +37,7 @@ Implements Readable,Writeable
 		  
 		  If Source.Length = Source.Position Then 'compress into Source
 		    If Encoding = Z_DETECT Then Encoding = DEFLATE_ENCODING
-		    Me.Constructor(New Compressor(CompressionLevel, Z_DEFAULT_STRATEGY, Encoding, DEFAULT_MEM_LVL), Source)
+		    Me.Constructor(New Compressor(Z_DEFAULT_COMPRESSION, Z_DEFAULT_STRATEGY, Encoding, DEFAULT_MEM_LVL), Source)
 		  Else ' decompress from Source
 		    If Encoding = Z_DETECT Then
 		      Select Case True
@@ -55,7 +55,7 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(Source As MemoryBlock, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As Integer = zlib.Z_DETECT)
+		Sub Constructor(Source As MemoryBlock, Encoding As Integer = zlib.Z_DETECT)
 		  ' Constructs a CompressedStream from the Source MemoryBlock. If the Source's size is zero then compressed
 		  ' output will be appended, otherwise the Source will be used as input to be decompressed.
 		  '
@@ -63,7 +63,7 @@ Implements Readable,Writeable
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Constructor
 		  
 		  If Source.Size >= 0 Then
-		    Me.Constructor(New BinaryStream(Source), CompressionLevel, Encoding)
+		    Me.Constructor(New BinaryStream(Source), Encoding)
 		  Else
 		    Raise New zlibException(Z_DATA_ERROR) ' can't use memoryblocks of unknown size!!
 		  End If
@@ -99,24 +99,24 @@ Implements Readable,Writeable
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(OutputStream As FolderItem, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Overwrite As Boolean = False, Encoding As Integer = zlib.DEFLATE_ENCODING) As zlib.CompressedStream
+		 Shared Function Create(OutputStream As FolderItem, Overwrite As Boolean = False, Encoding As Integer = zlib.DEFLATE_ENCODING) As zlib.CompressedStream
 		  ' Create a compression stream where compressed output is written to the OutputStream file.
 		  '
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Create
 		  
-		  Return Create(BinaryStream.Create(OutputStream, Overwrite), CompressionLevel, Encoding)
+		  Return Create(BinaryStream.Create(OutputStream, Overwrite), Encoding)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Create(OutputStream As Writeable, CompressionLevel As Integer = zlib.Z_DEFAULT_COMPRESSION, Encoding As Integer = zlib.DEFLATE_ENCODING) As zlib.CompressedStream
+		 Shared Function Create(OutputStream As Writeable, Encoding As Integer = zlib.DEFLATE_ENCODING) As zlib.CompressedStream
 		  ' Create a compression stream where compressed output is written to the OutputStream object.
 		  '
 		  ' See:
 		  ' https://github.com/charonn0/RB-zlib/wiki/zlib.CompressedStream.Create
 		  
-		  Return New CompressedStream(New Compressor(CompressionLevel, Z_DEFAULT_STRATEGY, Encoding, DEFAULT_MEM_LVL), OutputStream)
+		  Return New CompressedStream(New Compressor(Z_DEFAULT_COMPRESSION, Z_DEFAULT_STRATEGY, Encoding, DEFAULT_MEM_LVL), OutputStream)
 		  
 		End Function
 	#tag EndMethod

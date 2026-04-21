@@ -264,7 +264,8 @@ Protected Module zlib
 		  '
 		  ' See: https://github.com/charonn0/RB-zlib/wiki/zlib.Deflate
 		  
-		  Dim z As CompressedStream = CompressedStream.Create(Destination, CompressionLevel, Encoding)
+		  Dim z As CompressedStream = CompressedStream.Create(Destination, Encoding)
+		  z.Level = CompressionLevel
 		  Try
 		    Do Until Source.EOF
 		      z.Write(Source.Read(CHUNK_SIZE))

@@ -202,7 +202,9 @@ Protected Module PKZip
 		    
 		  Case METHOD_DEFLATED
 		    #If USE_ZLIB Then
-		      Return zlib.CompressedStream.Create(Stream, CompressionLevel, zlib.RAW_ENCODING)
+		      Dim z As zlib.CompressedStream = zlib.CompressedStream.Create(Stream, zlib.RAW_ENCODING)
+		      z.Level = CompressionLevel
+		      Return z
 		    #endif
 		    
 		  Case METHOD_BZIP2
