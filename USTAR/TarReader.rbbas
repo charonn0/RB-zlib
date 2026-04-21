@@ -194,21 +194,6 @@ Protected Class TarReader
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  ' This property has been deprecated in favor of TarReader.CurrentSize.
-			  ' Gets the uncompressed size of the current entry.
-			  '
-			  ' See:
-			  ' https://github.com/charonn0/RB-zlib/wiki/USTAR.TarReader.CurrentFileSize
-			  
-			  Return mCurrentSize
-			End Get
-		#tag EndGetter
-		Attributes( deprecated = "TarReader.CurrentSize" ) CurrentFileSize As UInt64
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
 			  ' Returns the GID of the current entry, if available.
 			  '
 			  ' See:
